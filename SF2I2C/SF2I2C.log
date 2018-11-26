@@ -1,0 +1,36 @@
+Software Version: 11.9.0.4
+creating folder: C:\Users\namna\OneDrive\Documents\ExJobb\Workspace\FPGA_MIST_I2C\SF2I2C
+Embedded FlashPro5 programmer detected.
+programmer 'E10026KIRX' : FlashPro5
+Created new project
+'C:\Users\namna\OneDrive\Documents\ExJobb\Workspace\FPGA_MIST_I2C\SF2I2C\SF2I2C.pro'
+STAPL file
+'C:\Users\namna\Dropbox\CUBES\Instrument\gateware\stapl\cubes-gw_20181106_digikey-mkr-kit_i2c.s\
+tp' has been loaded successfully.
+DESIGN : cubes;  CHECKSUM : CFB0;  ALG_VERSION : 2
+programmer 'E10026KIRX' : Scan Chain...
+programmer 'E10026KIRX' : Scan Chain PASSED.
+programmer 'E10026KIRX' : Executing action PROGRAM
+programmer 'E10026KIRX' : Family: Igloo2
+programmer 'E10026KIRX' : Product:      M2GL005
+programmer 'E10026KIRX' : EXPORT ISC_ENABLE_RESULT[32] = 00776444
+programmer 'E10026KIRX' : EXPORT CRCERR[1] = 0
+programmer 'E10026KIRX' : EXPORT EDCERR[1] = 0
+programmer 'E10026KIRX' : Programming FPGA Array...
+programmer 'E10026KIRX' : EXPORT Fabric component digest[256] =
+6848688ae04ddf85e6fae888262cff0e6fb1bdbe69791f30627d21f14f9c6f5e
+programmer 'E10026KIRX' :
+===================================================================================
+programmer 'E10026KIRX' : EXPORT DSN[128] = adccec5d79923b7c543a5aa92ed9d9d2
+programmer 'E10026KIRX' :
+===================================================================================
+programmer 'E10026KIRX' : Finished: Tue Nov 06 14:27:20 2018 (Elapsed time 00:00:26)
+programmer 'E10026KIRX' : Executing action PROGRAM PASSED.
+
+                        o - o - o - o - o - o
+
+Warning: Project 'SF2I2C' has been modified. Do you want to save it? [YES]
+creating folder:
+C:\Users\namna\OneDrive\Documents\ExJobb\Workspace\FPGA_MIST_I2C\SF2I2C\projectData
+Project saved.
+Project closed.

@@ -9,9 +9,8 @@
  */
 #include "mss_i2c.h"
 #include "../../CMSIS/mss_assert.h"
-#include "../../../target/msp_exp.h"
-
 #include <string.h>
+#include "../../../msp/msp_exp.h"
 
 #ifdef __cplusplus
 extern "C" {

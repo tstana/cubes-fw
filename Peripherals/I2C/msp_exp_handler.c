@@ -5,6 +5,8 @@
  *      Author: Zethian
  */
 
+#include "../UART/UART_comm_int.h"
+#include "i2c_comm_includes.h"
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";

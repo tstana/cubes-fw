@@ -2,16 +2,16 @@
  * msp_exp_handler.c
  *
  *  Created on: 26 nov. 2018
- *      Author: Zethian
+ *      Author: Marcus Persson
  */
 
-#include "../UART/UART_comm_int.h"
-#include "i2c_comm_includes.h"
+#include "../../msp/msp_exp.h"
+#include "../UART/uart_comm_int.h"
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
 volatile unsigned char send_data_hk[50] = "This is just some boring numbers about status";
-static unsigned char send_data_pus[60] = "I have no idea what PUS stands for, I just know it represen";
+static unsigned char send_data_pus[60] = "Packet Utilization Standard Packet Utilization Standard PUS";
 
 static unsigned char recv_data[501];
 static unsigned long recv_maxlen = 500;
@@ -29,11 +29,11 @@ static unsigned int has_syscommand = 0;
 
 void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	if(opcode == MSP_OP_REQ_PAYLOAD){
-		send_data = send_data_payload; /* Change to payload data location */
+		send_data = send_data_payload; /* TODO:Change to payload data location */
 		*len = sizeof(send_data_payload);
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		send_data = (char*)send_data_hk; /* Change to housekeeping data location */
+		send_data = (char*)send_data_hk; /* TODO:Change to housekeeping data location */
 		*len = sizeof(send_data_hk);
 	}
 	else if(opcode == MSP_OP_REQ_PUS){ /* TBD: is this needed, or can we ignore? */

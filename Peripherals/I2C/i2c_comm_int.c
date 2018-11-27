@@ -11,7 +11,7 @@
 unsigned char txbuffer[500] = "";
 unsigned char rxbuffer[500] = "";
 
-void initI2C(int SLAVE_SER_ADDR){
+void init_i2c(int SLAVE_SER_ADDR){
 	MSS_I2C_init(&g_mss_i2c0, SLAVE_SER_ADDR, MSS_I2C_PCLK_DIV_60); /* Clock can be set to any value as slave, not used */
 	MSS_I2C_set_slave_tx_buffer(&g_mss_i2c0, txbuffer, sizeof(txbuffer)); /* Set buffers for RX and TX I2C */
 	MSS_I2C_set_slave_rx_buffer(&g_mss_i2c0, rxbuffer, sizeof(rxbuffer));

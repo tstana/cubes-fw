@@ -8,14 +8,14 @@
  */
 
 #include <stdint.h>
-#include "Peripherals/UART/UART_comm_int.h"
 #include "Peripherals/FPGA_SYSINIT.h"
 #include "Peripherals/I2C/i2c_comm_includes.h"
-#define SLAVE_ADDR 0x11
+#include "Peripherals/UART/uart_comm_int.h"
+#define SLAVE_ADDR 0x35
 
 int main(void){
-	initI2C(SLAVE_ADDR);
-	initUART();
+	init_i2c(SLAVE_ADDR);
+	init_uart(NULL);
 	while(1){
 
 	}

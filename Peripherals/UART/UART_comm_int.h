@@ -16,7 +16,7 @@
  * Output: None
  *
  */
-void initUART(void);
+void init_uart(int* memory);
 
 /*
  * uart1_rx_handler
@@ -29,12 +29,12 @@ void uart1_rx_handler(mss_uart_instance_t * this_uart);
 
 
 /*
- * uart0_rx_handler
- * Interrupt for handling UART communication with SmartFusion2 side
- * Input: UART pointer
+ * Timer1_IRQHandler
+ * Interrupt for sending UART commands for status updates from HVPS
+ * Input:  None
  * Output: None
  *
  */
-void uart0_rx_handler(mss_uart_instance_t * this_uart);
+void Timer1_IRQHandler(void);
 
 #endif /* UART_COMM_INT_H_ */

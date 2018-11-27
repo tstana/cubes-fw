@@ -14,6 +14,6 @@
  * Input:  slave_adress, on format 0x35
  * Output: None
  ***********************************************/
-void initI2C(int slave_adress);
+void init_i2c(int slave_adress);
 
 #endif /* I2C_COMM_INT_H_ */

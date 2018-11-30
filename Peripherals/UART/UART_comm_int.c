@@ -10,10 +10,11 @@
 #include "../../firmware/drivers/mss_uart/mss_uart.h"
 #include "../../firmware/drivers/mss_timer/mss_timer.h"
 #include "uart_comm_int.h"
+#include "uart_comm_func.h"
 
 extern mss_uart_instance_t * const gp_my_uart1;
 
-int *memadr;
+char *memadr;
 
 
 
@@ -82,7 +83,7 @@ void Timer1_IRQHandler(void){
 }
 
 
-void init_uart(int* memory){
+void init_uart(char* memory){
 	/*
 	 * Initialize and configure UART and timer
 	 * Timer: periodic mode, loads value in load_immediate

@@ -16,7 +16,7 @@
  * Output: None
  *
  */
-void init_uart(int* memory);
+void init_uart(char* memory);
 
 /*
  * uart1_rx_handler

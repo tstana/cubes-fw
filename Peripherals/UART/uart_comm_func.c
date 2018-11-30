@@ -39,7 +39,7 @@ void getarray(uint8_t *array, uint8_t cmd[28]){
 		chksm+=array[i];
 	}
 	chksm = (chksm & 0xFF); /* Mask so only lower 2 bytes get sent */
-	sprintf(chkstr, "%X", chksm);
+	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
 	strcpy(cmd, "");
@@ -96,7 +96,7 @@ int checksum_control(uint8_t cmd[28]){
 	}
 	sum+=cmd[i];
 	sum = (sum & 0xFF); /* Mask so only lower 2 bytes get sent */
-	sprintf(check, "%X", sum);
+	sprintf(check, "%02X", sum);
 	if(cmd[++i] == check[0] && cmd[++i] == check[1]){
 		return 0;
 	}
@@ -110,7 +110,7 @@ int hvps_send_voltage(char command[]){
 	long voltage = strtol(command, NULL, 10); /* Get integer format of input voltage */
 	char hexvolt[4];
 	voltage = voltage * 1.812/pow(10, 3);
-	sprintf(hexvolt, "%X", voltage);
+	sprintf(hexvolt, "%04X", voltage);
 	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor */
 		HST[19+i]=hexvolt[i];
 	}

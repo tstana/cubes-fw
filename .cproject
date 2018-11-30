@@ -163,9 +163,15 @@
                         					
                     </folderInfo>
                     					
+                    <fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1823004736.84539133" name="main.c" rcbsApplicability="disable" resourcePath="main.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.267451047.113642420">
+                        						
+                        <tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.267451047.113642420" name="GNU ARM Cross C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.267451047"/>
+                        					
+                    </fileInfo>
+                    					
                     <sourceEntries>
                         						
-                        <entry excluding="Peripherals/SPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                         					
                     </sourceEntries>
                     				

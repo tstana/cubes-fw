@@ -962,7 +962,6 @@ static void mss_i2c_isr
 
             /* Mark any previous master write transaction as complete. */
             this_i2c->slave_status = MSS_I2C_SUCCESS;
-        	msp_recv_callback(this_i2c->slave_rx_buffer, this_i2c->slave_rx_idx);
 
             /* Check if transaction was pending. If yes, set the START bit */
             if(this_i2c->is_transaction_pending)
@@ -1009,7 +1008,6 @@ static void mss_i2c_isr
                 this_i2c->transaction = READ_SLAVE_TRANSACTION;
                 this_i2c->random_read_addr = 0u;
                 this_i2c->slave_status = MSS_I2C_IN_PROGRESS;
-                msp_send_callback(this_i2c->slave_tx_buffer, &(this_i2c->slave_tx_size));
 
                 /* If Start Bit is set, clear it, but store that information since it is because of
                  * pending transaction

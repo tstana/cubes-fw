@@ -11,8 +11,9 @@ extern volatile int ADC_incoming_data[500];
 void SPI_slave_handler();
 
 void initSPI(void){
-	MSS_SPI_set_frame_rx_handler(&g_mss_spi0, SPI_slave_handler);
-	int SPI_flag = 0;
+	MSS_SPI_init(&g_mss_spi0);
+	MSS_SPI_init(&g_mss_spi1);
+    MSS_SPI_configure_master_mode(&g_mss_spi0,MSS_SPI_SLAVE_0,MSS_SPI_MODE2,256u,MSS_SPI_BLOCK_TRANSFER_FRAME_SIZE);
 }
 
 void SPI_slave_handler(uint32_t slave_buffer){

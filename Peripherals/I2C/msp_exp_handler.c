@@ -7,6 +7,7 @@
 
 #include "../../msp/msp_exp.h"
 #include "../UART/uart_comm_int.h"
+#include "../RTC/rtc.h"
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
@@ -73,6 +74,10 @@ void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned l
 
 void msp_exprecv_complete(unsigned char opcode){
 	has_recv=opcode;
+	if(opcode == MSP_OP_SEND_TIME){
+		/* TODO: format time string */
+		set_time_from_string(recv_data);
+	}
 	MSS_UART_polled_tx_string(&g_mss_uart0, recv_data);
 }
 

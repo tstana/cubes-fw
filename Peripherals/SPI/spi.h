@@ -9,7 +9,6 @@
 
 #ifndef PERIPHERALS_SPI_SPI_H_
 #define PERIPHERALS_SPI_SPI_H_
-extern volatile int SPI_flag;
 
-void initSPI(void);
+void init_spi(void);
 #endif /* PERIPHERALS_SPI_SPI_H_ */

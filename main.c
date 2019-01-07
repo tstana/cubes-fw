@@ -11,8 +11,6 @@
 #include "Peripherals/FPGA_SYSINIT.h"
 #include "Peripherals/I2C/i2c_comm_includes.h"
 #include "Peripherals/UART/uart_comm_int.h"
-#include "Peripherals/GPIO/gpio.h"
-#include "Peripherals/SPI/spi.h"
 #include "Peripherals/RTC/rtc.h"
 #define SLAVE_ADDR 0x35
 
@@ -25,8 +23,6 @@ extern unsigned char time_data[100];
 int main(void){
 	init_i2c(SLAVE_ADDR);
 	init_uart(NULL);
-	init_spi();
-	init_gpio();
 	init_rtc();
 	while(1){
 		if(has_send != 0x00){

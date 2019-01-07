@@ -17,5 +17,8 @@
 #include "i2c_comm_func.h"
 #include "i2c_comm_int.h"
 
+extern unsigned int has_send;
+extern unsigned int has_recv;
+extern unsigned char time_data[100];
 
 #endif /* I2C_COMM_INCLUDES_H_ */

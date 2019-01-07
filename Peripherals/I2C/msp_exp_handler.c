@@ -6,22 +6,22 @@
  */
 
 #include "../../msp/msp_exp.h"
-#include "../UART/uart_comm_int.h"
 #include "../RTC/rtc.h"
+#include "i2c_comm_includes.h"
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
 volatile unsigned char send_data_hk[50] = "This is just some boring numbers about status";
-static unsigned char send_data_pus[60] = "Packet Utilization Standard Packet Utilization Standard PUS";
 
-static unsigned char recv_data[501];
+static unsigned char* recv_data;
 static unsigned long recv_maxlen = 500;
 static unsigned long recv_length;
+unsigned char time_data[100] = "";
 
-static unsigned int has_send = 0;
+unsigned int has_send = 0;
 static unsigned int has_send_error = 0;
 static unsigned int has_send_errorcode = 0;
-static unsigned int has_recv = 0;
+unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 static unsigned int has_syscommand = 0;
@@ -36,10 +36,6 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	else if(opcode == MSP_OP_REQ_HK){
 		send_data = (char*)send_data_hk; /* TODO:Change to housekeeping data location */
 		*len = sizeof(send_data_hk);
-	}
-	else if(opcode == MSP_OP_REQ_PUS){ /* TBD: is this needed, or can we ignore? */
-		send_data = send_data_pus;
-		*len = sizeof(send_data_pus);
 	}
 	else
 		*len = 0;
@@ -61,6 +57,9 @@ void msp_expsend_error(unsigned char opcode, int error){
 
 void msp_exprecv_start(unsigned char opcode, unsigned long len){
 	recv_length = len;
+	if(opcode==MSP_OP_SEND_TIME){
+		*recv_data = &time_data;
+	}
 }
 void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned long len, unsigned long offset){
 	for(unsigned long i=0; i<len; i++){
@@ -74,11 +73,6 @@ void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned l
 
 void msp_exprecv_complete(unsigned char opcode){
 	has_recv=opcode;
-	if(opcode == MSP_OP_SEND_TIME){
-		/* TODO: format time string */
-		set_time_from_string(recv_data);
-	}
-	MSS_UART_polled_tx_string(&g_mss_uart0, recv_data);
 }
 
 void msp_exprecv_error(unsigned char opcode, int error){

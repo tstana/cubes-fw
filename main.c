@@ -16,6 +16,12 @@
 #include "Peripherals/RTC/rtc.h"
 #define SLAVE_ADDR 0x35
 
+
+extern unsigned int has_send;
+extern unsigned int has_recv;
+extern unsigned char time_data[100];
+
+
 int main(void){
 	init_i2c(SLAVE_ADDR);
 	init_uart(NULL);
@@ -23,6 +29,24 @@ int main(void){
 	init_gpio();
 	init_rtc();
 	while(1){
+		if(has_send != 0x00){
+			switch(has_send){
+				case MSP_OP_REQ_PAYLOAD:
+					break;
+				case MSP_OP_REQ_HK:
+					break;
+				case MSP_OP_REQ_PUS:
+					break;
+			}
+			switch(has_recv){
+			case MSP_OP_SEND_TIME:
+				set_time_from_string(time_data);
+				break;
+			case MSP_OP_SEND_PUS:
+				break;
+
+			}
+		}
 	}
 }
 

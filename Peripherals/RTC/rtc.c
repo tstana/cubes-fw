@@ -11,7 +11,7 @@ void init_rtc(void){
 	MSS_RTC_init(MSS_RTC_CALENDAR_MODE, 32767);
 }
 
-void set_time_from_string(uint8_t time[]){
+void set_time_from_string(uint32_t time[]){
 	MSS_RTC_stop();
 	mss_rtc_calendar_t set_time;
 	time_t sec_time;

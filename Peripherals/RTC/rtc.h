@@ -18,5 +18,5 @@ void init_rtc(void);
  * Input: A string consisting of only UNIX time
  * Output: None
  */
-void set_time_from_string(uint8_t time[]);
+void set_time_from_string(uint32_t time[]);
 #endif /* PERIPHERALS_RTC_RTC_H_ */

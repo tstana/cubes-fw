@@ -8,7 +8,7 @@
 #ifndef UART_COMM_INT_H_
 #define UART_COMM_INT_H_
 
-#include "../../firmware/drivers/mss_uart/mss_uart.h"
+#include "../../cubes-fw-libero/drivers/mss_uart/mss_uart.h"
 
 /*
  * Initalizes all interrupts and timestamp timer

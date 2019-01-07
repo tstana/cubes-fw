@@ -5,7 +5,7 @@
  *      Author: Marcus Persson
  */
 #include <stdint.h>
-#include "../firmware/CMSIS/m2sxxx.h"
+#include "../cubes-fw-libero/CMSIS/m2sxxx.h"
 
 void init_Sleep(void){
 	SCB->SCR = ((uint32_t) 0 << SCB_SCR_SEVONPEND_Pos) & SCB_SCR_SEVONPEND_Msk;

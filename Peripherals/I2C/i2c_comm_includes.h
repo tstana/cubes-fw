@@ -10,9 +10,9 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "../../firmware/drivers/mss_gpio/mss_gpio.h"
-#include "../../firmware/CMSIS/system_m2sxxx.h"
-#include "../../firmware/drivers/mss_I2C/mss_I2C.h"
+#include "../../cubes-fw-libero/drivers/mss_gpio/mss_gpio.h"
+#include "../../cubes-fw-libero/CMSIS/system_m2sxxx.h"
+#include "../../cubes-fw-libero/drivers/mss_I2C/mss_I2C.h"
 #include "../../msp/msp_exp.h"
 #include "i2c_comm_func.h"
 #include "i2c_comm_int.h"

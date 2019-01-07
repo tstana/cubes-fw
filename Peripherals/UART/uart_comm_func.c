@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "../../firmware/drivers/mss_uart/mss_uart.h"
+#include "../../fcubes-fw-libero/drivers/mss_uart/mss_uart.h"
 #include "uart_comm_func.h"
 
 

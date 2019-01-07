@@ -8,7 +8,7 @@
 #ifndef PERIPHERALS_RTC_RTC_H_
 #define PERIPHERALS_RTC_RTC_H_
 
-#include "../../firmware/drivers/mss_rtc/mss_rtc.h"
+#include "../../cubes-fw-libero/drivers/mss_rtc/mss_rtc.h"
 #include <time.h>
 
 void init_rtc(void);

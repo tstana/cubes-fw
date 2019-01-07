@@ -7,8 +7,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "../../firmware/drivers/mss_uart/mss_uart.h"
-#include "../../firmware/drivers/mss_timer/mss_timer.h"
+#include "../../cubes-fw-libero/drivers/mss_uart/mss_uart.h"
+#include "../../cubes-fw-libero/drivers/mss_timer/mss_timer.h"
 #include "uart_comm_int.h"
 #include "uart_comm_func.h"
 

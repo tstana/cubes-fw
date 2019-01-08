@@ -11,9 +11,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "../cubes-fw-libero/CMSIS/system_m2sxxx.h"
-#include "../cubes-fw-libero/drivers/mss_I2C/mss_I2C.h"
+#include "../cubes-fw-libero/drivers/mss_i2c/mss_i2c.h"
 #include "../msp/msp_exp.h"
-#include "i2c_comm_int.h"
 
 extern unsigned int has_send;
 extern unsigned int has_recv;

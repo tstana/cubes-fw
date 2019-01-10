@@ -17,6 +17,7 @@
 extern unsigned int has_send;
 extern unsigned int has_recv;
 extern unsigned char time_data[100];
+extern volatile unsigned char send_data_hk[];
 
 /***********************************************
  * void initI2C(void)

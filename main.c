@@ -8,15 +8,14 @@
  */
 
 #include <stdint.h>
-#include "msp/i2c_comm_int.h"
-#include "hvps/UART_comm_int.h"
-#include "hvps/uart_comm_func.h"
+#include "hm_hvps.h"
+#include "msp/msp_i2c_int.h"
 #define SLAVE_ADDR 0x35
 extern int *mem_addr = (int*) 0x60000000;
 
 int main(void){
 	init_i2c(SLAVE_ADDR);
-	init_uart(&mem_addr);
+	hvps_init(&mem_addr);
 	while(1){}
 }
 

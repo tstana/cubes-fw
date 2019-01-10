@@ -7,7 +7,7 @@
 
 #define SLAVE_SER_ADDR_0   0x35
 
-#include "i2c_comm_int.h"
+#include "msp_i2c_int.h"
 unsigned char i2c_tx_buffer[500] = "";
 unsigned char i2c_rx_buffer[500] = "";
 unsigned int slave_buffer_size = 500;

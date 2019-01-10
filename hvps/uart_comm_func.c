@@ -83,10 +83,8 @@ int voltage_check(uint8_t cmd[28]){
 		return 0;
 }
 
-/*
- * TODO: Behövs den?
- */
-int checksum_control(uint8_t cmd[28]){
+
+/*int checksum_control(uint8_t cmd[28]){
 	uint16_t i=0;
 	uint16_t sum = 0x00;
 	uint8_t check[2] = "";
@@ -95,14 +93,14 @@ int checksum_control(uint8_t cmd[28]){
 		i++;
 	}
 	sum+=cmd[i];
-	sum = (sum & 0xFF); /* Mask so only lower 2 bytes get sent */
+	sum = (sum & 0xFF); /* Mask so only lower 2 bytes get sent*//*
 	sprintf(check, "%02X", sum);
 	if(cmd[++i] == check[0] && cmd[++i] == check[1]){
 		return 0;
 	}
 	else
 		return -1;
-}
+}*/
 
 
 int hvps_send_voltage(char command[]){

@@ -8,7 +8,7 @@
  */
 
 #include <stdint.h>
-#include "hm_hvps.h"
+#include "hvps/hvps_c11204-02.h"
 #include "msp/msp_i2c_int.h"
 #define SLAVE_ADDR 0x35
 extern int *mem_addr = (int*) 0x60000000;

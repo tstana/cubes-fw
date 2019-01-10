@@ -1,5 +1,5 @@
 /*
- * hm_hvps.c
+ * hvps_c11204-02.c
  *
  *  Created on: 10 jan. 2019
  *      Author: Marcus Persson
@@ -13,7 +13,7 @@
 
 #include "cubes-fw-libero/drivers/mss_uart/mss_uart.h"
 #include "cubes-fw-libero/drivers/mss_timer/mss_timer.h"
-#include "hm_hvps.h"
+#include "hvps_c11204-02.h"
 
 
 

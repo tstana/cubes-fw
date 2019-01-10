@@ -15,7 +15,7 @@
 extern int *mem_addr = (int*) 0x60000000;
 
 int main(void){
-//	init_i2c(SLAVE_ADDR);
+	init_i2c(SLAVE_ADDR);
 	init_uart(&mem_addr);
 	while(1){}
 }

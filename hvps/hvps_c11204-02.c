@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "cubes-fw-libero/drivers/mss_uart/mss_uart.h"
-#include "cubes-fw-libero/drivers/mss_timer/mss_timer.h"
+#include "../cubes-fw-libero/drivers/mss_uart/mss_uart.h"
+#include "../cubes-fw-libero/drivers/mss_timer/mss_timer.h"
 #include "hvps_c11204-02.h"
 
 

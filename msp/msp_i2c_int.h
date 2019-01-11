@@ -10,8 +10,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "../cubes-fw-libero/CMSIS/system_m2sxxx.h"
-#include "../cubes-fw-libero/drivers/mss_i2c/mss_i2c.h"
+#include "../firmware/CMSIS/system_m2sxxx.h"
+#include "../firmware/drivers/mss_i2c/mss_i2c.h"
 #include "../msp/msp_exp.h"
 
 extern unsigned int has_send;

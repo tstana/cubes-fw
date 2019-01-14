@@ -12,7 +12,7 @@ static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
 extern volatile unsigned char send_data_hk[500] = "test data";
 
-static unsigned char* recv_data;
+static unsigned char recv_data[100];
 static unsigned long recv_maxlen = 500;
 static unsigned long recv_length;
 unsigned char time_data[100] = "";
@@ -62,9 +62,9 @@ void msp_expsend_error(unsigned char opcode, int error){
 
 void msp_exprecv_start(unsigned char opcode, unsigned long len){
 	recv_length = len;
-	if(opcode==MSP_OP_SEND_TIME){
+	/*if(opcode==MSP_OP_SEND_TIME){
 		*recv_data = &time_data;
-	}
+	}*/
 }
 void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned long len, unsigned long offset){
 	for(unsigned long i=0; i<len; i++){
@@ -78,6 +78,9 @@ void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned l
 
 void msp_exprecv_complete(unsigned char opcode){
 	has_recv=opcode;
+	if(opcode == 0x71){
+		hvps_set_voltage(recv_data);
+	}
 }
 
 void msp_exprecv_error(unsigned char opcode, int error){

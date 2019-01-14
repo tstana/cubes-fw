@@ -48,7 +48,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 
 static int voltage_check(uint8_t cmd[28]){
 	char data[4] = "";
-	int val = 0;
+	double val = 0;
 	/* Check for which command that came to decide on array location */
 	if((cmd[0]=='H' && cmd[1]=='S' && cmd[2]=='T')) {
 		for(int i=0; i<4; i++){
@@ -62,7 +62,7 @@ static int voltage_check(uint8_t cmd[28]){
 	}
 	/* Convert to long and check value for limit of 55 */
 	val=strtol(data, NULL, 16);
-	val=round(val*(1.812/pow(10, 3)));
+	val=val*(1.812/pow(10, 3));
 	if(val > 55)
 		return -1;
 	else
@@ -70,7 +70,7 @@ static int voltage_check(uint8_t cmd[28]){
 }
 
 static void start_hvps(void){
-	char temp[28] = "";
+	uint8_t temp[28] = "";
 	strcpy(temp, "HST0000000000000000746900C8");
 	if(voltage_check(temp)==-1)
 		return;
@@ -81,12 +81,8 @@ static void start_hvps(void){
 
 int hvps_set_voltage(char* command){
 	uint8_t HST[30]="HST0000000000000000600000C8"; /* Standard input, ~44.5V, no temp correction */
-	uint16_t voltage = strtol(command, NULL, 10); /* Get integer format of input voltage */
-	char hexvolt[4];
-	voltage = voltage / (1.812/pow(10, 3));
-	sprintf(hexvolt, "%04X", voltage);
 	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor command */
-		HST[19+i]=hexvolt[i];
+		HST[19+i]=command[i];
 	}
 	if(voltage_check(HST) == -1)
 		return -1;
@@ -129,7 +125,8 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	}
 	else {
 		strncat(output, rx_buff, rx_size);
-		strcpy(send_data_hk,output);
+		if(output[1]=='h' && output[2]=='g')
+			strcpy(send_data_hk,output);
 		memset(output, '\0', sizeof(output));
 	}
 
@@ -145,30 +142,29 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
  *
  */
 void Timer1_IRQHandler(void){
-	static uint16_t cntr=0;
+	/*static uint16_t cntr=0;*/
 	uint8_t command[4] = "";
-	if(cntr==0){
-		/* Command for getting Voltage output */
-		strcpy(command, "HGV");
-		getarray(send, command);
-		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-		memset(send, '\0', sizeof(send));
-	}
-	if(cntr==1){
-		/* Command for getting current output */
+	/* Command for getting Voltage output */
+	strcpy(command, "HGV");
+	getarray(send, command);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+
+/*	if(cntr==1){
+		 Command for getting current output
 		strcpy(command, "HGC");
 		getarray(send, command);
 		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 		memset(send, '\0', sizeof(send));
 	}
 	if(cntr==2){
-		/* Command for getting Temperature output */
+		 Command for getting Temperature output
 		strcpy(command, "HGT");
 		getarray(send, command);
 		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 		memset(send, '\0', sizeof(send));
 	}
-	cntr=(cntr+1)%3;
+	cntr=(cntr+1)%3;*/
 	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
 }
 
@@ -185,7 +181,7 @@ void hvps_init(char* memory){
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	MSS_TIM64_load_immediate(0x00000000, 0xFFFFFFFF);
+	MSS_TIM64_load_immediate(0x00000000, 0x00FFFFFF);
 	MSS_TIM64_enable_irq();
 	MSS_TIM64_start();
 }

@@ -13,14 +13,15 @@
 
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
+#include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
 
 
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-uint16_t rec=0;
-
+static char *memadr;
+extern volatile unsigned char send_data_hk[];
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -71,7 +72,8 @@ static int voltage_check(uint8_t cmd[28]){
 
 static void start_hvps(void){
 	uint8_t temp[28] = "";
-	strcpy(temp, "HST0000000000000000746900C8");
+	uint8_t ram =
+	strcpy(temp, memadr);
 	if(voltage_check(temp)==-1)
 		return;
 	getarray(send, temp); /*get required string from function */
@@ -80,7 +82,10 @@ static void start_hvps(void){
 }
 
 int hvps_set_voltage(char* command){
-	uint8_t HST[30]="HST0000000000000000600000C8"; /* Standard input, ~44.5V, no temp correction */
+	uint8_t HST[30]=""; /* Standard input, ~44.5V, no temp correction */
+	for (int j=0; j<24; j++){
+		HST[j]=memadr[j];
+	}
 	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor command */
 		HST[19+i]=command[i];
 	}
@@ -102,21 +107,24 @@ void hvps_turn_on(void){
 void hvps_turn_off(void){
 	char HOF[] = "HOF";
 	getarray(send, HOF);
-	MSS_UART_polled_tx_string(&g_mss_uart0, send);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-
-char *memadr;
-extern volatile unsigned char send_data_hk[];
-
-
+void hvps_save_voltage(void){
+	char HRT[]="HRT";
+	getarray(send, HRT);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
 
  /* UART handler for RX from HVPS */
 /* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
 void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
+	nvm_status_t status;
+
 	static unsigned char output[30]="";
 
 	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
@@ -127,6 +135,18 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 		strncat(output, rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g')
 			strcpy(send_data_hk,output);
+		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
+			status = NVM_unlock(memadr, strlen(output));
+			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
+				status=NVM_write(memadr, output, strlen(output), NVM_LOCK_PAGE);
+				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
+					strcpy(send_data_hk, "HVPS SAVED");
+				else
+					strcpy(send_data_hk, "HVPS SAVE FAIL");
+			}
+			else
+				strcpy(send_data_hk, "HVPS UNLOCK FAIL");
+		}
 		memset(output, '\0', sizeof(output));
 	}
 

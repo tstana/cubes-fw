@@ -14,7 +14,7 @@
  * Output: None
  *
  */
-void hvps_init(char* memory);
+void hvps_init(uint32_t memory);
 
 /*
  * hvps_send_voltage()

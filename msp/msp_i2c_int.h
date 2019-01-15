@@ -16,7 +16,9 @@
 
 extern unsigned int has_send;
 extern unsigned int has_recv;
-extern unsigned char time_data[100];
+extern unsigned int has_syscommand;
+extern volatile unsigned char recv_data[100];
+extern volatile unsigned char time_data[100];
 extern volatile unsigned char send_data_hk[];
 
 /***********************************************

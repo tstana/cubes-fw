@@ -22,6 +22,7 @@ static uint8_t chkstr[2];
 static uint8_t send[40];
 static char *memadr;
 extern volatile unsigned char send_data_hk[];
+static uint32_t nvm_addr=0;
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -133,14 +134,15 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	}
 	else {
 		strncat(output, rx_buff, rx_size);
+		uint32_t output_len= strlen(output);
 		if(output[1]=='h' && output[2]=='g')
 			strcpy(send_data_hk,output);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
-			status = NVM_unlock(memadr, strlen(output));
+			status = NVM_unlock(nvm_addr, output_len);
 			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write(memadr, output, strlen(output), NVM_LOCK_PAGE);
+				status=NVM_write(nvm_addr, output, output_len, NVM_LOCK_PAGE);
 				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
-					strcpy(send_data_hk, "HVPS SAVED");
+					strcpy(send_data_hk, "HVPS SAVED"); /* TODO: Change to strcat when memory clear has been implemented */
 				else
 					strcpy(send_data_hk, "HVPS SAVE FAIL");
 			}
@@ -189,14 +191,15 @@ void Timer1_IRQHandler(void){
 }
 
 
-void hvps_init(char* memory){
+void hvps_init(uint32_t memory){
 	/*
 	 * Initialize and configure UART and timer
 	 * Timer: periodic mode, loads value in load_immediate
 	 * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
 	 */
 
-	memadr=memory;
+	memadr= (char*)memory;
+	nvm_addr = memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();

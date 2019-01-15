@@ -12,20 +12,19 @@ static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
 extern volatile unsigned char send_data_hk[500] = "test data";
 
-static unsigned char recv_data[100];
-static unsigned long recv_maxlen = 500;
+extern volatile unsigned char recv_data[100] = "";
+static unsigned long recv_maxlen = 100;
 static unsigned long recv_length;
-unsigned char time_data[100] = "";
+extern volatile unsigned char time_data[100] = "";
 
-unsigned int has_send = 0;
+extern unsigned int has_send = 0;
 static unsigned int has_send_error = 0;
 static unsigned int has_send_errorcode = 0;
-unsigned int has_recv = 0;
+extern unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
-static unsigned int has_syscommand = 0;
+extern unsigned int has_syscommand = 0;
 
-extern int *mem_addr;
 
 /* Prototype in msp_exp_handler.h */
 
@@ -50,10 +49,6 @@ void msp_expsend_data(unsigned char opcode, unsigned char *buf, unsigned long le
 
 void msp_expsend_complete(unsigned char opcode){ /* TODO: get offset and clear data there? */
 	has_send = opcode;
-	if(opcode == MSP_OP_REQ_PAYLOAD){ /* TODO: Clear sent data after transmission */
-	}
-	else if(opcode == MSP_OP_REQ_HK){
-	}
 }
 void msp_expsend_error(unsigned char opcode, int error){
 	has_send_error = opcode;
@@ -78,9 +73,6 @@ void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned l
 
 void msp_exprecv_complete(unsigned char opcode){
 	has_recv=opcode;
-	if(opcode == 0x71){
-		hvps_set_voltage(recv_data);
-	}
 }
 
 void msp_exprecv_error(unsigned char opcode, int error){

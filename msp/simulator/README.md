@@ -7,7 +7,7 @@ To generate the OBC simulator code, replace the "config.txt" file in the MSP
 simulator repository with the one found in this folder. The MSP simulator
 repository can be found here:
 
-  * https://gitlab.com/kth-mist/msp-simulator/tree/b1-addsim
+  * https://gitlab.com/kth-mist/msp-simulator
 
 Then run "setup.py" with Python3 and the code to be run on the MSP simulator
 will be generated in the "target/" folder.

@@ -1,4 +1,4 @@
-# MSP Simulator config file
+# MSP Simulator Configuration File
 
 The software running on the OBC simulator is set up through the config file in
 this folder.

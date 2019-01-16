@@ -67,10 +67,13 @@
 #            Ex3: "with a " "space" (resulting string: "with a space")        #
 ###############################################################################
 
+###############################################################################
+##--------------- CUBES MSP Simulator Configuration File --------------------##
+###############################################################################
 
-##-- Below is an example configuration. Modify it to fit your experiment --##
-
-
+#######################
+# -- CONFIGURATION -- #
+#######################
 # Set address and MTU (must be present!)
 setaddress 0x35
 setmtu 507
@@ -88,6 +91,9 @@ addcommand SEND_HVPS_VOLTAGE 0x71
 setdefaultdata SEND_HVPS_VOLTAGE "7019"  # 52.00 V
 setprintstyle SEND_HVPS_VOLTAGE string
 
+####################################
+# -- SIMULATOR COMMAND SEQUENCE -- #
+####################################
 # After this point, only 'invoke' and 'wait' are valid commands
 sequence init
 wait 5000

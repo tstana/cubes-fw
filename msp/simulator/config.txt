@@ -1,0 +1,128 @@
+###############################################################################
+# CONFIGURATION FILE FOR OBC SIMULATOR SETUP                                  #
+# Contact about questions: John Wikman jwikman@kth.se                         #
+#                                                                             #
+# Edit this file to change how the setup script sets up the OBC simulator.    #
+# You can add comments by typing # before your comment. All commands need to  #
+# be on a single line, if you wish to have a command across multiple lines    #
+# you need to type \ at the end of the line to also include what is on the    #
+# next line.                                                                  #
+#                                                                             #
+# Configuration options:                                                      #
+#  - setaddress <addr>: Sets the address that the OBC simulator will use to   #
+#                       communicate with your experiment. The address must be #
+#                       an integer value between 0x00 and 0x7F.               #
+#  - setmtu <mtu>: Sets the MTU that the OBC will use when communicating with #
+#                  your experiment.                                           #
+#  - addcommand <name> <opcode>: Adds a custom command with the specified     #
+#                                and opcode value. The opcode value must be   #
+#                                between 0x50 and 0x7F. Opcodez starting with #
+#                                0x5X will be system commands, 0x6X will be   #
+#                                requests, and 0x7X will be sends.            #
+#  - setdefaultdata <name> <data>: Sets the default data to be sent along     #
+#                                  with a send opcode. See available data     #
+#                                  types to see how data can be formatted.    #
+#  - setprintstyle <name> <style>: Set how received data from requests should #
+#                                  be printed. The different styles are:      #
+#                                  - none (default for send)                  #
+#                                  - bytes (default for request)              #
+#                                  - bits                                     #
+#                                  - string                                   #
+#                                                                             #
+# Default already specified commands are ACTIVE, SLEEP, POWER_OFF,            #
+# REQ_PAYLOAD, REQ_HK, REQ_PUS, SEND_TIME, SEND_PUS. You can use these in     #
+# setdefaultdata, setprintstyle, and invoke.                                  #
+#                                                                             #
+# After having set up all the commands, you need to specify the sequence in   #
+# which your commands will be called from the OBC. This needs to occur after  #
+# all configuration options in the file. To start specifying the sequence,    #
+# you need to write one of the following:                                     #
+#  - sequence init: Runs the below sequence once when starting up.            #
+#  - sequence loop: Runs the sequence in an infinite loop.                    #
+#                                                                             #
+# The sequence can consist of the following actions:                          #
+#  - invoke <name> [data]: Starts a transaction with the command associated   #
+#                          with the name. If the command is a send, some data #
+#                          must be associated with this action or the command #
+#                          must have a specified default data. See available  #
+#                          data types for how data can be formatted.          #
+#  - wait <millis>: Waits the specified number of milliseconds before         #
+#                   running the next action.                                  #
+#                                                                             #
+# Available data types:                                                       #
+#  - Array of bytes: Starts with a curly bracket, followed by a comma         #
+#                    separated sequence of bytes, and ends with a curly       #
+#                    bracket.                                                 #
+#                    Ex: {0x11, 0x26, 0xa9}                                   #
+#  - Repetition of a byte: Formatted as repeat(value, times), where 'value'   #
+#                          is the value to be repeated 'times' times.         #
+#                          Ex: repeat(0x33, 976)                              #
+#  - String: Starts with a double quotation mark, followed by a sequence of   #
+#            characters, and ends with a double quotation mark. Multiple      #
+#            strings that follow in a sequence will be concatenated together. #
+#            Each string, in a sequence or by itself, must occur on one line  #
+#            in its entirety.                                                 #
+#            Ex1: "hi, msp"                                                   #
+#            Ex2: "just say" "hello" (resulting string: "just sayhello")      #
+#            Ex3: "with a " "space" (resulting string: "with a space")        #
+###############################################################################
+
+
+##-- Below is an example configuration. Modify it to fit your experiment --##
+
+
+# Set address and MTU (must be present!)
+setaddress 0x35
+setmtu 507
+
+# Print style for time (built-in command)
+setprintstyle SEND_TIME bytes
+setprintstyle REQ_HK string
+
+# Request Parameters
+addcommand REQ_PARAMS 0x60
+setprintstyle REQ_PARAMS bits  # print it as a bit sequence
+
+# Send parameters
+addcommand SEND_HVPS_VOLTAGE 0x71
+setdefaultdata SEND_HVPS_VOLTAGE "7019"  # 52.00 V
+setprintstyle SEND_HVPS_VOLTAGE string
+
+# After this point, only 'invoke' and 'wait' are valid commands
+sequence init
+wait 5000
+invoke SEND_HVPS_VOLTAGE # default: 52.00 V
+wait 2000
+invoke REQ_HK
+
+sequence loop
+wait 8000
+invoke SEND_HVPS_VOLTAGE "7370" # 53.55 V
+wait 2000
+invoke REQ_HK
+wait 8000
+invoke SEND_HVPS_VOLTAGE "74AB" # 54.12 V
+wait 2000
+invoke REQ_HK
+wait 8000
+invoke SEND_HVPS_VOLTAGE "8000" # 59.38V -- should not be applied by CUBES
+wait 2000
+invoke REQ_HK
+wait 8000
+invoke SEND_HVPS_VOLTAGE # Default value (52V)
+wait 2000
+invoke REQ_HK
+wait 8000
+invoke SLEEP
+wait 10000
+invoke REQ_HK
+wait 2000
+invoke ACTIVE
+wait 1000
+invoke REQ_HK
+wait 4000
+invoke SEND_HVPS_VOLTAGE # Default value (52V)
+wait 1000
+invoke REQ_HK
+wait 4000
+

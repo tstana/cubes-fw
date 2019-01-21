@@ -21,16 +21,29 @@ extern volatile unsigned char recv_data[100];
 extern volatile unsigned char time_data[100];
 extern volatile unsigned char send_data_hk[];
 
-/***********************************************
+/* **********************************************
  * void initI2C(void)
  * Function for initializing I2C parameters and interrupts
  * Input:  slave_adress, on format 0x35
  * Output: None
- ***********************************************/
+ ********************************************** */
+
 void init_i2c(int slave_adress);
 
-
+/* **************************************************
+ * int msp_save_seqflags
+ * Function for saving MSP sequenceflags to NVM memory at system power-off.
+ * Input: none
+ * Return: -1 if any failure, 0 if passed
+ **************************************************** */
 int msp_save_seqflags(void);
 
+
+/* ****************************************************
+ * int msp_save_seqflags
+ * Function for reading MSP sequenceflags from NVM memory at system power-on.
+ * Input: none
+ * Return: none
+ *************************************************** */
 void msp_read_seqflags(void);
 #endif /* I2C_COMM_INT_H_ */

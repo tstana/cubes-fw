@@ -14,11 +14,9 @@
 
 #include "mem_mgmt/mem_mgmt.h"
 #define SLAVE_ADDR 0x35
-#define nvm_mem_addr  NULL /* TODO: Update to memory position for NVM memory */
-#define ram_mem_addr  NULL /* TODO: Update to memory position for RAM memory */
 
 int main(void){
-	while(mem_ram_hvps_write("HST0000000000000000746900C8") != 0);
+	while(mem_ram_hvps_write("HST0000000000000000746900C8") != 0); /* Writing standard HVPS value to ram for testing */
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	while(1){

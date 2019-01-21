@@ -5,8 +5,8 @@
  *      Author: Marcus Persson
  */
 
+#include <msp_i2c.h>
 #include "../msp/msp_exp.h"
-#include "msp_i2c_int.h"
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";

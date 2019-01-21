@@ -16,6 +16,8 @@
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
 
+#include "../mem_mgmt/mem_mgmt.h"
+
 
 
 static uint8_t chkstr[2];
@@ -41,7 +43,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', sizeof(cmd));
+	memset(cmd, '\0', sizeof(cmd[28]));
 }
 
 
@@ -72,12 +74,11 @@ static int voltage_check(uint8_t cmd[28]){
 }
 
 static void start_hvps(void){
-	uint8_t temp[28] = "";
-	uint8_t ram =
-	strcpy(temp, memadr);
-	if(voltage_check(temp)==-1)
+	uint8_t ram[28] = "";
+	mem_ram_hvps_read(ram);
+	if(voltage_check(ram)==-1)
 		return;
-	getarray(send, temp); /*get required string from function */
+	getarray(send, ram); /*get required string from function */
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }

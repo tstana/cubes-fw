@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "../firmware/CMSIS/system_m2sxxx.h"
 #include "../firmware/drivers/mss_i2c/mss_i2c.h"
-#include "../msp/msp_exp.h"
+#include "msp_exp.h"
 
 extern unsigned int has_send;
 extern unsigned int has_recv;
@@ -29,4 +29,8 @@ extern volatile unsigned char send_data_hk[];
  ***********************************************/
 void init_i2c(int slave_adress);
 
+
+int msp_save_seqflags(void);
+
+void msp_read_seqflags(void);
 #endif /* I2C_COMM_INT_H_ */

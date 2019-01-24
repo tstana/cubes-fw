@@ -74,7 +74,7 @@ static int voltage_check(uint8_t cmd[28]){
 }
 
 static void start_hvps(void){
-	uint8_t ram[28] = "";
+	uint8_t ram[28] = "HST";
 	mem_ram_hvps_read(ram);
 	if(voltage_check(ram)==-1)
 		return;
@@ -84,7 +84,7 @@ static void start_hvps(void){
 }
 
 int hvps_set_voltage(char* command){
-	uint8_t HST[30]=""; /* Standard input, ~44.5V, no temp correction */
+	uint8_t HST[30]="HST"; /* Standard input, ~44.5V, no temp correction */
 	for (int j=0; j<24; j++){
 		HST[j]=memadr[j];
 	}
@@ -141,7 +141,7 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
 			status = NVM_unlock(nvm_addr, output_len);
 			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write(nvm_addr, output, output_len, NVM_LOCK_PAGE);
+				status=NVM_write(nvm_addr, output[3], output_len, NVM_LOCK_PAGE);
 				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
 					strcpy(send_data_hk, "HVPS SAVED"); /* TODO: Change to strcat when memory clear has been implemented */
 				else

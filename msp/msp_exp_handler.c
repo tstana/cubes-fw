@@ -5,7 +5,7 @@
  *      Author: Marcus Persson
  */
 
-#include <msp_i2c.h>
+#include "msp_i2c.h"
 #include "../msp/msp_exp.h"
 
 static unsigned char *send_data;

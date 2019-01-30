@@ -22,8 +22,8 @@
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-static char *memadr;
-extern volatile unsigned char send_data_hk[];
+static uint32_t *memadr; /* TODO: Change to 8-bit? */
+extern volatile uint8_t send_data_hk[];
 static uint32_t nvm_addr=0;
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
@@ -51,7 +51,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 
 
 static int voltage_check(uint8_t cmd[28]){
-	char data[4] = "";
+	uint8_t data[4] = "";
 	double val = 0;
 	/* Check for which command that came to decide on array location */
 	if((cmd[0]=='H' && cmd[1]=='S' && cmd[2]=='T')) {
@@ -74,16 +74,17 @@ static int voltage_check(uint8_t cmd[28]){
 }
 
 static void start_hvps(void){
-	uint8_t ram[28] = "HST";
-	mem_ram_hvps_read(ram);
-	if(voltage_check(ram)==-1)
+	uint8_t nvm[28] = "HST";
+	mem_nvm_read(memadr, &nvm[3], 24);
+	mem_ram_hvps_write(&nvm[3]);
+	if(voltage_check(nvm)==-1)
 		return;
-	getarray(send, ram); /*get required string from function */
+	getarray(send, nvm); /*get required string from function */
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-int hvps_set_voltage(char* command){
+int hvps_set_voltage(uint8_t* command){
 	uint8_t HST[30]="HST"; /* Standard input, ~44.5V, no temp correction */
 	for (int j=0; j<24; j++){
 		HST[j]=memadr[j];
@@ -100,21 +101,21 @@ int hvps_set_voltage(char* command){
 }
 
 void hvps_turn_on(void){
-	char HON[] = "HON";
+	uint8_t HON[] = "HON";
 	getarray(send, HON);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
 void hvps_turn_off(void){
-	char HOF[] = "HOF";
+	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
 void hvps_save_voltage(void){
-	char HRT[]="HRT";
+	uint8_t HRT[]="HRT";
 	getarray(send, HRT);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
@@ -125,9 +126,8 @@ void hvps_save_voltage(void){
 void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
-	nvm_status_t status;
 
-	static unsigned char output[30]="";
+	static uint8_t output[30]="";
 
 	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
 	if(rx_buff[rx_size-1] != 0x0d){
@@ -135,20 +135,10 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	}
 	else {
 		strncat(output, rx_buff, rx_size);
-		uint32_t output_len= strlen(output);
 		if(output[1]=='h' && output[2]=='g')
 			strcpy(send_data_hk,output);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
-			status = NVM_unlock(nvm_addr, output_len);
-			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write(nvm_addr, output[3], output_len, NVM_LOCK_PAGE);
-				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
-					strcpy(send_data_hk, "HVPS SAVED"); /* TODO: Change to strcat when memory clear has been implemented */
-				else
-					strcpy(send_data_hk, "HVPS SAVE FAIL");
-			}
-			else
-				strcpy(send_data_hk, "HVPS UNLOCK FAIL");
+			mem_nvm_hvps_write(output[4]);
 		}
 		memset(output, '\0', sizeof(output));
 	}
@@ -199,7 +189,7 @@ void hvps_init(uint32_t memory){
 	 * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
 	 */
 
-	memadr= (char*)memory;
+	memadr= (uint32_t*)memory;
 	nvm_addr = memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);

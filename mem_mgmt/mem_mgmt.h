@@ -39,4 +39,12 @@ void mem_ram_hvps_read(char *data);
  */
 void mem_nvm_read(uint32_t *addr, uint8_t *data, uint32_t length);
 
+/* mem_nvm_hvps_write
+ * Function for writing data to NVM for HVPS.
+ * Input: 	uint8_t pointer to where data is to be transferred from
+ * Return:  int with value 0 if passed, -1 if any failure.
+ */
+
+int mem_nvm_hvps_write(uint8_t* data);
+
 #endif /* MEM_MGMT_MEM_MGMT_H_ */

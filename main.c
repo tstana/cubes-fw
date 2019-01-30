@@ -4,7 +4,7 @@
  *  Created on: 25 okt. 2018
  *  Author: Marcus Persson
  *  V1.0
- *  FPGA MIST I2C communication code
+ *  FPGA firmware code
  */
 
 #include "msp/msp_i2c.h"
@@ -18,6 +18,7 @@
 
 int main(void){
 	while(mem_ram_hvps_write("0000000000000000746900C8") != 0); /* Writing standard HVPS value to ram for testing */
+	msp_read_seqflags();
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	while(1){

@@ -23,7 +23,7 @@ void hvps_init(uint32_t memory);
  * Output: Return -1 for fail, 0 for pass.
  */
 
-int hvps_set_voltage(char* command);
+int hvps_set_voltage(uint8_t* command);
 
 /*
  * hvps_turn_on()

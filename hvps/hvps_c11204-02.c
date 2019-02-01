@@ -24,7 +24,6 @@ static uint8_t chkstr[2];
 static uint8_t send[40];
 static uint32_t *memadr; /* TODO: Change to 8-bit? */
 extern volatile uint8_t send_data_hk[];
-static uint32_t nvm_addr=0;
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -75,8 +74,7 @@ static int voltage_check(uint8_t cmd[28]){
 
 static void start_hvps(void){
 	uint8_t nvm[28] = "HST";
-	mem_nvm_read(memadr, &nvm[3], 24);
-	mem_ram_hvps_write(&nvm[3]);
+	mem_read(NVM_HVPS, &nvm[3]);
 	if(voltage_check(nvm)==-1)
 		return;
 	getarray(send, nvm); /*get required string from function */
@@ -138,7 +136,7 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 		if(output[1]=='h' && output[2]=='g')
 			strcpy(send_data_hk,output);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
-			mem_nvm_hvps_write(output[4]);
+			mem_nvm_write(NVM_HVPS, output[4]);
 		}
 		memset(output, '\0', sizeof(output));
 	}
@@ -190,7 +188,6 @@ void hvps_init(uint32_t memory){
 	 */
 
 	memadr= (uint32_t*)memory;
-	nvm_addr = memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();

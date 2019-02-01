@@ -10,7 +10,7 @@
 
 static unsigned char *send_data;
 static unsigned char send_data_payload[30] = "This is data, important data";
-extern volatile unsigned char send_data_hk[500] = "test data";
+extern volatile unsigned char send_data_hk[400] = "test data";
 
 extern volatile unsigned char recv_data[100] = "";
 static unsigned long recv_maxlen = 100;

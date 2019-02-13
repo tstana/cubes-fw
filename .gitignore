@@ -1,4 +1,8 @@
 Debug/
 .settings/
 .metadata/
+README.txt
+*.xml
+*.cxf
+filelists/
 

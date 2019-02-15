@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include "../cubes_hw_platform.h"
 
-#define CUBES_TIME_REG		(*(uint32_t *)CUBES_TIMEKEEPING)
+#define CUBES_TIME_REG		(*(volatile uint32_t *)CUBES_TIMEKEEPING)
 
 void 		cubes_set_time(uint32_t newtime);
 uint32_t 	cubes_get_time(void);

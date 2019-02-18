@@ -65,5 +65,5 @@ uint32_t citiroc_get_rocsr()
 uint32_t citiroc_get_hcr(uint32_t channel_num)
 {
 	/* each channel is at "channel_num" offset from CH0HCR in memory...*/
-	return (CITIROC->CH0HCR + channel_num);
+	return *(&(CITIROC->CH0HCR) + channel_num);
 }

@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
+#include "firmware/drivers/citiroc/citiroc.h"
 
 #include "hvps/hvps_c11204-02.h"
 #include "msp/msp_exp.h"

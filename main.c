@@ -20,48 +20,33 @@
 #define SLAVE_ADDR 0x35
 #define nvm_mem_addr 0x60000000
 
+__attribute__((__interrupt__)) void HardFault_Handler(void){
+	  __asm volatile (
+	    " movs r0,#4       \n"
+	    " movs r1, lr      \n"
+	    " tst r0, r1       \n"
+	    " beq _MSP         \n"
+	    " mrs r0, psp      \n"
+	    " b _HALT          \n"
+	  "_MSP:               \n"
+	    " mrs r0, msp      \n"
+	  "_HALT:              \n"
+	    " ldr r1,[r0,#20]  \n"
+	    " bkpt #0          \n"
+	  );
+}
+
 int main(void){
 	uint32_t current_time;
 	uint32_t rocsr;
 	uint32_t daqrdy;
 	uint32_t hcr[32];
 	uint32_t i;
+	uint8_t data[500];
 
-	/*
-	 * Test code: set various values of time and check that they are set.
-	 *
-	 * At each breakpoint, _mentally_ count the number of seconds passed between
-	 * the time when the breakpoint hits and when you click "Run" in the Debug
-	 * window. When the next breakpoint hits, check that the current_time value
-	 * is according to the mental count. Then repeat.
-	 */
-	current_time = cubes_get_time();
-	cubes_set_time(0);
-	current_time = cubes_get_time();
-	cubes_set_time(60);
-	current_time = cubes_get_time();
-	cubes_set_time((uint32_t)0x0fffffff);
-	current_time = cubes_get_time();
+	/* Test code to read from Histogram location */
 
-	/*
-	 * Test ideas for CITIROC_INTF
-	 *
-	 * 1. Exercise the configurable bits in the ROCSR
-	 * 2. Read all HCR registers
-	 *
-	 * SUGGESTION: Set breakpoints after calls to "get_csr()" and on the
-	 * "while(1)" below.
-	 */
-	rocsr = citiroc_get_rocsr();
-	citiroc_daq_set_dur(151);		// <--- BREAK here
-	citiroc_daq_start();
-	rocsr = citiroc_get_rocsr();
-	citiroc_daq_stop();				// <--- BREAK here
-	daqrdy = citiroc_daq_is_rdy();
-
-	for (i = 0; i < 32; i++) {
-		hcr[i] = citiroc_get_hcr(i);
-	}
+	mem_read(0x50030000, &data);
 
 	 /* Skip the rest for now */
 	while (1)						// <--- BREAK here, check "daqrdy" and "hcr[x]"

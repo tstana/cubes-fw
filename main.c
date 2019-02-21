@@ -45,8 +45,9 @@ int main(void){
 	uint8_t data[500];
 
 	/* Test code to read from Histogram location */
+	/* First argument is memory adress, the second is a pointer to where the data is to be transferred. */
 
-	mem_read(0x50030000, &data);
+	mem_read(RAM_HISTO, &data);
 
 	 /* Skip the rest for now */
 	while (1)						// <--- BREAK here, check "daqrdy" and "hcr[x]"

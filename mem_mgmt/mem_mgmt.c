@@ -86,10 +86,11 @@ void mem_read(uint32_t modul, uint8_t *data){
 		length=SEQFLAG_LEN;
 		addr=(uint8_t *)(nvm_addr+seqflag_offset);
 		break;
+	case RAM_HISTO:
+		length = 500;
+		addr=(uint8_t *)(histo_addr);
 	default:
-		addr = (uint8_t *) modul;
-		length=500;
-		//return; /* If the statement isn't found, return without reading */
+		return; /* If the statement isn't found, return without reading */
 	}
 	for(int i=0; i<length; i++){
 		data[i] = addr[i]; /* write data from memory to specified array */

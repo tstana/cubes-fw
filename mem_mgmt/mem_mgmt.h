@@ -19,6 +19,7 @@
 #define CITIROC_LEN		128u
 #define HVPS_LEN		24u
 #define SEQFLAG_LEN		sizeof(msp_seqflags_t)
+#define HISTO_LEN
 
 #define ram_addr 0x20000000u
 #define nvm_addr 0x60000000u

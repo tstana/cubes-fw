@@ -42,10 +42,12 @@ int main(void){
 	uint32_t daqrdy;
 	uint32_t hcr[32];
 	uint32_t i;
-	uint8_t data[500];
+	uint8_t data[HISTO_LEN];
 
 	/* Test code to read from Histogram location */
-	/* First argument is memory adress, the second is a pointer to where the data is to be transferred. */
+	/* First argument is memory adress, the second is a pointer to where the data is to be transferred.
+	 * Length of array is defined in mem_mgmt.h
+	 * */
 
 	mem_read(RAM_HISTO, &data);
 

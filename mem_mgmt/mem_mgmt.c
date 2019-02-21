@@ -87,7 +87,7 @@ void mem_read(uint32_t modul, uint8_t *data){
 		addr=(uint8_t *)(nvm_addr+seqflag_offset);
 		break;
 	case RAM_HISTO:
-		length = 500;
+		length = HISTO_LEN;
 		addr=(uint8_t *)(histo_addr);
 	default:
 		return; /* If the statement isn't found, return without reading */

@@ -36,6 +36,14 @@ __attribute__((__interrupt__)) void HardFault_Handler(void){
 	  );
 }
 
+void delay(int ms)
+{
+	int d = ms * SystemCoreClock / 128;
+
+	while (d-- > 0)
+		;
+}
+
 int main(void){
 	uint32_t current_time;
 	uint32_t rocsr;

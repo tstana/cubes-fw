@@ -2,7 +2,7 @@
 #define cubes_HW_PLATFORM_H_
 /*****************************************************************************
 *
-*Created by Microsemi SmartDesign  Wed Feb 13 10:06:30 2019
+*Created by Microsemi SmartDesign  Fri Feb 22 13:11:31 2019
 *
 *Memory map specification for peripherals in cubes
 */
@@ -12,7 +12,8 @@
 * Master(s) for this subsystem: CM3 
 *---------------------------------------------------------------------------*/
 #define CUBES_TIMEKEEPING               0x50000000U
-#define CITIROC_INTF                    0x50001000U
+#define CITIROC_INTF                    0x50010000U
+#define HISTO_RAM                       0x50030000U
 
 
 #endif /* cubes_HW_PLATFORM_H_*/

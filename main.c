@@ -52,6 +52,41 @@ int main(void){
 	uint32_t i;
 	uint8_t data[HISTO_LEN];
 
+	/*
+	 * Test code for histo_ram and histo_ram_ctrl
+	 *
+	 * 1. Old checks, to make sure that the CSR interface still works...
+	 */
+	rocsr = citiroc_get_rocsr();
+	citiroc_daq_set_dur(151);               // <--- BREAK here
+	citiroc_daq_start();
+	rocsr = citiroc_get_rocsr();
+	citiroc_daq_stop();                     // <--- BREAK here
+	daqrdy = citiroc_daq_is_rdy();
+
+	for (i = 0; i < 32; i++) {
+		hcr[i] = citiroc_get_hcr(i);
+	}
+
+	/* 2. Setting ROCSR.NEWCFG to '1' initiates the histo_ram memory loading
+	 * process.
+	 *
+	 * NB: Without setting it to '1', the histo_ram will contain
+	 * "garbage" data.
+	 */
+	CITIROC->ROCSR |= (1 << NEWSC); 		// <--- BREAK here, check CHxHCR
+
+	 /* 3. NEWCFG should then reset on read, so check that it is '0'; */
+	citiroc_get_rocsr(); 					// <--- BREAK here
+
+	 /*
+	  * 4. Wait for ROCSR.DAQRDY to be set ('1') before attempting a read.
+	  * Use a 100-ms or longer delay in case it stalls...
+	  * */
+	while (!citiroc_daq_is_rdy())
+		;
+
+
 	/* Test code to read from Histogram location */
 	/* First argument is memory adress, the second is a pointer to where the data is to be transferred.
 	 * Length of array is defined in mem_mgmt.h

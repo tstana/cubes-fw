@@ -8,9 +8,9 @@
 #define SLAVE_SER_ADDR_0   0x35
 
 #include "msp_i2c_int.h"
-unsigned char i2c_tx_buffer[500] = "";
-unsigned char i2c_rx_buffer[500] = "";
-unsigned int slave_buffer_size = 500;
+unsigned char i2c_tx_buffer[550] = "";
+unsigned char i2c_rx_buffer[550] = "";
+unsigned int slave_buffer_size = 550;
 
 mss_i2c_slave_handler_ret_t slave_write_handler(mss_i2c_instance_t * this_i2c,uint8_t * p_rx_data,uint16_t rx_size){
 	msp_recv_callback(p_rx_data, rx_size);

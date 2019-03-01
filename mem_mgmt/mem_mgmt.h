@@ -19,7 +19,7 @@
 #define CITIROC_LEN		128u
 #define HVPS_LEN		24u
 #define SEQFLAG_LEN		sizeof(msp_seqflags_t)
-#define HISTO_LEN		24832
+#define HISTO_LEN		28926
 
 #define ram_addr 0x20000000u
 #define nvm_addr 0x60000000u
@@ -45,7 +45,7 @@ void mem_ram_write(uint32_t modul, uint8_t *data);
  *			uint8_t pointer to where data is to be transferred
  * Return: None
  */
-void mem_read(uint32_t modul, uint8_t *data);
+void mem_read(uint32_t modul, uint32_t **data);
 
 /* mem_nvm_write
  * Function for writing data to NVM.

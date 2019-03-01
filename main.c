@@ -20,7 +20,7 @@
 #define SLAVE_ADDR 0x35
 #define nvm_mem_addr 0x60000000
 
-__attribute__((__interrupt__)) void HardFault_Handler(void){
+/*__attribute__((__interrupt__)) void HardFault_Handler(void){
 	  __asm volatile (
 	    " movs r0,#4       \n"
 	    " movs r1, lr      \n"
@@ -34,30 +34,30 @@ __attribute__((__interrupt__)) void HardFault_Handler(void){
 	    " ldr r1,[r0,#20]  \n"
 	    " bkpt #0          \n"
 	  );
-}
+}*/
 
-void delay(int ms)
+/*void delay(int ms)
 {
 	int d = ms * SystemCoreClock / 128;
 
 	while (d-- > 0)
 		;
-}
+}*/
 
 int main(void){
-	uint32_t current_time;
+	/*uint32_t current_time;
 	uint32_t rocsr;
 	uint32_t daqrdy;
 	uint32_t hcr[32];
 	uint32_t i;
-	uint8_t data[HISTO_LEN];
+	uint8_t data[HISTO_LEN]; */
 
 	/*
 	 * Test code for histo_ram and histo_ram_ctrl
 	 *
 	 * 1. Old checks, to make sure that the CSR interface still works...
 	 */
-	rocsr = citiroc_get_rocsr();
+/*	rocsr = citiroc_get_rocsr();
 	citiroc_daq_set_dur(151);               // <--- BREAK here
 	citiroc_daq_start();
 	rocsr = citiroc_get_rocsr();
@@ -66,7 +66,7 @@ int main(void){
 
 	for (i = 0; i < 32; i++) {
 		hcr[i] = citiroc_get_hcr(i);
-	}
+	}*/
 
 	/* 2. Setting ROCSR.NEWCFG to '1' initiates the histo_ram memory loading
 	 * process.
@@ -92,16 +92,15 @@ int main(void){
 	 * Length of array is defined in mem_mgmt.h
 	 * */
 
-	mem_read(RAM_HISTO, &data);
 
 	 /* Skip the rest for now */
-	while (1)						// <--- BREAK here, check "daqrdy" and "hcr[x]"
+	/*while (1)						// <--- BREAK here, check "daqrdy" and "hcr[x]"
 		;
 
-	mem_ram_write(RAM_HVPS, "0000000000000000746900C8"); /* Writing standard HVPS value to ram for testing */
-	msp_read_seqflags();
+	mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
+	//msp_read_seqflags();
 	init_i2c(SLAVE_ADDR);
-	hvps_init(nvm_mem_addr);
+	//hvps_init(nvm_mem_addr);
 	while(1){
 		if(has_send != 0){
 			switch(has_send){
@@ -131,7 +130,7 @@ int main(void){
 		else if(has_syscommand != 0){
 			switch(has_syscommand){
 			case MSP_OP_ACTIVE:
-				hvps_turn_on();
+				//hvps_turn_on();
 				break;
 			case MSP_OP_SLEEP:
 				hvps_turn_off();

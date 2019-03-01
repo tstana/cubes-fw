@@ -7,9 +7,10 @@
 
 #include "msp_i2c.h"
 #include "../msp/msp_exp.h"
+#include "../mem_mgmt/mem_mgmt.h"
 
-static unsigned char *send_data;
-static unsigned char send_data_payload[30] = "This is data, important data";
+static uint8_t *send_data;
+static unsigned char send_data_payload[HISTO_LEN];
 extern volatile unsigned char send_data_hk[400] = "test data";
 
 extern volatile unsigned char recv_data[100] = "";
@@ -29,12 +30,20 @@ extern unsigned int has_syscommand = 0;
 /* Prototype in msp_exp_handler.h */
 
 void msp_expsend_start(unsigned char opcode, unsigned long *len){
+	uint32_t* long_data;
 	if(opcode == MSP_OP_REQ_PAYLOAD){
-		send_data = send_data_payload; /* TODO:Change to payload data location */
-		*len = strlen(send_data_payload);
+		mem_read(RAM_HISTO, &long_data);
+		*len = HISTO_LEN;
+		for(int i=0; i<HISTO_LEN/4; i++){
+			send_data_payload[i*4+0] = long_data[i] & 0xFF;
+			send_data_payload[i*4+1] = long_data[i]>>8 & 0xFF;
+			send_data_payload[i*4+2] = long_data[i]>>16 & 0xFF;
+			send_data_payload[i*4+3] = long_data[i]>>24 & 0xFF;
+		}
+		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		send_data = (char*)send_data_hk; /* TODO:Change to housekeeping data location */
+		send_data = (uint8_t*)send_data_hk; /* TODO:Change to housekeeping data location */
 		*len = strlen(send_data_hk);
 	}
 	else

@@ -41,22 +41,22 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 	switch(modul){
 		case NVM_HVPS:
 		length=HVPS_LEN;
-		*addr=(uint8_t *)(nvm_addr+hvps_offset);
+		addr=(uint8_t *)(nvm_addr+hvps_offset);
 		break;
 	case NVM_CITIROC:
 		length=CITIROC_LEN;
-		*addr=(uint8_t *)(nvm_addr+citiroc_offset);
+		addr=(uint8_t *)(nvm_addr+citiroc_offset);
 		break;
 	case NVM_SEQFLAG:
 		length=SEQFLAG_LEN;
-		*addr=(uint8_t *)(nvm_addr+seqflag_offset);
+		addr=(uint8_t *)(nvm_addr+seqflag_offset);
 		break;
 	default:
 		return -1;
 	}
-	nvm_status_t status = NVM_unlock(addr, length);
+	nvm_status_t status = NVM_unlock((uint32_t)addr, length);
 			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write(addr, data, length, NVM_LOCK_PAGE);
+				status=NVM_write((uint32_t)addr, data, length, NVM_LOCK_PAGE);
 				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
 					return 0;
 				else
@@ -66,33 +66,32 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 				return -1;
 }
 
-void mem_read(uint32_t modul, uint8_t *data){
+void mem_read(uint32_t modul, uint32_t **data){
 	uint32_t length=0;
-	uint8_t *addr = (uint8_t *)0x60000000;
+	uint32_t *addr;
 	switch(modul){ /* Set length and address pointer to correct module through switch */
-	case NVM_HVPS:
-		length=HVPS_LEN;
-		addr=(uint8_t *)(nvm_addr+hvps_offset);
-		break;
-	case NVM_CITIROC:
-		length=CITIROC_LEN;
-		addr=(uint8_t *)(nvm_addr+citiroc_offset);
-		break;
-	case RAM_HVPS:
-		length=HVPS_LEN;
-		addr=(uint8_t *)(ram_addr+hvps_offset);
-		break;
-	case NVM_SEQFLAG:
-		length=SEQFLAG_LEN;
-		addr=(uint8_t *)(nvm_addr+seqflag_offset);
-		break;
-	case RAM_HISTO:
-		length = HISTO_LEN;
-		addr=(uint8_t *)(histo_addr);
-	default:
-		return; /* If the statement isn't found, return without reading */
+		case NVM_HVPS:
+			length=HVPS_LEN;
+			addr=(uint32_t *)(nvm_addr+hvps_offset);
+			break;
+		case NVM_CITIROC:
+			length=CITIROC_LEN;
+			addr=(uint32_t *)(nvm_addr+citiroc_offset);
+			break;
+		case RAM_HVPS:
+			length=HVPS_LEN;
+			addr=(uint32_t *)(ram_addr+hvps_offset);
+			break;
+		case NVM_SEQFLAG:
+			length=SEQFLAG_LEN;
+			addr=(uint32_t *)(nvm_addr+seqflag_offset);
+			break;
+		case RAM_HISTO:
+			length = HISTO_LEN;
+			addr=(uint32_t *)(histo_addr);
+			break;
+		default:
+			return; /* If the statement isn't found, return without reading */
 	}
-	for(int i=0; i<length; i++){
-		data[i] = addr[i]; /* write data from memory to specified array */
-	}
+	*data  = addr;
 }

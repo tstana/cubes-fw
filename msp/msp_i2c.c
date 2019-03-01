@@ -12,9 +12,9 @@
 #include "msp_i2c.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "../mem_mgmt/mem_mgmt.h"
-uint8_t i2c_tx_buffer[500] = "";
-uint8_t i2c_rx_buffer[500] = "";
-uint32_t slave_buffer_size = 500;
+uint8_t i2c_tx_buffer[550] = "";
+uint8_t i2c_rx_buffer[550] = "";
+uint32_t slave_buffer_size = 550;
 
 mss_i2c_slave_handler_ret_t slave_write_handler(mss_i2c_instance_t * this_i2c,uint8_t * p_rx_data,uint16_t rx_size){
 	msp_recv_callback(p_rx_data, rx_size);
@@ -49,6 +49,6 @@ int msp_save_seqflags(void){
 void msp_read_seqflags(void){
 	msp_seqflags_t seqflags;
 	NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
-	mem_read(NVM_SEQFLAG, (uint8_t*) &seqflags);
+	mem_read(NVM_SEQFLAG, &seqflags);
 	msp_exp_state_initialize(seqflags);
 }

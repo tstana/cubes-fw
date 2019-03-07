@@ -35,10 +35,10 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		mem_read(RAM_HISTO, &long_data);
 		*len = HISTO_LEN;
 		for(int i=0; i<HISTO_LEN/4; i++){
-			send_data_payload[i*4+0] = long_data[i] & 0xFF;
-			send_data_payload[i*4+1] = long_data[i]>>8 & 0xFF;
-			send_data_payload[i*4+2] = long_data[i]>>16 & 0xFF;
-			send_data_payload[i*4+3] = long_data[i]>>24 & 0xFF;
+			send_data_payload[i*4+3] = long_data[i] & 0xFF;
+			send_data_payload[i*4+2] = long_data[i]>>8 & 0xFF;
+			send_data_payload[i*4+1] = long_data[i]>>16 & 0xFF;
+			send_data_payload[i*4+0] = long_data[i]>>24 & 0xFF;
 		}
 		send_data = (uint8_t*) send_data_payload;
 	}

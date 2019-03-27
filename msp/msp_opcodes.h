@@ -36,6 +36,7 @@
 
 #define CUBES_OP_HVPS_CONF 	0x71
 #define CUBES_OP_CITI_CONF	0x72
+#define CUBES_OP_PROB_CONF  0x73
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

@@ -49,8 +49,9 @@ int main(void){
 	uint32_t rocsr;
 	uint32_t daqrdy;
 	uint32_t hcr[32];
-	uint32_t i;
-	uint8_t data[HISTO_LEN]; */
+	uint32_t i; */
+	uint32_t* data;
+	uint8_t data2[100];
 
 	/*
 	 * Test code for histo_ram and histo_ram_ctrl
@@ -91,8 +92,10 @@ int main(void){
 	/* First argument is memory adress, the second is a pointer to where the data is to be transferred.
 	 * Length of array is defined in mem_mgmt.h
 	 * */
-
-
+	data = (uint32_t*) 0x50001084;
+	for (int i = 0; i<100; i++){
+		data[i] = i;
+	}
 	 /* Skip the rest for now */
 	/*while (1)						// <--- BREAK here, check "daqrdy" and "hcr[x]"
 		;
@@ -123,7 +126,12 @@ int main(void){
 					hvps_set_voltage(recv_data);
 					break;
 				case CUBES_OP_CITI_CONF:
+					mem_ram_write(RAM_CITIROC, recv_data);
+					citiroc_send_slow_control();
 					break;
+				case CUBES_OP_PROB_CONF:
+					mem_ram_write(RAM_CITIROC, recv_data);
+					citiroc_send_probes();
 			}
 			has_recv=0;
 		}

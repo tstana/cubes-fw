@@ -13,8 +13,8 @@ static uint8_t *send_data;
 static unsigned char send_data_payload[HISTO_LEN];
 extern volatile unsigned char send_data_hk[400] = "test data";
 
-extern volatile unsigned char recv_data[100] = "";
-static unsigned long recv_maxlen = 100;
+extern volatile unsigned char recv_data[2000] = "";
+static unsigned long recv_maxlen = 2000;
 static unsigned long recv_length;
 extern volatile unsigned char time_data[100] = "";
 

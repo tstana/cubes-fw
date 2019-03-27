@@ -17,7 +17,9 @@
 #define RAM_CITIROC		0x11u
 #define RAM_HVPS		0x12u
 #define RAM_HISTO		0x13u
+#define RAM_CITI_PROB	0x14u
 #define CITIROC_LEN		143u
+#define PROBE_LEN		32u
 #define HVPS_LEN		24u
 #define SEQFLAG_LEN		sizeof(msp_seqflags_t)
 #define HISTO_LEN		24832

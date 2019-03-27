@@ -19,11 +19,11 @@ void mem_ram_write(uint32_t modul, uint8_t *data){
 	switch(modul){
 	case RAM_HVPS:
 		length=HVPS_LEN;
-		addr=(uint8_t *)(ram_addr+hvps_offset);
+		addr=(uint8_t *)(CFG_RAM);
 		break;
 	case RAM_CITIROC:
 		length=CITIROC_LEN;
-		addr=(uint8_t *)(ram_addr+citiroc_offset);
+		addr=(uint8_t *)(CFG_RAM + 0x0C);	// TODO: Fix blunt offset assignment
 		break;
 	default:
 		addr = (uint8_t *) modul;

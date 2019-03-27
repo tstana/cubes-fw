@@ -37,7 +37,7 @@ void citiroc_init()
 void citiroc_daq_set_dur(uint8_t duration)
 {
 	/* Set DAQDUR bits to input parameter */
-	CITIROC->ROCSR |= (duration << 1);
+	CITIROC->ROCSR |= (duration << DAQDUR);
 }
 
 void citiroc_daq_start()
@@ -66,4 +66,21 @@ uint32_t citiroc_get_hcr(uint32_t channel_num)
 {
 	/* each channel is at "channel_num" offset from CH0HCR in memory...*/
 	return *(&(CITIROC->CH0HCR) + channel_num);
+}
+
+void citiroc_send_slow_control()
+{
+	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
+	CITIROC->ROCSR |= (1 << NEWSC);
+	while (CITIROC->ROCSR & (1 << SCBUSY))
+		;
+}
+
+void citiroc_send_probes()
+{
+	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
+	CITIROC->ROCSR |= (1 << ASICPRBEN);
+	while (CITIROC->ROCSR & (1 << SCBUSY))
+		;
+	CITIROC->ROCSR &= ~(1 << ASICPRBEN);
 }

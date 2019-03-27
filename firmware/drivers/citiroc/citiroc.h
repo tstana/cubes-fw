@@ -36,7 +36,7 @@
 /** Citiroc CSR struct definition */
 struct citiroc_csr {
 	uint32_t	ROCSR;
-
+	uint32_t	TEMPR;
 	uint32_t	CH0HCR;
 	uint32_t	CH1HCR;
 	uint32_t	CH2HCR;
@@ -75,18 +75,21 @@ typedef struct citiroc_csr citiroc_csr_t;
 
 /** Citiroc CSR bit fields definition */
 #define NEWSC			( 0)
-#define DAQDUR			( 1)
-#define DAQSTART		( 9)
-#define DAQSTOP			(10)
-#define SCERR			(16)
+#define ASICPRBEN		( 1)
+#define DAQZEROSUP		( 2)
+#define DAQDUR			( 3)
+#define DAQSTART		(11)
+#define DAQSTOP			(12)
+#define FORCETRIG		(13)
+#define SCBUSY			(16)
 #define DAQRDY			(17)
-#define HISTO_RAM_FULL	( 18)
+#define HISTOFULL		(18)
 
 /** Base address and register definitions*/
 #define CITIROC_CSR_BASE	CITIROC_INTF
 
-#define CITIROC_CSR			((citiroc_csr_t *) CITIROC_INTF)	// formal
-#define CITIROC				CITIROC_CSR							// convenient
+#define CITIROC_CSR			((citiroc_csr_t *) CITIROC_CSR_BASE)	// formal
+#define CITIROC				CITIROC_CSR								// convenient
 
 /** Function definitions */
 /* TODO: return something?
@@ -103,5 +106,8 @@ void		citiroc_daq_stop();
 uint32_t	citiroc_daq_is_rdy();
 
 uint32_t	citiroc_get_hcr(uint32_t channel_num);
+
+void		citiroc_send_slow_control();
+void		citiroc_send_probes();
 
 #endif // _CITIROC_H_

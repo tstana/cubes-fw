@@ -33,18 +33,16 @@ void mem_ram_write(uint32_t modul, uint8_t *data){
 		length=8;
 		//return;
 	}
-	/*for(int i=0; i<length/4; i++){
-		addr[i]<<24 = data[i+0] & 0xFF;
+	for(int i=0; i<length/4; i++){
+		/*addr[i]<<24 = data[i+0] & 0xFF;
 		addr[i]<<16 = data[i+1] & 0xFF;
 		addr[i]<<8  = data[i+2] & 0xFF;
 		addr[i]<<0  = data[i+3] & 0xFF;*/
-		  unsigned int res = 0;
-		  unsigned char i;
-		  for (i = 0; i < 4; i++) {
-		    addr[i] = addr[i] << 8;
-		    addr[i] += *(data + i);
-		  }
-
+		for (unsigned char j = 0; j < 4; j++) {
+			addr[i] = addr[i] << 8;
+			addr[i] += data[(i*4)+j];
+		}
+	}
 }
 
 int mem_nvm_write(uint32_t modul, uint8_t *data){

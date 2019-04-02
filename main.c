@@ -52,11 +52,11 @@ int main(void){
 					break;
 				case CUBES_OP_CITI_CONF:
 					mem_ram_write(RAM_CITIROC, recv_data);
-					//citiroc_send_slow_control();
+					citiroc_send_slow_control();
 					break;
 				case CUBES_OP_PROB_CONF:
 					mem_ram_write(RAM_CITIROC, recv_data);
-					//citiroc_send_probes();
+					citiroc_send_probes();
 			}
 			has_recv=0;
 		}

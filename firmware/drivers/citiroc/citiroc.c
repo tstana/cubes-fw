@@ -80,6 +80,7 @@ void citiroc_send_probes()
 {
 	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
 	CITIROC->ROCSR |= (1 << ASICPRBEN);
+	CITIROC->ROCSR |= (1 << NEWSC);
 	while (CITIROC->ROCSR & (1 << SCBUSY))
 		;
 	CITIROC->ROCSR &= ~(1 << ASICPRBEN);

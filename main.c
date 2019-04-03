@@ -51,11 +51,11 @@ int main(void){
 					hvps_set_voltage(recv_data);
 					break;
 				case CUBES_OP_CITI_CONF:
-					mem_ram_write(RAM_CITIROC, recv_data);
+					mem_ram_write(RAM_CITI_CONF, recv_data);
 					citiroc_send_slow_control();
 					break;
 				case CUBES_OP_PROB_CONF:
-					mem_ram_write(RAM_CITIROC, recv_data);
+					mem_ram_write(RAM_CITI_PROBE, recv_data);
 					citiroc_send_probes();
 			}
 			has_recv=0;

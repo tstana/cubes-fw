@@ -21,27 +21,24 @@ void mem_ram_write(uint32_t modul, uint8_t *data){
 		length=HVPS_LEN;
 		addr=(uint32_t *)(CFG_RAM);
 		break;
-	case RAM_CITIROC:
+	case RAM_CITI_CONF:
 		length=CITIROC_LEN;
-		addr=(uint32_t *)(CFG_RAM + 0x0C);	// TODO: Fix blunt offset assignment
+		addr=(uint32_t *)(CFG_RAM + CITIROC_OFS);
 		break;
-	case RAM_CITI_PROB:
+	case RAM_CITI_PROBE:
 		length = PROBE_LEN;
-		addr=(uint32_t *)(CFG_RAM + 0x0C);
+		addr=(uint32_t *)(CFG_RAM + PROBE_OFS);
+		break;
 	default:
 		addr = (uint32_t *) modul;
 		length=8;
 		//return;
 	}
-	for(int i=0; i<length/4; i++){
-		/*addr[i]<<24 = data[i+0] & 0xFF;
-		addr[i]<<16 = data[i+1] & 0xFF;
-		addr[i]<<8  = data[i+2] & 0xFF;
-		addr[i]<<0  = data[i+3] & 0xFF;*/
-		for (unsigned char j = 0; j < 4; j++) {
-			addr[i] = addr[i] << 8;
-			addr[i] += data[(i*4)+j];
-		}
+	for(int i=0; i < length; i += 4){
+		addr[i] = (data[i+3] << 24) |
+				  (data[i+2] << 16) |
+				  (data[i+1] <<  8) |
+				  data[i];
 	}
 }
 
@@ -49,7 +46,7 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 	uint32_t length=0;
 	uint32_t *addr = (uint32_t *)0x00000000;
 	switch(modul){
-		case NVM_HVPS:
+	case NVM_HVPS:
 		length=HVPS_LEN;
 		addr=(uint32_t *)(nvm_addr+hvps_offset);
 		break;

@@ -14,13 +14,18 @@
 #define NVM_CITIROC 	0x01u
 #define NVM_HVPS 		0x02u
 #define NVM_SEQFLAG		0x03u
-#define RAM_CITIROC		0x11u
+#define RAM_CITI_CONF	0x11u
 #define RAM_HVPS		0x12u
 #define RAM_HISTO		0x13u
-#define RAM_CITI_PROB	0x14u
-#define CITIROC_LEN		143u
-#define PROBE_LEN		32u
+#define RAM_CITI_PROBE	0x14u
+
+#define HVPS_OFS		0x00
 #define HVPS_LEN		24u
+#define CITIROC_OFS		0x10
+#define CITIROC_LEN		143u
+#define PROBE_OFS		0xA0
+#define PROBE_LEN		32u
+
 #define SEQFLAG_LEN		sizeof(msp_seqflags_t)
 #define HISTO_LEN		24832
 

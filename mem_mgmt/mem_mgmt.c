@@ -34,11 +34,12 @@ void mem_ram_write(uint32_t modul, uint8_t *data){
 		length=8;
 		//return;
 	}
-	for(int i=0; i < length; i += 4){
-		addr[i] = (data[i+3] << 24) |
-				  (data[i+2] << 16) |
-				  (data[i+1] <<  8) |
-				  data[i];
+	for(int i=0; i < length; i += 4) {
+		*addr = (data[i+3] << 24) |
+				(data[i+2] << 16) |
+				(data[i+1] <<  8) |
+				(data[i]);
+		addr += 1;
 	}
 }
 

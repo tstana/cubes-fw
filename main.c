@@ -25,7 +25,7 @@ int main(void){
 
 
 	/*mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
-	//msp_read_seqflags();
+	msp_read_seqflags();
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	hvps_turn_off();

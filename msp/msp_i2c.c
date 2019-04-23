@@ -17,7 +17,7 @@ uint8_t i2c_rx_buffer[550] = "";
 uint32_t slave_buffer_size = 550;
 
 mss_i2c_slave_handler_ret_t slave_write_handler(mss_i2c_instance_t * this_i2c,uint8_t * p_rx_data,uint16_t rx_size){
-	msp_recv_callback(p_rx_data, rx_size);
+	code = msp_recv_callback(p_rx_data, rx_size);
 	msp_send_callback((unsigned char *)i2c_tx_buffer, (unsigned long *)&slave_buffer_size);
 	return MSS_I2C_REENABLE_SLAVE_RX;
 }

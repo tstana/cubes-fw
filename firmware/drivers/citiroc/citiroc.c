@@ -48,14 +48,14 @@ uint8_t citiroc_daq_get_dur()
 
 void citiroc_daq_start()
 {
+	/* DAQSTART bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
 	CITIROC->ROCSR |= (1 << DAQSTART);
 }
 
 void citiroc_daq_stop()
 {
+	/* DAQSTOP bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
 	CITIROC->ROCSR |= (1 << DAQSTOP);
-	/* TODO: Is this really necessary: */
-	CITIROC->ROCSR &= ~(1 << DAQSTART);
 }
 
 uint32_t citiroc_daq_is_rdy()

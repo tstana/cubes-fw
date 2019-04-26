@@ -26,6 +26,11 @@ int main(void){
 
 	/*mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
 	//msp_read_seqflags();
+
+	/* Startup delay */
+	for (int i = 0; i < 1000; i++)
+		;
+
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	hvps_turn_off();
@@ -59,8 +64,8 @@ int main(void){
 					mem_ram_write(RAM_CITI_PROBE, recv_data);
 					citiroc_send_probes();
 					break;
-				case CUBES_OP_DUR_CONF:
-					citiroc_daq_set_dur(recv_data);
+				case CUBES_OP_DAQ_DUR:
+					citiroc_daq_set_dur((uint8_t) recv_data[0]);
 					break;
 				case CUBES_OP_DAQ_START:
 					citiroc_daq_start();

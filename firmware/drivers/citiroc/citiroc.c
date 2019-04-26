@@ -36,8 +36,14 @@ void citiroc_init()
 
 void citiroc_daq_set_dur(uint8_t duration)
 {
-	/* Set DAQDUR bits to input parameter */
+	/* Reset DAQDUR bits and apply new setting */
+	CITIROC->ROCSR &= ~(0xFF << DAQDUR);
 	CITIROC->ROCSR |= (duration << DAQDUR);
+}
+
+uint8_t citiroc_daq_get_dur()
+{
+	return (CITIROC->ROCSR >> DAQDUR) & 0xFF;
 }
 
 void citiroc_daq_start()

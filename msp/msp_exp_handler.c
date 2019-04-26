@@ -10,7 +10,7 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 static uint8_t *send_data;
-static unsigned char send_data_payload[HISTO_LEN];
+static unsigned char send_data_payload[HISTO_LEN]="";
 extern volatile unsigned char send_data_hk[400] = "test data";
 
 extern volatile unsigned char recv_data[2000] = "";

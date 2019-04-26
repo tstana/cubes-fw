@@ -25,7 +25,7 @@ int main(void){
 
 
 	/*mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
-	msp_read_seqflags();
+	//msp_read_seqflags();
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	hvps_turn_off();
@@ -44,6 +44,7 @@ int main(void){
 		else if(has_recv != 0){
 			switch(has_recv){
 				case MSP_OP_SEND_TIME:
+					cubes_set_time((uint32_t) strtoul(recv_data));
 					break;
 				case MSP_OP_SEND_PUS:
 					break;
@@ -57,6 +58,16 @@ int main(void){
 				case CUBES_OP_PROB_CONF:
 					mem_ram_write(RAM_CITI_PROBE, recv_data);
 					citiroc_send_probes();
+					break;
+				case CUBES_OP_DUR_CONF:
+					citiroc_daq_set_dur(recv_data);
+					break;
+				case CUBES_OP_DAQ_START:
+					citiroc_daq_start();
+					break;
+				case CUBES_OP_DAQ_STOP:
+					citiroc_daq_stop();
+					break;
 			}
 			has_recv=0;
 		}

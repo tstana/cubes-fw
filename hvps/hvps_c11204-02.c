@@ -13,14 +13,17 @@
 
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
+#include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
+
+#include "../mem_mgmt/mem_mgmt.h"
 
 
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-uint16_t rec=0;
-
+static uint32_t *memadr; /* TODO: Change to 8-bit? */
+extern volatile uint8_t send_data_hk[];
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -39,7 +42,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', sizeof(cmd));
+	memset(cmd, '\0', sizeof(cmd[28]));
 }
 
 
@@ -47,7 +50,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 
 
 static int voltage_check(uint8_t cmd[28]){
-	char data[4] = "";
+	uint8_t data[4] = "";
 	double val = 0;
 	/* Check for which command that came to decide on array location */
 	if((cmd[0]=='H' && cmd[1]=='S' && cmd[2]=='T')) {
@@ -70,17 +73,20 @@ static int voltage_check(uint8_t cmd[28]){
 }
 
 static void start_hvps(void){
-	uint8_t temp[28] = "";
-	strcpy(temp, "HST0000000000000000746900C8");
-	if(voltage_check(temp)==-1)
+	uint8_t nvm[28] = "HST";
+	mem_read(NVM_HVPS, &nvm[3]);
+	if(voltage_check(nvm)==-1)
 		return;
-	getarray(send, temp); /*get required string from function */
+	getarray(send, nvm); /*get required string from function */
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-int hvps_set_voltage(char* command){
-	uint8_t HST[30]="HST0000000000000000600000C8"; /* Standard input, ~44.5V, no temp correction */
+int hvps_set_voltage(uint8_t* command){
+	uint8_t HST[30]="HST"; /* Standard input, ~44.5V, no temp correction */
+	for (int j=0; j<24; j++){
+		HST[j]=memadr[j];
+	}
 	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor command */
 		HST[19+i]=command[i];
 	}
@@ -93,31 +99,33 @@ int hvps_set_voltage(char* command){
 }
 
 void hvps_turn_on(void){
-	char HON[] = "HON";
+	uint8_t HON[] = "HON";
 	getarray(send, HON);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
 void hvps_turn_off(void){
-	char HOF[] = "HOF";
+	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
-	MSS_UART_polled_tx_string(&g_mss_uart0, send);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-
-char *memadr;
-extern volatile unsigned char send_data_hk[];
-
-
+void hvps_save_voltage(void){
+	uint8_t HRT[]="HRT";
+	getarray(send, HRT);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
 
  /* UART handler for RX from HVPS */
 /* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
 void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
-	static unsigned char output[30]="";
+
+	static uint8_t output[30]="";
 
 	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
 	if(rx_buff[rx_size-1] != 0x0d){
@@ -127,6 +135,9 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 		strncat(output, rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g')
 			strcpy(send_data_hk,output);
+		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
+			mem_nvm_write(NVM_HVPS, output[4]);
+		}
 		memset(output, '\0', sizeof(output));
 	}
 
@@ -169,14 +180,14 @@ void Timer1_IRQHandler(void){
 }
 
 
-void hvps_init(char* memory){
+void hvps_init(uint32_t memory){
 	/*
 	 * Initialize and configure UART and timer
 	 * Timer: periodic mode, loads value in load_immediate
 	 * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
 	 */
 
-	memadr=memory;
+	memadr= (uint32_t*)memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();

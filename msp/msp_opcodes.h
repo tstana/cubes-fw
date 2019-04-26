@@ -30,6 +30,13 @@
 #define MSP_OP_SEND_TIME   0x30
 #define MSP_OP_SEND_PUS    0x31
 
+/* CUBES custom opcodes */
+#define CUBES_OP_HVPS_OFF	0x51
+#define CUBES_OP_HVPS_ON	0x52
+
+#define CUBES_OP_HVPS_CONF 	0x71
+#define CUBES_OP_CITI_CONF	0x72
+#define CUBES_OP_PROB_CONF  0x73
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

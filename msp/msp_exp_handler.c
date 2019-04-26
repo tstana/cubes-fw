@@ -70,6 +70,7 @@ void msp_expsend_error(unsigned char opcode, int error){
 
 void msp_exprecv_start(unsigned char opcode, unsigned long len){
 	recv_length = len;
+	recv_data = "";
 	/*if(opcode==MSP_OP_SEND_TIME){
 		*recv_data = &time_data;
 	}*/

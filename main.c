@@ -21,11 +21,12 @@
 #define nvm_mem_addr 0x60000000
 
 
-int main(void){
-
+int main(void)
+{
+	uint8_t daq_dur;
 
 	/*mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
-	msp_read_seqflags();
+	//msp_read_seqflags();
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	hvps_turn_off();
@@ -47,16 +48,22 @@ int main(void){
 					break;
 				case MSP_OP_SEND_PUS:
 					break;
-				case CUBES_OP_HVPS_CONF:
+				case CUBES_OP_SEND_HVPS_CONF:
 					hvps_set_voltage(recv_data);
 					break;
-				case CUBES_OP_CITI_CONF:
+				case CUBES_OP_SEND_CITI_CONF:
 					mem_ram_write(RAM_CITI_CONF, recv_data);
 					citiroc_send_slow_control();
 					break;
-				case CUBES_OP_PROB_CONF:
+				case CUBES_OP_SEND_PROB_CONF:
 					mem_ram_write(RAM_CITI_PROBE, recv_data);
 					citiroc_send_probes();
+					break;
+				case CUBES_OP_SEND_DAQ_DUR_AND_START:
+					daq_dur = recv_data[0];
+					citiroc_daq_set_dur(daq_dur);
+					// citiroc_daq_start();
+					break;
 			}
 			has_recv=0;
 		}

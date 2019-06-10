@@ -10,8 +10,8 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 static uint8_t *send_data;
-static unsigned char send_data_payload[HISTO_LEN];
-extern volatile unsigned char send_data_hk[400] = "test data";
+static unsigned char send_data_payload[HISTO_LEN]="";
+extern volatile unsigned char send_data_hk[400] = "";
 
 extern volatile unsigned char recv_data[2000] = "";
 static unsigned long recv_maxlen = 2000;
@@ -47,8 +47,17 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		send_data = (uint8_t*)send_data_hk; /* TODO:Change to housekeeping data location */
-		*len = strlen(send_data_hk);
+		*long_data = citiroc_get_hcr(0);
+		to_bigendian32(send_data_hk, *long_data);
+		*long_data = citiroc_get_hcr(16);
+		to_bigendian32(send_data_hk+4, *long_data);
+		*long_data = citiroc_get_hcr(31);
+		to_bigendian32(send_data_hk+8, *long_data);
+		*long_data = citiroc_get_hcr(21);
+		to_bigendian32(send_data_hk+12, *long_data);
+
+		send_data = (uint8_t *)send_data_hk;
+		*len = 16;
 	}
 	else
 		*len = 0;
@@ -70,6 +79,7 @@ void msp_expsend_error(unsigned char opcode, int error){
 
 void msp_exprecv_start(unsigned char opcode, unsigned long len){
 	recv_length = len;
+	memset(recv_data, '\0', sizeof(recv_data));
 	/*if(opcode==MSP_OP_SEND_TIME){
 		*recv_data = &time_data;
 	}*/

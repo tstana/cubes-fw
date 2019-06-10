@@ -37,7 +37,7 @@ int main(void){
 	while(1){
 		if(has_send != 0){
 			switch(has_send){
-				case MSP_OP_REQ_PAYLOAD:
+				case MSP_OP_REQ_PAYLOAD: /* Payload is transferred in msp_exp_handler.c, use this to clear memory or set citiroc bit to start new DAQ */
 					break;
 				case MSP_OP_REQ_HK:
 					break;

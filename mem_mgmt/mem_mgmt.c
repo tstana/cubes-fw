@@ -99,6 +99,8 @@ void mem_read(uint32_t modul, uint32_t **data){
 			length = HISTO_LEN;
 			addr=(uint32_t *)(histo_addr);
 			break;
+		case RAM_HK:
+			addr=(uint32_t *)(hit_base_addr);
 		default:
 			return; /* If the statement isn't found, return without reading */
 	}

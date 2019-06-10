@@ -11,7 +11,7 @@
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[HISTO_LEN]="";
-extern volatile unsigned char send_data_hk[400] = "test data";
+extern volatile unsigned char send_data_hk[400] = "";
 
 extern volatile unsigned char recv_data[2000] = "";
 static unsigned long recv_maxlen = 2000;
@@ -47,8 +47,37 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		send_data = (uint8_t*)send_data_hk; /* TODO:Change to housekeeping data location */
-		*len = strlen(send_data_hk);
+		mem_read(RAM_HK, &long_data);
+		for(int i=0; i<4; i++){
+			switch(i){
+			case 0:
+				send_data_hk[i*4+0] = long_data[4] & 0xFF;
+				send_data_hk[i*4+1] = long_data[4]>>8 & 0xFF;
+				send_data_hk[i*4+2] = long_data[4]>>16 & 0xFF;
+				send_data_hk[i*4+3] = long_data[4]>>24 & 0xFF;
+				break;
+			case 1:
+				send_data_hk[i*4+0] = long_data[64] & 0xFF;
+				send_data_hk[i*4+1] = long_data[64]>>8 & 0xFF;
+				send_data_hk[i*4+2] = long_data[64]>>16 & 0xFF;
+				send_data_hk[i*4+3] = long_data[64]>>24 & 0xFF;
+				break;
+			case 2:
+				send_data_hk[i*4+0] = long_data[84] & 0xFF;
+				send_data_hk[i*4+1] = long_data[84]>>8 & 0xFF;
+				send_data_hk[i*4+2] = long_data[84]>>16 & 0xFF;
+				send_data_hk[i*4+3] = long_data[84]>>24 & 0xFF;
+				break;
+			case 3:
+				send_data_hk[i*4+0] = long_data[124] & 0xFF;
+				send_data_hk[i*4+1] = long_data[124]>>8 & 0xFF;
+				send_data_hk[i*4+2] = long_data[124]>>16 & 0xFF;
+				send_data_hk[i*4+3] = long_data[124]>>24 & 0xFF;
+				break;
+			}
+		}
+		send_data = (uint8_t *)send_data_hk;
+		*len = 16;
 	}
 	else
 		*len = 0;

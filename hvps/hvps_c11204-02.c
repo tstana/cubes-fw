@@ -15,6 +15,7 @@
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
+#include "../msp/msp_exp_handler.h"
 
 #include "../mem_mgmt/mem_mgmt.h"
 
@@ -23,7 +24,6 @@
 static uint8_t chkstr[2];
 static uint8_t send[40];
 static uint32_t *memadr; /* TODO: Change to 8-bit? */
-extern volatile uint8_t send_data_hk[];
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -101,6 +101,7 @@ int hvps_set_voltage(uint8_t* command){
 void hvps_turn_on(void){
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
+	MSS_TIM64_start();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -108,6 +109,7 @@ void hvps_turn_on(void){
 void hvps_turn_off(void){
 	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
+	MSS_TIM64_stop();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -134,7 +136,7 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	else {
 		strncat(output, rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g')
-			strcpy(send_data_hk,output);
+			msp_add_hk(output, strlen(output));
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
 			mem_nvm_write(NVM_HVPS, output[4]);
 		}
@@ -194,5 +196,5 @@ void hvps_init(uint32_t memory){
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
 	MSS_TIM64_load_immediate(0x00000000, 0x00FFFFFF);
 	MSS_TIM64_enable_irq();
-	MSS_TIM64_start();
+	//MSS_TIM64_start();
 }

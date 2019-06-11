@@ -49,18 +49,18 @@ int main(void)
 				case MSP_OP_SEND_PUS:
 					break;
 				case CUBES_OP_SEND_HVPS_CONF:
-					hvps_set_voltage(recv_data);
+					hvps_set_voltage(msp_get_recv());
 					break;
 				case CUBES_OP_SEND_CITI_CONF:
-					mem_ram_write(RAM_CITI_CONF, recv_data);
+					mem_ram_write(RAM_CITI_CONF, msp_get_recv());
 					citiroc_send_slow_control();
 					break;
 				case CUBES_OP_SEND_PROB_CONF:
-					mem_ram_write(RAM_CITI_PROBE, recv_data);
+					mem_ram_write(RAM_CITI_PROBE, msp_get_recv());
 					citiroc_send_probes();
 					break;
 				case CUBES_OP_SEND_DAQ_DUR_AND_START:
-					daq_dur = recv_data[0];
+					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					// citiroc_daq_start();
 					break;

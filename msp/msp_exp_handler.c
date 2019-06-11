@@ -8,15 +8,15 @@
 #include "msp_i2c.h"
 #include "../msp/msp_exp.h"
 #include "../mem_mgmt/mem_mgmt.h"
+#include "../firmware/drivers/citiroc/citiroc.h"
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[HISTO_LEN]="";
-extern volatile unsigned char send_data_hk[400] = "";
+static unsigned char send_data_hk[400] = "";
 
-extern volatile unsigned char recv_data[2000] = "";
+unsigned char recv_data[2000] = "";
 static unsigned long recv_maxlen = 2000;
 static unsigned long recv_length;
-extern volatile unsigned char time_data[100] = "";
 
 extern unsigned int has_send = 0;
 static unsigned int has_send_error = 0;
@@ -47,14 +47,15 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		*long_data = citiroc_get_hcr(0);
-		to_bigendian32(send_data_hk, *long_data);
-		*long_data = citiroc_get_hcr(16);
-		to_bigendian32(send_data_hk+4, *long_data);
-		*long_data = citiroc_get_hcr(31);
-		to_bigendian32(send_data_hk+8, *long_data);
-		*long_data = citiroc_get_hcr(21);
-		to_bigendian32(send_data_hk+12, *long_data);
+		uint32_t temp = 0;
+		temp = citiroc_get_hcr(0);
+		to_bigendian32(send_data_hk, temp);
+		temp = citiroc_get_hcr(16);
+		to_bigendian32(send_data_hk+4, temp);
+		temp = citiroc_get_hcr(31);
+		to_bigendian32(send_data_hk+8, temp);
+		temp = citiroc_get_hcr(21);
+		to_bigendian32(send_data_hk+12, temp);
 
 		send_data = (uint8_t *)send_data_hk;
 		*len = 16;
@@ -105,4 +106,16 @@ void msp_exprecv_error(unsigned char opcode, int error){
 
 void msp_exprecv_syscommand(unsigned char opcode){
 	has_syscommand = opcode;
+}
+
+void msp_add_hk(unsigned char *buff, unsigned long len){
+	static unsigned long offset =0;
+	for (unsigned long i=0; i<len; i++){
+		send_data_hk[i+offset] = buff[i];
+	}
+	offset=len;
+}
+
+unsigned char* msp_get_recv(void){
+	return (unsigned char*)recv_data;
 }

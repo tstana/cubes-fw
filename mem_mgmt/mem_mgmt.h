@@ -18,6 +18,7 @@
 #define RAM_HVPS		0x12u
 #define RAM_HISTO		0x13u
 #define RAM_CITI_PROBE	0x14u
+#define RAM_HK			0x15u
 
 #define HVPS_OFS		0x00
 #define HVPS_LEN		24u
@@ -35,6 +36,7 @@
 #define citiroc_offset 	0x3008u
 #define seqflag_offset 	0xF000
 #define histo_addr 		0x50030000
+#define hit_base_addr	0x50010008
 
 
 /* mem_ram_write

@@ -27,13 +27,18 @@ int main(void)
 
 	/*mem_ram_write(RAM_HVPS, "0000000000000000746900C8");*/ /* Writing standard HVPS value to ram for testing */
 	//msp_read_seqflags();
+
+	/* Startup delay */
+	for (int i = 0; i < 1000; i++)
+		;
+
 	init_i2c(SLAVE_ADDR);
 	hvps_init(nvm_mem_addr);
 	hvps_turn_off();
 	while(1){
 		if(has_send != 0){
 			switch(has_send){
-				case MSP_OP_REQ_PAYLOAD:
+				case MSP_OP_REQ_PAYLOAD: /* Payload is transferred in msp_exp_handler.c, use this to clear memory or set citiroc bit to start new DAQ */
 					break;
 				case MSP_OP_REQ_HK:
 					break;
@@ -45,6 +50,7 @@ int main(void)
 		else if(has_recv != 0){
 			switch(has_recv){
 				case MSP_OP_SEND_TIME:
+					cubes_set_time((uint32_t) strtoul(recv_data));
 					break;
 				case MSP_OP_SEND_PUS:
 					break;
@@ -63,6 +69,15 @@ int main(void)
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					// citiroc_daq_start();
+					break;
+				case CUBES_OP_DAQ_DUR:
+					citiroc_daq_set_dur((uint8_t) recv_data[0]);
+					break;
+				case CUBES_OP_DAQ_START:
+					citiroc_daq_start();
+					break;
+				case CUBES_OP_DAQ_STOP:
+					citiroc_daq_stop();
 					break;
 			}
 			has_recv=0;

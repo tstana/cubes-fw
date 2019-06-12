@@ -5,4 +5,4 @@ README.txt
 *.xml
 *.cxf
 filelists/
-
+.vscode

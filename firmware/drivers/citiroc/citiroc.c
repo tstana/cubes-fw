@@ -36,21 +36,26 @@ void citiroc_init()
 
 void citiroc_daq_set_dur(uint8_t duration)
 {
-	/* Clear DAQDUR bits and set to new value */
+	/* Reset DAQDUR bits and apply new setting */
 	CITIROC->ROCSR &= ~(0xFF << DAQDUR);
 	CITIROC->ROCSR |= (duration << DAQDUR);
 }
 
+uint8_t citiroc_daq_get_dur()
+{
+	return (CITIROC->ROCSR >> DAQDUR) & 0xFF;
+}
+
 void citiroc_daq_start()
 {
+	/* DAQSTART bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
 	CITIROC->ROCSR |= (1 << DAQSTART);
 }
 
 void citiroc_daq_stop()
 {
+	/* DAQSTOP bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
 	CITIROC->ROCSR |= (1 << DAQSTOP);
-	/* TODO: Is this really necessary: */
-	CITIROC->ROCSR &= ~(1 << DAQSTART);
 }
 
 uint32_t citiroc_daq_is_rdy()

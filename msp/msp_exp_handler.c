@@ -18,20 +18,20 @@ unsigned char recv_data[2000] = "";
 static unsigned long recv_maxlen = 2000;
 static unsigned long recv_length;
 
-extern unsigned int has_send = 0;
+unsigned int has_send = 0;
 static unsigned int has_send_error = 0;
 static unsigned int has_send_errorcode = 0;
-extern unsigned int has_recv = 0;
+unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
-extern unsigned int has_syscommand = 0;
+unsigned int has_syscommand = 0;
 
 
 /* Prototype in msp_exp_handler.h */
 
 void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	uint32_t* long_data;
-	if(opcode == MSP_OP_REQ_PAYLOAD){
+	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()){
 		mem_read(RAM_HISTO, &long_data);
 		*len = HISTO_LEN;
 		/*
@@ -48,14 +48,16 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	}
 	else if(opcode == MSP_OP_REQ_HK){
 		uint32_t temp = 0;
-		temp = citiroc_get_hcr(0);
+		temp = CITIROC->TEMPR;
 		to_bigendian32(send_data_hk, temp);
-		temp = citiroc_get_hcr(16);
+		temp = citiroc_get_hcr(0);
 		to_bigendian32(send_data_hk+4, temp);
-		temp = citiroc_get_hcr(31);
+		temp = citiroc_get_hcr(16);
 		to_bigendian32(send_data_hk+8, temp);
-		temp = citiroc_get_hcr(21);
+		temp = citiroc_get_hcr(31);
 		to_bigendian32(send_data_hk+12, temp);
+		temp = citiroc_get_hcr(21);
+		to_bigendian32(send_data_hk+16, temp);
 
 		send_data = (uint8_t *)send_data_hk;
 		*len = 16;
@@ -110,7 +112,7 @@ void msp_exprecv_syscommand(unsigned char opcode){
 
 void msp_add_hk(unsigned char *buff, unsigned long len){
 	static unsigned long offset =0;
-	for (unsigned long i=0; i<len; i++){
+	for (unsigned long i=20; i<len; i++){
 		send_data_hk[i+offset] = buff[i];
 	}
 	offset=len;

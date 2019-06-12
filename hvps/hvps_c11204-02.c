@@ -123,7 +123,7 @@ void hvps_save_voltage(void){
 
  /* UART handler for RX from HVPS */
 /* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
-void uart0_rx_handler(mss_uart_instance_t * this_uart){
+static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
 

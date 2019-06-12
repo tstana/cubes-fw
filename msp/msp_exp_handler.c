@@ -47,14 +47,15 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
-		*long_data = citiroc_get_hcr(0);
-		to_bigendian32(send_data_hk, *long_data);
-		*long_data = citiroc_get_hcr(16);
-		to_bigendian32(send_data_hk+4, *long_data);
-		*long_data = citiroc_get_hcr(31);
-		to_bigendian32(send_data_hk+8, *long_data);
-		*long_data = citiroc_get_hcr(21);
-		to_bigendian32(send_data_hk+12, *long_data);
+		uint32_t temp = 0;
+		temp = citiroc_get_hcr(0);
+		to_bigendian32(send_data_hk, temp);
+		temp = citiroc_get_hcr(16);
+		to_bigendian32(send_data_hk+4, temp);
+		temp = citiroc_get_hcr(31);
+		to_bigendian32(send_data_hk+8, temp);
+		temp = citiroc_get_hcr(21);
+		to_bigendian32(send_data_hk+12, temp);
 
 		send_data = (uint8_t *)send_data_hk;
 		*len = 16;

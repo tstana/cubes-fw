@@ -74,9 +74,11 @@ int main(void)
 				break;
 			case MSP_OP_SLEEP:
 				hvps_turn_off();
+				citiroc_daq_stop();
 				break;
 			case MSP_OP_POWER_OFF:
 				hvps_turn_off();
+				citiroc_daq_stop();
 				msp_save_seqflags();
 				break;
 			}

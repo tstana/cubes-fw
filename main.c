@@ -9,6 +9,8 @@
 
 #include "msp/msp_i2c.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
 #include "firmware/drivers/citiroc/citiroc.h"
@@ -18,7 +20,6 @@
 #include "mem_mgmt/mem_mgmt.h"
 
 #define SLAVE_ADDR 0x35
-#define nvm_mem_addr 0x60000000
 
 
 int main(void)
@@ -32,8 +33,8 @@ int main(void)
 	for (int i = 0; i < 1000; i++)
 		;
 
-	init_i2c(SLAVE_ADDR);
-	hvps_init(nvm_mem_addr);
+	msp_init_i2c(SLAVE_ADDR);
+	hvps_init(NVM_ADDR);
 	hvps_turn_off();
 	while(1){
 		if(has_send != 0){
@@ -50,7 +51,7 @@ int main(void)
 		else if(has_recv != 0){
 			switch(has_recv){
 				case MSP_OP_SEND_TIME:
-					cubes_set_time((uint32_t) strtoul(recv_data));
+					cubes_set_time((uint32_t) strtoul(msp_get_recv(), NULL, 10));
 					break;
 				case MSP_OP_SEND_PUS:
 					break;
@@ -69,9 +70,6 @@ int main(void)
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					// citiroc_daq_start();
-					break;
-				case CUBES_OP_DAQ_DUR:
-					citiroc_daq_set_dur((uint8_t) recv_data[0]);
 					break;
 				case CUBES_OP_DAQ_START:
 					citiroc_daq_start();

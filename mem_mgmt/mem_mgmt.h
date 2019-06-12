@@ -18,7 +18,6 @@
 #define RAM_HVPS		0x12u
 #define RAM_HISTO		0x13u
 #define RAM_CITI_PROBE	0x14u
-#define RAM_HK			0x15u
 
 #define HVPS_OFS		0x00
 #define HVPS_LEN		24u
@@ -30,13 +29,12 @@
 #define SEQFLAG_LEN		sizeof(msp_seqflags_t)
 #define HISTO_LEN		24832
 
-#define ram_addr 		0x20000000u
-#define nvm_addr 		0x60000000u
-#define hvps_offset 	0x3000u
-#define citiroc_offset 	0x3008u
-#define seqflag_offset 	0xF000
-#define histo_addr 		0x50030000
-#define hit_base_addr	0x50010008
+#define RAM_ADDR		0x20000000u
+#define NVM_ADDR		0x60000000u
+#define HVPS_OFFSET 	0x3000u
+#define CITIROC_OFFSET 	0x3008u
+#define SEQFLAG_OFFSET 	0xF000
+#define HISTO_ADDR 		0x50030000
 
 
 /* mem_ram_write

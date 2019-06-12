@@ -25,7 +25,7 @@ extern unsigned int has_syscommand;
  * Output: None
  ********************************************** */
 
-void init_i2c(int slave_adress);
+void msp_init_i2c(int slave_adress);
 
 /* **************************************************
  * int msp_save_seqflags

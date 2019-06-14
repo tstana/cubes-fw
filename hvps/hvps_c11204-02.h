@@ -39,4 +39,10 @@ void hvps_turn_on(void);
 
 void hvps_turn_off(void);
 
+void hvps_get_voltage(void);
+
+void hvps_get_current(void);
+
+void hvps_get_temp(void);
+
 #endif /* HM_HVPS_H_ */

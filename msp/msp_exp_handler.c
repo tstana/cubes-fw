@@ -9,6 +9,7 @@
 #include "../msp/msp_exp.h"
 #include "../mem_mgmt/mem_mgmt.h"
 #include "../firmware/drivers/citiroc/citiroc.h"
+#include "../hvps/hvps_c11204-02.h"
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[HISTO_LEN]="";
@@ -25,6 +26,8 @@ unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
+
+static int offset = 0;
 
 
 /* Prototype in msp_exp_handler.h */
@@ -48,17 +51,18 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	}
 	else if(opcode == MSP_OP_REQ_HK){
 		uint32_t temp = 0;
-		temp = CITIROC->TEMPR;
-		to_bigendian32(send_data_hk, temp);
+		offset=0;
 		temp = citiroc_get_hcr(0);
-		to_bigendian32(send_data_hk+4, temp);
+		to_bigendian32(send_data_hk, temp);
 		temp = citiroc_get_hcr(16);
-		to_bigendian32(send_data_hk+8, temp);
+		to_bigendian32(send_data_hk+4, temp);
 		temp = citiroc_get_hcr(31);
-		to_bigendian32(send_data_hk+12, temp);
+		to_bigendian32(send_data_hk+8, temp);
 		temp = citiroc_get_hcr(21);
-		to_bigendian32(send_data_hk+16, temp);
-
+		to_bigendian32(send_data_hk+12, temp);
+		hvps_get_voltage();
+		hvps_get_current();
+		hvps_get_temp();
 		send_data = (uint8_t *)send_data_hk;
 		*len = 16;
 	}
@@ -74,6 +78,10 @@ void msp_expsend_data(unsigned char opcode, unsigned char *buf, unsigned long le
 
 void msp_expsend_complete(unsigned char opcode){ /* TODO: get offset and clear data there? */
 	has_send = opcode;
+	if(opcode == MSP_OP_REQ_PAYLOAD)
+		memset(send_data_payload, '\0', sizeof(send_data_payload));
+	else if (opcode == MSP_OP_REQ_HK)
+		memset(send_data_hk, '\0', sizeof(send_data_hk));
 }
 void msp_expsend_error(unsigned char opcode, int error){
 	has_send_error = opcode;
@@ -111,11 +119,10 @@ void msp_exprecv_syscommand(unsigned char opcode){
 }
 
 void msp_add_hk(unsigned char *buff, unsigned long len){
-	static unsigned long offset =0;
-	for (unsigned long i=20; i<len; i++){
+	for (unsigned long i=16; i<len; i++){
 		send_data_hk[i+offset] = buff[i];
 	}
-	offset=len;
+	offset+=len;
 }
 
 unsigned char* msp_get_recv(void){

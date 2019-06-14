@@ -121,6 +121,23 @@ void hvps_save_voltage(void){
 	memset(send, '\0', sizeof(send));
 }
 
+void hvps_get_voltage(void){
+	getarray(send, "HGV");
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+
+void hvps_get_current(void){
+	getarray(send, "HGC");
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+void hvps_get_temp(void){
+	getarray(send, "HGT");
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+
  /* UART handler for RX from HVPS */
 /* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
 static void uart0_rx_handler(mss_uart_instance_t * this_uart){
@@ -136,9 +153,9 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	else {
 		strncat(output, rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g')
-			msp_add_hk(output, strlen(output));
+			msp_add_hk(&output[4], 4);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
-			mem_nvm_write(NVM_HVPS, output[4]);
+			mem_nvm_write(NVM_HVPS, &output[4]);
 		}
 		memset(output, '\0', sizeof(output));
 	}
@@ -155,29 +172,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
  *
  */
 void Timer1_IRQHandler(void){
-	/*static uint16_t cntr=0;*/
-	uint8_t command[4] = "";
-	/* Command for getting Voltage output */
-	strcpy(command, "HGV");
-	getarray(send, command);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-	memset(send, '\0', sizeof(send));
-
-/*	if(cntr==1){
-		 Command for getting current output
-		strcpy(command, "HGC");
-		getarray(send, command);
-		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-		memset(send, '\0', sizeof(send));
-	}
-	if(cntr==2){
-		 Command for getting Temperature output
-		strcpy(command, "HGT");
-		getarray(send, command);
-		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-		memset(send, '\0', sizeof(send));
-	}
-	cntr=(cntr+1)%3;*/
+	hvps_get_voltage();
 	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
 }
 

@@ -53,7 +53,7 @@ void mem_ram_write(uint32_t modul, uint8_t *data);
  *			uint8_t pointer to where data is to be transferred
  * Return: None
  */
-void mem_read(uint32_t modul, uint32_t **data);
+void mem_read(uint32_t modul, uint32_t *data);
 
 /* mem_nvm_write
  * Function for writing data to NVM.

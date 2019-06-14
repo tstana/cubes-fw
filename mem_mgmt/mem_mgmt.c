@@ -74,7 +74,7 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 				return -1;
 }
 
-void mem_read(uint32_t modul, uint32_t **data){
+void mem_read(uint32_t modul, uint32_t *data){
 	uint32_t length=0;
 	uint32_t *addr;
 	switch(modul){ /* Set length and address pointer to correct module through switch */
@@ -102,5 +102,5 @@ void mem_read(uint32_t modul, uint32_t **data){
 		default:
 			return; /* If the statement isn't found, return without reading */
 	}
-	*data  = addr;
+	data  = addr;
 }

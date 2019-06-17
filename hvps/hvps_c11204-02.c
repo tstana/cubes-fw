@@ -23,7 +23,7 @@
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-static uint32_t *memadr; /* TODO: Change to 8-bit? */
+static uint32_t *memadr;
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -42,7 +42,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', sizeof(cmd[28]));
+	memset(cmd, '\0', sizeof(cmd));
 }
 
 
@@ -64,7 +64,7 @@ static int voltage_check(uint8_t cmd[28]){
 		}
 	}
 	/* Convert to long and check value for limit of 55 */
-	val=strtol(data, NULL, 16);
+	val=strtol((char*)data, NULL, 16);
 	val=val*(1.812/pow(10, 3));
 	if(val > 55)
 		return -1;
@@ -122,18 +122,21 @@ void hvps_save_voltage(void){
 }
 
 void hvps_get_voltage(void){
-	getarray(send, "HGV");
+	uint8_t HGV[]="HGV";
+	getarray(send, HGV);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
 void hvps_get_current(void){
-	getarray(send, "HGC");
+	uint8_t HGC[]="HGC";
+	getarray(send, HGC);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 void hvps_get_temp(void){
-	getarray(send, "HGT");
+	uint8_t HGT[]="HGT";
+	getarray(send, HGT);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -148,10 +151,10 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 
 	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
 	if(rx_buff[rx_size-1] != 0x0d){
-		strncat(output, rx_buff, rx_size);
+		strncat((char*)output, (char *)rx_buff, rx_size);
 	}
 	else {
-		strncat(output, rx_buff, rx_size);
+		strncat((char*)output, (char*)rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g')
 			msp_add_hk(&output[4], 4);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){

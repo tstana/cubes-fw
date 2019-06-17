@@ -12,7 +12,7 @@
 #include "../hvps/hvps_c11204-02.h"
 
 static uint8_t *send_data;
-static unsigned char send_data_payload[HISTO_LEN]="";
+static unsigned char send_data_payload[25000]="";
 static unsigned char send_data_hk[400] = "";
 
 unsigned char recv_data[2000] = "";
@@ -35,18 +35,38 @@ static int offset = 0;
 void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	uint32_t* long_data;
 	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()){
-		mem_read(RAM_HISTO, &long_data);
-		*len = HISTO_LEN;
+		/*mem_read(RAM_HISTO, &long_data);
+		*len = HISTO_LEN;*/
 		/*
 		 * Massage bin memory (16-bit, big-endian, organized into 2x 16-bit big-endian)
 		 * into MSP data array; see mem-addressing.png for a visual description of this.
 		 */
-		for(int i=0; i<HISTO_LEN/4; i++){
+		/*for(int i=0; i<HISTO_LEN/4; i++){
 			send_data_payload[i*4+1] = long_data[i] & 0xFF;
 			send_data_payload[i*4+0] = long_data[i]>>8 & 0xFF;
 			send_data_payload[i*4+3] = long_data[i]>>16 & 0xFF;
 			send_data_payload[i*4+2] = long_data[i]>>24 & 0xFF;
+		}*/
+		send_data_payload[0] = (unsigned char)'C';
+		send_data_payload[1] = (unsigned char)'1';
+		for (int i = 2; i < 254; ++i) {
+			send_data_payload[i] = 0;
 		}
+		unsigned int val = 2048;
+		send_data_payload[254] = (val >> 8) & 0xFF;
+		send_data_payload[255] = val & 0xFF;
+		  // Histogram data
+		for (int j = 0; j < 6; ++j) {
+			val = 0;
+			for (int i = 0; i < 2048; ++i) {
+				send_data_payload[256 + 4096*j + i*2    ] = (val >> 8) & 0xFF;
+				send_data_payload[256 + 4096*j + i*2 + 1] = val & 0xFF;
+				val += 32;
+			}
+		  }
+
+		*len = 24975; //-25 to allow for "Unix time: xxxxxxx\r\n - DATADATADATA - \r\n"
+
 		send_data = (uint8_t*) send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK){
@@ -76,7 +96,7 @@ void msp_expsend_data(unsigned char opcode, unsigned char *buf, unsigned long le
 	}
 }
 
-void msp_expsend_complete(unsigned char opcode){ /* TODO: get offset and clear data there? */
+void msp_expsend_complete(unsigned char opcode){
 	has_send = opcode;
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
@@ -91,9 +111,6 @@ void msp_expsend_error(unsigned char opcode, int error){
 void msp_exprecv_start(unsigned char opcode, unsigned long len){
 	recv_length = len;
 	memset(recv_data, '\0', sizeof(recv_data));
-	/*if(opcode==MSP_OP_SEND_TIME){
-		*recv_data = &time_data;
-	}*/
 }
 void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned long len, unsigned long offset){
 	for(unsigned long i=0; i<len; i++){

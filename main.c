@@ -51,7 +51,7 @@ int main(void)
 		else if(has_recv != 0){
 			switch(has_recv){
 				case MSP_OP_SEND_TIME:
-					cubes_set_time((uint32_t) strtoul(msp_get_recv(), NULL, 10));
+					cubes_set_time((uint32_t) strtoul((char*)msp_get_recv(), NULL, 10));
 					break;
 				case MSP_OP_SEND_PUS:
 					break;

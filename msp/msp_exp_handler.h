@@ -148,13 +148,5 @@ void msp_exprecv_error(unsigned char opcode, int error);
  */
 void msp_exprecv_syscommand(unsigned char opcode);
 
-/*
- * This function is called to add data to the housekeeping buffer
- *
- */
-void msp_add_hk(unsigned char *buff, unsigned long len);
-
-
-unsigned char* msp_get_recv(void);
 
 #endif

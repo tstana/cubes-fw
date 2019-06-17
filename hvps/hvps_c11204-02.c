@@ -15,7 +15,7 @@
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
-#include "../msp/msp_exp_handler.h"
+#include "../msp/msp_i2c.h"
 
 #include "../mem_mgmt/mem_mgmt.h"
 
@@ -142,7 +142,6 @@ void hvps_get_temp(void){
 }
 
  /* UART handler for RX from HVPS */
-/* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
 static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
@@ -155,8 +154,12 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	}
 	else {
 		strncat((char*)output, (char*)rx_buff, rx_size);
-		if(output[1]=='h' && output[2]=='g')
-			msp_add_hk(&output[4], 4);
+		if(output[1]=='h' && output[2]=='g' && output[3]=='v')
+			msp_add_hk(&output[4], 4, 0);
+		else if(output[1]=='h' && output[2]=='g' && output[3]=='c')
+			msp_add_hk(&output[4], 4, 4);
+		else if(output[1]=='h' && output[2]=='g' && output[3]=='t')
+			msp_add_hk(&output[4], 4, 8);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
 			mem_nvm_write(NVM_HVPS, &output[4]);
 		}

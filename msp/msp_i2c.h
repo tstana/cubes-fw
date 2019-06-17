@@ -43,4 +43,13 @@ int msp_save_seqflags(void);
  * Return: none
  *************************************************** */
 void msp_read_seqflags(void);
+
+/*
+ * This function is called in msp_exp_handler to add data to the housekeeping buffer
+ *
+ */
+void msp_add_hk(unsigned char *buff, unsigned long len, int offset);
+
+
+unsigned char* msp_get_recv(void);
 #endif /* I2C_COMM_INT_H_ */

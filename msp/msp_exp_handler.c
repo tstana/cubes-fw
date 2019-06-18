@@ -48,13 +48,13 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 	}
 	else if(opcode == MSP_OP_REQ_HK){
 		uint32_t temp = 0;
-		temp = citiroc_get_hcr(0);
+		temp = citiroc_hcr_get(0);
 		to_bigendian32(send_data_hk, temp);
-		temp = citiroc_get_hcr(16);
+		temp = citiroc_hcr_get(16);
 		to_bigendian32(send_data_hk+4, temp);
-		temp = citiroc_get_hcr(31);
+		temp = citiroc_hcr_get(31);
 		to_bigendian32(send_data_hk+8, temp);
-		temp = citiroc_get_hcr(21);
+		temp = citiroc_hcr_get(21);
 		to_bigendian32(send_data_hk+12, temp);
 
 		send_data = (uint8_t *)send_data_hk;

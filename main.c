@@ -61,6 +61,7 @@ int main(void)
 					break;
 				case CUBES_OP_SEND_DAQ_DUR_AND_START:
 					daq_dur = recv_data[0];
+					citiroc_hcr_reset();
 					citiroc_daq_set_dur(daq_dur);
 					// citiroc_daq_start();
 					break;

@@ -81,6 +81,7 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define DAQSTART		(11)
 #define DAQSTOP			(12)
 #define FORCETRIG		(13)
+#define CHXHCR_RST		(14)
 #define SCBUSY			(16)
 #define DAQRDY			(17)
 #define HISTOFULL		(18)
@@ -105,7 +106,8 @@ void		citiroc_daq_start();
 void		citiroc_daq_stop();
 uint32_t	citiroc_daq_is_rdy();
 
-uint32_t	citiroc_get_hcr(uint32_t channel_num);
+uint32_t	citiroc_hcr_get(uint32_t channel_num);
+void		citiroc_hcr_reset(void);
 
 void		citiroc_send_slow_control();
 void		citiroc_send_probes();

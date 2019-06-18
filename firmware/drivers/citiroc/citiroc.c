@@ -63,10 +63,16 @@ uint32_t citiroc_get_rocsr()
 	return CITIROC->ROCSR;
 }
 
-uint32_t citiroc_get_hcr(uint32_t channel_num)
+uint32_t citiroc_hcr_get(uint32_t channel_num)
 {
 	/* each channel is at "channel_num" offset from CH0HCR in memory...*/
 	return *(&(CITIROC->CH0HCR) + channel_num);
+}
+
+void citiroc_hcr_reset()
+{
+	CITIROC->ROCSR |= (1 << CHXHCR_RST);
+	// No clearing needed, bit self-resets.
 }
 
 void citiroc_send_slow_control()

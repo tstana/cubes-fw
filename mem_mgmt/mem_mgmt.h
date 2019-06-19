@@ -1,8 +1,8 @@
-/*
+/**
  * ram_mgmt.h
  *
  *  Created on: 15 jan. 2019
- *      Author: Marcus Persson
+ *  @author Marcus Persson
  */
 
 #include "../msp/msp_seqflags.h"
@@ -37,29 +37,29 @@
 #define HISTO_ADDR 		0x50030000
 
 
-/* mem_ram_write
+/** mem_ram_write
  * Function for writing data to RAM.
- * Input: 	Reference to submodule (see defines at top of this file)
- *			uint8_t pointer to where data is to be transferred from
+ * @param 	Reference to submodule (see defines at top of this file)
+ * @param	uint8_t pointer to where data is to be transferred from
  * Return: None
  */
 
 void mem_ram_write(uint32_t modul, uint8_t *data);
 
 
-/* mem_read
+/** mem_read
  * Function for reading data from NVM.
- * Input: 	Reference to submodule (see defines at top of this file)
- *			uint8_t pointer to where data is to be transferred
+ * @param 	Reference to submodule (see defines at top of this file)
+ * @param	uint8_t pointer to where data is to be transferred
  * Return: None
  */
 void mem_read(uint32_t modul, uint32_t *data);
 
-/* mem_nvm_write
+/** mem_nvm_write
  * Function for writing data to NVM.
- * Input: 	uint32_t Reference to submodule to be written for.
- * 			uint8_t pointer to where data is to be transferred from
- * Return:  int with value 0 if passed, -1 if any failure.
+ * @param 	uint32_t Reference to submodule to be written for.
+ * @param	uint8_t pointer to where data is to be transferred from
+ * @return  int with value 0 if passed, -1 if any failure.
  */
 
 int mem_nvm_write(uint32_t modul, uint8_t* data);

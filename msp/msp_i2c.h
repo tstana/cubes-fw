@@ -1,8 +1,8 @@
-/*
- * I2C_comm_int.h
+/**
+ * @file I2C_comm_int.h
  *
  *  Created on: 26 okt. 2018
- *      Author: Marcus Persson
+ *  @author Marcus Persson
  */
 
 #ifndef I2C_COMM_INT_H_
@@ -18,25 +18,25 @@ extern unsigned int has_send;
 extern unsigned int has_recv;
 extern unsigned int has_syscommand;
 
-/* **********************************************
+/** **********************************************
  * void initI2C(void)
  * Function for initializing I2C parameters and interrupts
- * Input:  slave_adress, on format 0x35
+ * @param  slave_adress, on format 0x35
  * Output: None
  ********************************************** */
 
 void msp_init_i2c(int slave_adress);
 
-/* **************************************************
+/** **************************************************
  * int msp_save_seqflags
  * Function for saving MSP sequenceflags to NVM memory at system power-off.
  * Input: none
- * Return: -1 if any failure, 0 if passed
+ * @return: -1 if any failure, 0 if passed
  **************************************************** */
 int msp_save_seqflags(void);
 
 
-/* ****************************************************
+/** ****************************************************
  * int msp_save_seqflags
  * Function for reading MSP sequenceflags from NVM memory at system power-on.
  * Input: none

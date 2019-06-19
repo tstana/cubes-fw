@@ -27,7 +27,7 @@ static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
 
-uint8_t hk_add_done = 0;
+volatile uint8_t hk_add_done = 0;
 
 
 
@@ -80,17 +80,8 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 		to_bigendian32(send_data_hk+8, temp);
 		temp = citiroc_get_hcr(21);
 		to_bigendian32(send_data_hk+12, temp);
-		hvps_get_voltage();
-		while(hk_add_done != 1)
-			;
-		hvps_get_current();
-		while(hk_add_done != 1)
-			;
-		hvps_get_temp();
-		while(hk_add_done != 1)
-			;
 		send_data = (uint8_t *)send_data_hk;
-		*len = 16;
+		*len = 28;
 	}
 	else
 		*len = 0;
@@ -142,10 +133,9 @@ void msp_exprecv_syscommand(unsigned char opcode){
 }
 
 void msp_add_hk(unsigned char *buff, unsigned long len, int offset){
-	for (unsigned long i=16; i<len; i++){
+	for (unsigned long i=0; i<len; i++){
 		send_data_hk[i+offset] = buff[i];
 	}
-	hk_add_done = 1;
 }
 
 unsigned char* msp_get_recv(void){

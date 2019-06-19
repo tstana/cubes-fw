@@ -155,11 +155,11 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	else {
 		strncat((char*)output, (char*)rx_buff, rx_size);
 		if(output[1]=='h' && output[2]=='g' && output[3]=='v')
-			msp_add_hk(&output[4], 4, 0);
+			msp_add_hk(&output[4], 4, 16);
 		else if(output[1]=='h' && output[2]=='g' && output[3]=='c')
-			msp_add_hk(&output[4], 4, 4);
+			msp_add_hk(&output[4], 4, 20);
 		else if(output[1]=='h' && output[2]=='g' && output[3]=='t')
-			msp_add_hk(&output[4], 4, 8);
+			msp_add_hk(&output[4], 4, 24);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
 			mem_nvm_write(NVM_HVPS, &output[4]);
 		}
@@ -172,13 +172,22 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	memset(rx_buff, '\0', sizeof(rx_buff)); /* Clear buffer */
 }
 
+/* Function for setting the time in Timer64 from cleartext seconds */
+
+static void hvps_hk_set_timer(int settime){
+    unsigned long long settimer  = settime * 100000000; /* Multiply with 100MHz to get to seconds*/
+    long timer1 = settimer & 0xFFFFFFFF;
+    long timer2 = (settimer >> 32) & 0xFFFFFFFF;
+    MSS_TIM64_load_immediate(timer2, timer1);
+}
 
 /* Timer interrupt for sending commands to the HVPS
- * Timing set up in timer1 init
  *
  */
 void Timer1_IRQHandler(void){
 	hvps_get_voltage();
+	hvps_get_current();
+	hvps_get_temp();
 	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
 }
 
@@ -192,10 +201,14 @@ void hvps_init(uint32_t memory){
 
 	memadr= (uint32_t*)memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
+	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	MSS_TIM64_load_immediate(0x00000000, 0x00FFFFFF);
+	hvps_hk_set_timer(60);
 	MSS_TIM64_enable_irq();
-	//MSS_TIM64_start();
+	MSS_TIM64_start();
 }
+
+
+

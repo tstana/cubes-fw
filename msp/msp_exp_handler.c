@@ -48,7 +48,7 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 			send_data_payload[i*4+3] = long_data[i]>>16 & 0xFF;
 			send_data_payload[i*4+2] = long_data[i]>>24 & 0xFF;
 		}*/
-		send_data_payload[0] = (unsigned char)'C';
+		send_data_payload[0] = (unsigned char)'C'; /* TODO: Remove from here */
 		send_data_payload[1] = (unsigned char)'1';
 		for (int i = 2; i < 254; ++i) {
 			send_data_payload[i] = 0;
@@ -65,7 +65,7 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 				val += 32;
 			}
 		  }
-
+		/* TODO: Remove to here */
 		*len = 24975; //-25 to allow for "Unix time: xxxxxxx\r\n - DATADATADATA - \r\n"
 
 		send_data = (uint8_t*) send_data_payload;
@@ -98,7 +98,7 @@ void msp_expsend_complete(unsigned char opcode){
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
 	else if (opcode == MSP_OP_REQ_HK)
-		memset(send_data_hk, '\0', sizeof(send_data_hk));
+		memset(send_data_hk, '\0', 16);
 }
 void msp_expsend_error(unsigned char opcode, int error){
 	has_send_error = opcode;

@@ -71,11 +71,9 @@ int main(void)
 					citiroc_daq_set_dur(daq_dur);
 					// citiroc_daq_start();
 					break;
-				case CUBES_OP_DAQ_START:
-					citiroc_daq_start();
-					break;
-				case CUBES_OP_DAQ_STOP:
-					citiroc_daq_stop();
+				case CUBES_OP_SEND_DAQ_DUR:
+					daq_dur = msp_get_recv()[0];
+					citiroc_daq_set_dur(daq_dur);
 					break;
 			}
 			has_recv=0;
@@ -83,7 +81,7 @@ int main(void)
 		else if(has_syscommand != 0){
 			switch(has_syscommand){
 			case MSP_OP_ACTIVE:
-				//hvps_turn_on();
+				hvps_turn_on();
 				break;
 			case MSP_OP_SLEEP:
 				hvps_turn_off();
@@ -93,6 +91,12 @@ int main(void)
 				hvps_turn_off();
 				citiroc_daq_stop();
 				msp_save_seqflags();
+				break;
+			case CUBES_OP_DAQ_START:
+				citiroc_daq_start();
+				break;
+			case CUBES_OP_DAQ_STOP:
+				citiroc_daq_stop();
 				break;
 			}
 			has_syscommand=0;

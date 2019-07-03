@@ -205,7 +205,7 @@ void hvps_init(uint32_t memory){
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	hvps_hk_set_timer(60);
+	hvps_hk_set_timer(5);
 	MSS_TIM64_enable_irq();
 	MSS_TIM64_start();
 }

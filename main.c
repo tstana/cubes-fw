@@ -55,23 +55,18 @@ int main(void)
 					break;
 				case MSP_OP_SEND_PUS:
 					break;
-				case CUBES_OP_SEND_HVPS_CONF:
+				case MSP_OP_SEND_CUBES_HVPS_CONF:
 					hvps_set_voltage(msp_get_recv());
 					break;
-				case CUBES_OP_SEND_CITI_CONF:
+				case MSP_OP_SEND_CUBES_CITI_CONF:
 					mem_ram_write(RAM_CITI_CONF, msp_get_recv());
 					citiroc_send_slow_control();
 					break;
-				case CUBES_OP_SEND_PROB_CONF:
+				case MSP_OP_SEND_CUBES_PROB_CONF:
 					mem_ram_write(RAM_CITI_PROBE, msp_get_recv());
 					citiroc_send_probes();
 					break;
-				case CUBES_OP_SEND_DAQ_DUR_AND_START:
-					daq_dur = msp_get_recv()[0];
-					citiroc_daq_set_dur(daq_dur);
-					// citiroc_daq_start();
-					break;
-				case CUBES_OP_SEND_DAQ_DUR:
+				case MSP_OP_SEND_CUBES_DAQ_DUR:
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					break;
@@ -92,10 +87,10 @@ int main(void)
 				citiroc_daq_stop();
 				msp_save_seqflags();
 				break;
-			case CUBES_OP_DAQ_START:
+			case MSP_OP_CUBES_DAQ_START:
 				citiroc_daq_start();
 				break;
-			case CUBES_OP_DAQ_STOP:
+			case MSP_OP_CUBES_DAQ_STOP:
 				citiroc_daq_stop();
 				break;
 			}

@@ -31,16 +31,15 @@
 #define MSP_OP_SEND_PUS    0x31
 
 /* CUBES custom opcodes */
-#define CUBES_OP_HVPS_OFF	0x51
-#define CUBES_OP_HVPS_ON	0x52
-#define CUBES_OP_DAQ_START	0x53
-#define CUBES_OP_DAQ_STOP	0x54
+#define MSP_OP_CUBES_HVPS_OFF	0x51
+#define MSP_OP_CUBES_HVPS_ON	0x52
+#define MSP_OP_CUBES_DAQ_START	0x53
+#define MSP_OP_CUBES_DAQ_STOP	0x54
 
-#define CUBES_OP_SEND_HVPS_CONF				0x71
-#define CUBES_OP_SEND_CITI_CONF     		0x72
-#define CUBES_OP_SEND_PROB_CONF     		0x73
-#define CUBES_OP_SEND_DAQ_DUR_AND_START		0x74
-#define CUBES_OP_SEND_DAQ_DUR				0x75
+#define MSP_OP_SEND_CUBES_HVPS_CONF				0x71
+#define MSP_OP_SEND_CUBES_CITI_CONF     		0x72
+#define MSP_OP_SEND_CUBES_PROB_CONF     		0x73
+#define MSP_OP_SEND_CUBES_DAQ_DUR				0x74
 
 
 /* Values for determining opcode type */

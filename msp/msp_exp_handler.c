@@ -65,8 +65,8 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len){
 				val += 32;
 			}
 		  }
+		*len = 24832;	// max. number of simulated histo bytes
 		/* TODO: Remove to here */
-		*len = 24975; //-25 to allow for "Unix time: xxxxxxx\r\n - DATADATADATA - \r\n"
 
 		send_data = (uint8_t*) send_data_payload;
 	}

@@ -102,6 +102,7 @@ void 		citiroc_init();
 uint32_t 	citiroc_get_rocsr();
 
 void 		citiroc_daq_set_dur(uint8_t duration);
+uint8_t 	citiroc_daq_get_dur();
 void		citiroc_daq_start();
 void		citiroc_daq_stop();
 uint32_t	citiroc_daq_is_rdy();

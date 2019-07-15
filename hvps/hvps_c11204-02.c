@@ -15,6 +15,7 @@
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
+#include "../msp/msp_i2c.h"
 
 #include "../mem_mgmt/mem_mgmt.h"
 
@@ -22,8 +23,7 @@
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-static uint32_t *memadr; /* TODO: Change to 8-bit? */
-extern volatile uint8_t send_data_hk[];
+static uint32_t *memadr;
 
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
@@ -42,7 +42,7 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', sizeof(cmd[28]));
+	memset(cmd, '\0', sizeof(cmd));
 }
 
 
@@ -64,7 +64,7 @@ static int voltage_check(uint8_t cmd[28]){
 		}
 	}
 	/* Convert to long and check value for limit of 55 */
-	val=strtol(data, NULL, 16);
+	val=strtol((char*)data, NULL, 16);
 	val=val*(1.812/pow(10, 3));
 	if(val > 55)
 		return -1;
@@ -101,6 +101,7 @@ int hvps_set_voltage(uint8_t* command){
 void hvps_turn_on(void){
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
+	MSS_TIM64_start();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -108,6 +109,7 @@ void hvps_turn_on(void){
 void hvps_turn_off(void){
 	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
+	MSS_TIM64_stop();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -119,9 +121,28 @@ void hvps_save_voltage(void){
 	memset(send, '\0', sizeof(send));
 }
 
+void hvps_get_voltage(void){
+	uint8_t HGV[]="HGV";
+	getarray(send, HGV);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+
+void hvps_get_current(void){
+	uint8_t HGC[]="HGC";
+	getarray(send, HGC);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+void hvps_get_temp(void){
+	uint8_t HGT[]="HGT";
+	getarray(send, HGT);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	memset(send, '\0', sizeof(send));
+}
+
  /* UART handler for RX from HVPS */
-/* TODO: Add some sort of process to check for what command got returned, if status, write to memory, if return from sent command, acknowledge or ignore */
-void uart0_rx_handler(mss_uart_instance_t * this_uart){
+static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
 
@@ -129,14 +150,18 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 
 	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
 	if(rx_buff[rx_size-1] != 0x0d){
-		strncat(output, rx_buff, rx_size);
+		strncat((char*)output, (char *)rx_buff, rx_size);
 	}
 	else {
-		strncat(output, rx_buff, rx_size);
-		if(output[1]=='h' && output[2]=='g')
-			strcpy(send_data_hk,output);
+		strncat((char*)output, (char*)rx_buff, rx_size);
+		if(output[1]=='h' && output[2]=='g' && output[3]=='v')
+			msp_add_hk(&output[4], 4, 16);
+		else if(output[1]=='h' && output[2]=='g' && output[3]=='c')
+			msp_add_hk(&output[4], 4, 20);
+		else if(output[1]=='h' && output[2]=='g' && output[3]=='t')
+			msp_add_hk(&output[4], 4, 24);
 		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
-			mem_nvm_write(NVM_HVPS, output[4]);
+			mem_nvm_write(NVM_HVPS, &output[4]);
 		}
 		memset(output, '\0', sizeof(output));
 	}
@@ -147,35 +172,22 @@ void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	memset(rx_buff, '\0', sizeof(rx_buff)); /* Clear buffer */
 }
 
+/* Function for setting the time in Timer64 from cleartext seconds */
+
+static void hvps_hk_set_timer(int settime){
+    unsigned long long settimer  = settime * 100000000; /* Multiply with 100MHz to get to seconds*/
+    long timer1 = settimer & 0xFFFFFFFF;
+    long timer2 = (settimer >> 32) & 0xFFFFFFFF;
+    MSS_TIM64_load_immediate(timer2, timer1);
+}
 
 /* Timer interrupt for sending commands to the HVPS
- * Timing set up in timer1 init
  *
  */
 void Timer1_IRQHandler(void){
-	/*static uint16_t cntr=0;*/
-	uint8_t command[4] = "";
-	/* Command for getting Voltage output */
-	strcpy(command, "HGV");
-	getarray(send, command);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-	memset(send, '\0', sizeof(send));
-
-/*	if(cntr==1){
-		 Command for getting current output
-		strcpy(command, "HGC");
-		getarray(send, command);
-		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-		memset(send, '\0', sizeof(send));
-	}
-	if(cntr==2){
-		 Command for getting Temperature output
-		strcpy(command, "HGT");
-		getarray(send, command);
-		MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
-		memset(send, '\0', sizeof(send));
-	}
-	cntr=(cntr+1)%3;*/
+	hvps_get_voltage();
+	hvps_get_current();
+	hvps_get_temp();
 	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
 }
 
@@ -189,10 +201,14 @@ void hvps_init(uint32_t memory){
 
 	memadr= (uint32_t*)memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
+	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	MSS_TIM64_load_immediate(0x00000000, 0x00FFFFFF);
+	hvps_hk_set_timer(5);
 	MSS_TIM64_enable_irq();
 	MSS_TIM64_start();
 }
+
+
+

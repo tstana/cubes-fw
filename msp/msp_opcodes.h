@@ -40,7 +40,7 @@
 #define MSP_OP_SEND_CUBES_CITI_CONF     		0x72
 #define MSP_OP_SEND_CUBES_PROB_CONF     		0x73
 #define MSP_OP_SEND_CUBES_DAQ_DUR				0x74
-
+#define MSP_OP_SEND_CUBES_HVPS_TMP_VOLT			0x75
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

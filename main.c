@@ -58,6 +58,15 @@ int main(void)
 				case MSP_OP_SEND_CUBES_HVPS_CONF:
 					hvps_set_voltage(msp_get_recv());
 					break;
+				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
+				{
+					uint16_t volt = (uint16_t)((msp_get_recv()[0] << 8) |
+											   (msp_get_recv()[1]));
+
+					hvps_set_temporary_voltage(volt);
+
+					break;
+				}
 				case MSP_OP_SEND_CUBES_CITI_CONF:
 					mem_ram_write(RAM_CITI_CONF, msp_get_recv());
 					citiroc_send_slow_control();

@@ -17,13 +17,23 @@
 void hvps_init(uint32_t memory);
 
 /**
- * hvps_send_voltage()
- * Takes incoming voltage command and transforms it into hex and formats the HST command to uart.
+ * hvps_set_voltage()
+ * Takes incoming voltage command and transforms it into hex and formats the HST
+ * command to UART.
  * @param A string literal with voltage in decimal form
  * @return Return -1 for fail, 0 for pass.
  */
-
 int hvps_set_voltage(uint8_t* command);
+
+/**
+ * hvps_set_temporary_voltage()
+ *
+ * @brief Sents a temporary voltage at the HVPS output using the "HBV" command.
+ *
+ * @param A string literal with voltage in decimal form
+ * @return -1 for fail, 0 for pass.
+ */
+int hvps_set_temporary_voltage(uint16_t v);
 
 /**
  * hvps_turn_on()
@@ -59,7 +69,14 @@ void hvps_get_current(void);
  *
  * Sends a command to retrieve temperature from HVPS
  */
-
 void hvps_get_temp(void);
+
+
+/**
+ * hvps_get_temp_corr_factor(void)
+ *
+ * Sends a command to retrieve temperature correction factor from HVPS.
+ */
+void hvps_get_temp_corr_factor(void);
 
 #endif /* HM_HVPS_H_ */

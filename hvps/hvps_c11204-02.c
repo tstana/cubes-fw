@@ -98,6 +98,24 @@ int hvps_set_voltage(uint8_t* command){
 	return 0;
 }
 
+int hvps_set_temporary_voltage(uint16_t v)
+{
+	/* Prep command string and parameter */
+	uint8_t cmd[8] = "HBV";
+	itoa(v, (char *)(cmd+3), 16);
+
+	/* Give up early if voltage is too high */
+	if(voltage_check(cmd) == -1)
+		return -1;
+
+	/* Format string to UART and send it on */
+	uint8_t HBV[12];
+	getarray(HBV, cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, HBV, strlen((char *)HBV));
+
+	return 0;
+}
+
 void hvps_turn_on(void){
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
@@ -114,7 +132,7 @@ void hvps_turn_off(void){
 	memset(send, '\0', sizeof(send));
 }
 
-void hvps_save_voltage(void){
+void hvps_get_temp_corr_factor(void){
 	uint8_t HRT[]="HRT";
 	getarray(send, HRT);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
@@ -134,6 +152,7 @@ void hvps_get_current(void){
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
+
 void hvps_get_temp(void){
 	uint8_t HGT[]="HGT";
 	getarray(send, HGT);

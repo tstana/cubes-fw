@@ -97,7 +97,7 @@ int main(void)
 				msp_save_seqflags();
 				break;
 			case MSP_OP_CUBES_DAQ_START:
-				// citiroc_daq_start();
+				citiroc_daq_start();
 				citiroc_hcr_reset();
 				break;
 			case MSP_OP_CUBES_DAQ_STOP:

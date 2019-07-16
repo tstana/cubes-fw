@@ -33,53 +33,37 @@ volatile uint8_t hk_add_done = 0;
 
 /* Prototype in msp_exp_handler.h */
 
-void msp_expsend_start(unsigned char opcode, unsigned long *len){
-	uint32_t* long_data;
-	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()){
-		/*mem_read(RAM_HISTO, &long_data);
-		*len = HISTO_LEN;*/
+void msp_expsend_start(unsigned char opcode, unsigned long *len)
+{
+	uint32_t *long_data = (uint32_t *)HISTO_RAM;
+	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy())
+	{
 		/*
-		 * Massage bin memory (16-bit, big-endian, organized into 2x 16-bit big-endian)
-		 * into MSP data array; see mem-addressing.png for a visual description of this.
+		 * Massage bin memory (16-bit, big-endian, organized into 2x 16-bit
+		 * big-endian) into MSP data array; see mem-addressing.png for a visual
+		 * description of this.
 		 */
-		/*for(int i=0; i<HISTO_LEN/4; i++){
+		for(int i=0; i<HISTO_LEN/4; i++) {
 			send_data_payload[i*4+1] = long_data[i] & 0xFF;
 			send_data_payload[i*4+0] = long_data[i]>>8 & 0xFF;
 			send_data_payload[i*4+3] = long_data[i]>>16 & 0xFF;
 			send_data_payload[i*4+2] = long_data[i]>>24 & 0xFF;
-		}*/
-		send_data_payload[0] = (unsigned char)'C'; /* TODO: Remove from here */
-		send_data_payload[1] = (unsigned char)'1';
-		for (int i = 2; i < 254; ++i) {
-			send_data_payload[i] = 0;
 		}
-		unsigned int val = 2048;
-		send_data_payload[254] = (val >> 8) & 0xFF;
-		send_data_payload[255] = val & 0xFF;
-		  // Histogram data
-		for (int j = 0; j < 6; ++j) {
-			val = 0;
-			for (int i = 0; i < 2048; ++i) {
-				send_data_payload[256 + 4096*j + i*2    ] = (val >> 8) & 0xFF;
-				send_data_payload[256 + 4096*j + i*2 + 1] = val & 0xFF;
-				val += 32;
-			}
-		  }
-		*len = 24832;	// max. number of simulated histo bytes
-		/* TODO: Remove to here */
 
+		*len = HISTO_LEN;
 		send_data = (uint8_t*) send_data_payload;
 	}
-	else if(opcode == MSP_OP_REQ_HK){
-		uint32_t temp = 0;
-		temp = citiroc_hcr_get(0);
-		to_bigendian32(send_data_hk, temp);
-		temp = citiroc_hcr_get(16);
-		to_bigendian32(send_data_hk+4, temp);
-		temp = citiroc_hcr_get(31);
-		to_bigendian32(send_data_hk+8, temp);
-		temp = citiroc_hcr_get(21);
-		to_bigendian32(send_data_hk+12, temp);
+	else if(opcode == MSP_OP_REQ_HK)
+	{
+		uint32_t hcr = 0;
+		hcr = citiroc_hcr_get(0);
+		to_bigendian32(send_data_hk, hcr);
+		hcr = citiroc_hcr_get(16);
+		to_bigendian32(send_data_hk+4, hcr);
+		hcr = citiroc_hcr_get(31);
+		to_bigendian32(send_data_hk+8, hcr);
+		hcr = citiroc_hcr_get(21);
+		to_bigendian32(send_data_hk+12, hcr);
 		send_data = (uint8_t *)send_data_hk;
 		*len = 28;
 	}

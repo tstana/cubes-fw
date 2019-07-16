@@ -72,13 +72,40 @@ static int voltage_check(uint8_t cmd[28]){
 		return 0;
 }
 
-static void start_hvps(void){
-	uint8_t nvm[28] = "HST";
-	mem_read(NVM_HVPS, &nvm[3]);
-	if(voltage_check(nvm)==-1)
+static void start_hvps(void)
+{
+	/* Start by reading HVPS settings from NVM */
+	uint32_t hvps_settings[3];
+	mem_read(NVM_HVPS, hvps_settings);
+
+	/* Convert these into ASCII; see memory layout diagram for details */
+	uint16_t dtp1, dtp2;
+	uint16_t dt1, dt2;
+	uint16_t v, t;
+	dtp1 = hvps_settings[0] & 0xFFFF;
+	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
+	dt1 = hvps_settings[1] & 0xFFFF;
+	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
+	v = hvps_settings[2] & 0xFFFF;
+	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
+
+	/* Compose command string, converting int16's into ASCII*/
+	uint8_t HST[28] = "HST";
+	itoa(dtp1, (char *)&HST[3], 16);
+	itoa(dtp2, (char *)&HST[7], 16);
+	itoa(dt1, (char *)&HST[11], 16);
+	itoa(dt2, (char *)&HST[15], 16);
+	itoa(v, (char *)&HST[19], 16);
+	itoa(t, (char *)&HST[23], 16);
+
+	if(voltage_check(HST)==-1)
 		return;
-	getarray(send, nvm); /*get required string from function */
+
+	/* Prepend STX and append checksum and CR, then send*/
+	getarray(send, HST);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+
+	/* Clear send buffer */
 	memset(send, '\0', sizeof(send));
 }
 

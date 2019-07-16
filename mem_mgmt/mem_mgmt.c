@@ -74,25 +74,28 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 				return -1;
 }
 
-void mem_read(uint32_t modul, uint32_t *data){
+uint32_t mem_read(uint32_t modul, uint32_t *data)
+{
 	uint32_t length=0;
 	uint32_t *addr;
-	switch(modul){ /* Set length and address pointer to correct module through switch */
+
+	/* Set length and address pointer to correct module through switch */
+	switch(modul){
 		case NVM_HVPS:
 			length=HVPS_LEN;
 			addr=(uint32_t *)(NVM_ADDR+HVPS_OFFSET);
 			break;
 		case NVM_CITIROC:
-			length=CITIROC_LEN;
+			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
 		// TODO: Gateware currently does not allow reading the CFG_RAM. Remove?
 		case RAM_HVPS:
-			length=HVPS_LEN;
+			length = HVPS_LEN;
 			addr=(uint32_t *)(RAM_ADDR+HVPS_OFFSET);
 			break;
 		case NVM_SEQFLAG:
-			length=SEQFLAG_LEN;
+			length = SEQFLAG_LEN;
 			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
 			break;
 		case RAM_HISTO:
@@ -100,7 +103,21 @@ void mem_read(uint32_t modul, uint32_t *data){
 			addr=(uint32_t *)(HISTO_ADDR);
 			break;
 		default:
-			return; /* If the statement isn't found, return without reading */
+			return -1; /* If the statement isn't found, return without reading */
 	}
-	data  = addr;
+
+	/*
+	 * Inputs to length so far were in number of bytes; turn into number of
+	 * 32-bit addresses, then copy the actual data.
+	 */
+	length /= 4;
+
+	int i;
+	for (i = 0; i < length; ++i)
+	{
+		data[i] = addr[i];
+	}
+
+	/* and return the number of bytes copied */
+	return length*4;
 }

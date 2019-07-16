@@ -20,9 +20,9 @@
 #define RAM_CITI_PROBE	0x14u
 
 #define HVPS_OFS		0x00
-#define HVPS_LEN		24u
+#define HVPS_LEN		12u
 #define CITIROC_OFS		0x10
-#define CITIROC_LEN		143u
+#define CITIROC_LEN		144u
 #define PROBE_OFS		0xA0
 #define PROBE_LEN		32u
 
@@ -53,7 +53,7 @@ void mem_ram_write(uint32_t modul, uint8_t *data);
  * @param	uint8_t pointer to where data is to be transferred
  * Return: None
  */
-void mem_read(uint32_t modul, uint32_t *data);
+uint32_t mem_read(uint32_t modul, uint32_t *data);
 
 /** mem_nvm_write
  * Function for writing data to NVM.

@@ -56,15 +56,27 @@ int main(void)
 				case MSP_OP_SEND_PUS:
 					break;
 				case MSP_OP_SEND_CUBES_HVPS_CONF:
+					// TODO: Call hvps_set_temp_corr_factor() and turn HVPS on
+					// 		 (see MSP_OP_SEND_CUBES_HVPS_TMP_VOLT below)
 					hvps_set_voltage(msp_get_recv());
 					break;
 				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
 				{
-					uint16_t volt = (uint16_t)((msp_get_recv()[0] << 8) |
-											   (msp_get_recv()[1]));
+					uint8_t turn_on = (uint8_t)msp_get_recv()[0];
+					if (hvps_is_on())
+					{
+						if (turn_on == 0)
+						{
+							hvps_turn_off();
+							break;
+						}
+						uint16_t volt = (uint16_t)((msp_get_recv()[1] << 8) |
+												   (msp_get_recv()[2]));
 
-					hvps_set_temporary_voltage(volt);
-
+						hvps_set_temporary_voltage(volt);
+					}
+					else if (turn_on == 1)
+						hvps_turn_on();
 					break;
 				}
 				case MSP_OP_SEND_CUBES_CITI_CONF:

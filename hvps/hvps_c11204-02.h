@@ -71,6 +71,22 @@ void hvps_get_current(void);
  */
 void hvps_get_temp(void);
 
+/**
+ * hvps_get_status(void)
+ *
+ * @brief Send a command to retrieve the status of the HVPS module.
+ */
+void hvps_get_status(void);
+
+/**
+ * hvps_is_on(void)
+ *
+ * @brief Get the latest obtained status from the HVPS.
+ *
+ * @return '1' if HVPS output voltage is on, '0' otherwise.
+ */
+uint8_t hvps_is_on(void);
+
 
 /**
  * hvps_get_temp_corr_factor(void)

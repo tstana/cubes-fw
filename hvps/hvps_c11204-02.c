@@ -25,6 +25,10 @@ static uint8_t chkstr[2];
 static uint8_t send[40];
 static uint32_t *memadr;
 
+static uint16_t hvps_status;
+
+
+
 static void getarray(uint8_t *array, uint8_t cmd[28]){
 	const uint8_t stx = 0x02;
 	const uint8_t etx = 0x03;
@@ -187,6 +191,19 @@ void hvps_get_temp(void){
 	memset(send, '\0', sizeof(send));
 }
 
+void hvps_get_status(void)
+{
+	uint8_t cmd[8];
+	getarray(cmd, (uint8_t *)"HGS");
+	MSS_UART_polled_tx(&g_mss_uart0, cmd, strlen((char *)cmd));
+}
+
+uint8_t hvps_is_on(void)
+{
+	return (uint8_t)(hvps_status & 0x0001);
+}
+
+
  /* UART handler for RX from HVPS */
 static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	uint8_t rx_buff[30]="";
@@ -194,7 +211,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 
 	static uint8_t output[30]="";
 
-	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff)); /* Get message from HVPS and send it on to computer terminal */
+	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff));
 	if(rx_buff[rx_size-1] != 0x0d){
 		strncat((char*)output, (char *)rx_buff, rx_size);
 	}
@@ -206,8 +223,11 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 			msp_add_hk(&output[4], 4, 20);
 		else if(output[1]=='h' && output[2]=='g' && output[3]=='t')
 			msp_add_hk(&output[4], 4, 24);
-		else if(output[1]=='h' && output[2]=='r' && output[3]=='t'){
+		else if(output[1]=='h' && output[2]=='r' && output[3]=='t')
 			mem_nvm_write(NVM_HVPS, &output[4]);
+		else if (output[1] == 'h' && output[2] == 'g' && output[3] == 's')
+		{
+			hvps_status = (uint16_t) strtol((char *)&output[4], NULL, 16);
 		}
 		memset(output, '\0', sizeof(output));
 	}
@@ -230,7 +250,9 @@ static void hvps_hk_set_timer(int settime){
 /* Timer interrupt for sending commands to the HVPS
  *
  */
-void Timer1_IRQHandler(void){
+void Timer1_IRQHandler(void)
+{
+	hvps_get_status();
 	hvps_get_voltage();
 	hvps_get_current();
 	hvps_get_temp();

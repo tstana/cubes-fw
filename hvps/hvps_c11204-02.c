@@ -29,7 +29,8 @@ static uint16_t hvps_status;
 
 
 
-static void getarray(uint8_t *array, uint8_t cmd[28]){
+static void getarray(uint8_t *array, uint8_t cmd[28])
+{
 	const uint8_t stx = 0x02;
 	const uint8_t etx = 0x03;
 	const uint8_t CR = 0x0D;
@@ -53,7 +54,8 @@ static void getarray(uint8_t *array, uint8_t cmd[28]){
 
 
 
-static int voltage_check(uint8_t cmd[28]){
+static int voltage_check(uint8_t cmd[28])
+{
 	uint8_t data[4] = "";
 	double val = 0;
 	/* Check for which command that came to decide on array location */
@@ -113,7 +115,8 @@ static void start_hvps(void)
 	memset(send, '\0', sizeof(send));
 }
 
-int hvps_set_voltage(uint8_t* command){
+int hvps_set_voltage(uint8_t* command)
+{
 	uint8_t HST[30]="HST"; /* Standard input, ~44.5V, no temp correction */
 	for (int j=0; j<24; j++){
 		HST[j]=memadr[j];
@@ -147,35 +150,40 @@ int hvps_set_temporary_voltage(uint16_t v)
 	return 0;
 }
 
-void hvps_turn_on(void){
+void hvps_turn_on(void)
+{
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-void hvps_turn_off(void){
+void hvps_turn_off(void)
+{
 	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-void hvps_get_temp_corr_factor(void){
+void hvps_get_temp_corr_factor(void)
+{
 	uint8_t HRT[]="HRT";
 	getarray(send, HRT);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-void hvps_get_voltage(void){
+void hvps_get_voltage(void)
+{
 	uint8_t HGV[]="HGV";
 	getarray(send, HGV);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
 
-void hvps_get_current(void){
+void hvps_get_current(void)
+{
 	uint8_t HGC[]="HGC";
 	getarray(send, HGC);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
@@ -203,7 +211,8 @@ uint8_t hvps_is_on(void)
 
 
  /* UART handler for RX from HVPS */
-static void uart0_rx_handler(mss_uart_instance_t * this_uart){
+static void uart0_rx_handler(mss_uart_instance_t * this_uart)
+{
 	uint8_t rx_buff[30]="";
 	uint32_t rx_size;
 

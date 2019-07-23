@@ -28,9 +28,11 @@ int hvps_set_voltage(uint8_t* command);
 /**
  * hvps_set_temporary_voltage()
  *
- * @brief Sents a temporary voltage at the HVPS output using the "HBV" command.
+ * @brief Sets a temporary voltage at the HVPS output using the "HBV" command.
  *
- * @param A string literal with voltage in decimal form
+ * @param Two-byte value corresponding to the ASCII value sent to the HVPS
+ *        module. For example, for an ASCII setting of "3AEF" (four bytes), the
+ *        corresponding two-byte value (the passed parameter value) is 0x3AEF.
  * @return -1 for fail, 0 for pass.
  */
 int hvps_set_temporary_voltage(uint16_t v);

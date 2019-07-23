@@ -150,7 +150,6 @@ int hvps_set_temporary_voltage(uint16_t v)
 void hvps_turn_on(void){
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
-	MSS_TIM64_start();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -158,7 +157,6 @@ void hvps_turn_on(void){
 void hvps_turn_off(void){
 	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
-	MSS_TIM64_stop();
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
 	memset(send, '\0', sizeof(send));
 }
@@ -193,9 +191,9 @@ void hvps_get_temp(void){
 
 void hvps_get_status(void)
 {
-	uint8_t cmd[8];
-	getarray(cmd, (uint8_t *)"HGS");
-	MSS_UART_polled_tx(&g_mss_uart0, cmd, strlen((char *)cmd));
+	uint8_t cmd[] = "HGS";
+	getarray(send, cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 }
 
 uint8_t hvps_is_on(void)
@@ -238,42 +236,59 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart){
 	memset(rx_buff, '\0', sizeof(rx_buff)); /* Clear buffer */
 }
 
-/* Function for setting the time in Timer64 from cleartext seconds */
-
-static void hvps_hk_set_timer(int settime){
-    unsigned long long settimer  = settime * 100000000; /* Multiply with 100MHz to get to seconds*/
-    long timer1 = settimer & 0xFFFFFFFF;
-    long timer2 = (settimer >> 32) & 0xFFFFFFFF;
-    MSS_TIM64_load_immediate(timer2, timer1);
-}
-
-/* Timer interrupt for sending commands to the HVPS
+/**
+ * @brief Timer interrupt for sending commands to the HVPS
+ *        Each second, a separate command is sent to the HVPS.
  *
  */
 void Timer1_IRQHandler(void)
 {
-	hvps_get_status();
-	hvps_get_voltage();
-	hvps_get_current();
-	hvps_get_temp();
+	static uint8_t current_run = 0;
+	current_run = (current_run + 1) % 4;
+
+	switch (current_run)
+	{
+	case 0:
+		hvps_get_status();
+		break;
+	case 1:
+		hvps_get_voltage();
+		break;
+	case 2:
+		hvps_get_current();
+		break;
+	case 3:
+		hvps_get_temp();
+		break;
+	default:
+		break;
+	}
+
 	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
 }
 
 
-void hvps_init(uint32_t memory){
-	/*
-	 * Initialize and configure UART and timer
-	 * Timer: periodic mode, loads value in load_immediate
-	 * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
-	 */
-
+/**
+ * Initialize and configure UART and timer
+ * Timer: periodic mode, loads value in load_immediate
+ * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
+ */
+void hvps_init(uint32_t memory)
+{
 	memadr= (uint32_t*)memory;
-	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS | MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
+	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
+			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
 	start_hvps();
+
+	/* Set a 1-second timeout on the timer (multiply with 100MHz clock freq.)*/
+	unsigned long long settimer  = 1 * 100000000;
+	long timer1 = settimer & 0xFFFFFFFF;
+	long timer2 = (settimer >> 32) & 0xFFFFFFFF;
+
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	hvps_hk_set_timer(5);
+	MSS_TIM64_load_immediate(timer2, timer1);
 	MSS_TIM64_enable_irq();
 	MSS_TIM64_start();
 }

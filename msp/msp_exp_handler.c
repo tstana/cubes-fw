@@ -81,8 +81,6 @@ void msp_expsend_complete(unsigned char opcode){
 	has_send = opcode;
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
-	else if(opcode == MSP_OP_REQ_HK)
-		memset(send_data_hk, '\0', sizeof(send_data_hk));
 }
 void msp_expsend_error(unsigned char opcode, int error){
 	has_send_error = opcode;

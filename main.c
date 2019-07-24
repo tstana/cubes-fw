@@ -63,20 +63,16 @@ int main(void)
 				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
 				{
 					uint8_t turn_on = (uint8_t)msp_get_recv()[0];
-					if (hvps_is_on())
-					{
-						if (turn_on == 0)
-						{
-							hvps_turn_off();
-							break;
-						}
-						uint16_t volt = (uint16_t)((msp_get_recv()[1] << 8) |
-												   (msp_get_recv()[2]));
+					uint16_t volt = (uint16_t)((msp_get_recv()[1] << 8) |
+											   (msp_get_recv()[2]));
 
-						hvps_set_temporary_voltage(volt);
-					}
-					else if (turn_on == 1)
+					if (turn_on && !hvps_is_on())
 						hvps_turn_on();
+					else if (!turn_on && hvps_is_on())
+						hvps_turn_off();
+
+					hvps_set_temporary_voltage(volt);
+
 					break;
 				}
 				case MSP_OP_SEND_CUBES_CITI_CONF:

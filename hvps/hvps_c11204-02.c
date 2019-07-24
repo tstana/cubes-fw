@@ -210,39 +210,35 @@ uint8_t hvps_is_on(void)
 }
 
 
- /* UART handler for RX from HVPS */
+/* UART handler for RX from HVPS */
+static uint8_t hvps_hk[12];
+
 static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 {
-	uint8_t rx_buff[30]="";
-	uint32_t rx_size;
+	static uint8_t rx_buff[51]="";
+	static size_t rx_size;
 
-	static uint8_t output[30]="";
-
-	rx_size = MSS_UART_get_rx(this_uart, rx_buff, sizeof(rx_buff));
-	if(rx_buff[rx_size-1] != 0x0d){
-		strncat((char*)output, (char *)rx_buff, rx_size);
-	}
-	else {
-		strncat((char*)output, (char*)rx_buff, rx_size);
-		if(output[1]=='h' && output[2]=='g' && output[3]=='v')
-			msp_add_hk(&output[4], 4, 16);
-		else if(output[1]=='h' && output[2]=='g' && output[3]=='c')
-			msp_add_hk(&output[4], 4, 20);
-		else if(output[1]=='h' && output[2]=='g' && output[3]=='t')
-			msp_add_hk(&output[4], 4, 24);
-		else if(output[1]=='h' && output[2]=='r' && output[3]=='t')
-			mem_nvm_write(NVM_HVPS, &output[4]);
-		else if (output[1] == 'h' && output[2] == 'g' && output[3] == 's')
+	rx_size += MSS_UART_get_rx(this_uart, rx_buff + rx_size, sizeof(rx_buff));
+	if(rx_buff[rx_size-1] == 0x0d)
+	{
+		/* Copy to HK buffer */
+		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v')
+			memcpy(&hvps_hk[0], &rx_buff[4], 4);
+		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='c')
+			memcpy(&hvps_hk[4], &rx_buff[4], 4);
+		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t')
+			memcpy(&hvps_hk[8], &rx_buff[4], 4);
+		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t')
+			mem_nvm_write(NVM_HVPS, &rx_buff[4]);
+		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
 		{
-			hvps_status = (uint16_t) strtol((char *)&output[4], NULL, 16);
+			hvps_status = (uint16_t) strtol((char *)&rx_buff[4], NULL, 16);
 		}
-		memset(output, '\0', sizeof(output));
+
+		/* Clear RX buffer and prep for next round of RX... */
+		memset(rx_buff, '\0', sizeof(rx_buff));
+		rx_size = 0;
 	}
-
-
-
-	//processData(rx_buff); /* Process data for certain commands */
-	memset(rx_buff, '\0', sizeof(rx_buff)); /* Clear buffer */
 }
 
 /**
@@ -253,7 +249,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 void Timer1_IRQHandler(void)
 {
 	static uint8_t current_run = 0;
-	current_run = (current_run + 1) % 4;
+	current_run = (current_run + 1) % 5;
 
 	switch (current_run)
 	{
@@ -269,11 +265,15 @@ void Timer1_IRQHandler(void)
 	case 3:
 		hvps_get_temp();
 		break;
+	case 4:
+		msp_add_hk(hvps_hk, 12, 16);
+		break;
 	default:
 		break;
 	}
 
-	MSS_TIM64_clear_irq(); /*interrupt bit needs to be cleared after every call */
+	/*interrupt bit needs to be cleared after every call */
+	MSS_TIM64_clear_irq();
 }
 
 

@@ -82,9 +82,10 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define DAQSTOP			(12)
 #define FORCETRIG		(13)
 #define CHXHCR_RST		(14)
+#define HISTRST			(15)
 #define SCBUSY			(16)
 #define DAQRDY			(17)
-#define HISTOFULL		(18)
+#define HISTRSTONGO		(18)
 
 /** Base address and register definitions*/
 #define CITIROC_CSR_BASE	CITIROC_INTF
@@ -112,5 +113,12 @@ void		citiroc_hcr_reset(void);
 
 void		citiroc_send_slow_control();
 void		citiroc_send_probes();
+
+/**
+ * citiroc_histo_reset()
+ *
+ * @brief Set the ROCSR.HISTO_RST bit and wait for reset to complete
+ */
+void 		citiroc_histo_reset();
 
 #endif // _CITIROC_H_

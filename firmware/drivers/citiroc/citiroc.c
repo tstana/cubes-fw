@@ -97,3 +97,10 @@ void citiroc_send_probes()
 		;
 	CITIROC->ROCSR &= ~(1 << ASICPRBEN);
 }
+
+void citiroc_histo_reset()
+{
+	CITIROC->ROCSR |= (1 << HISTRST);
+	while (CITIROC->ROCSR & (1 << HISTRSTONGO))
+		;
+}

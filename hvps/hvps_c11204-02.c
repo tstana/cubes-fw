@@ -215,7 +215,8 @@ static uint8_t hvps_hk[12];
 
 static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 {
-	static uint8_t rx_buff[51]="";
+	// TODO: Make rx_buff 51-byte long, to account for max HVPS reply length.
+	static uint8_t rx_buff[16]="";
 	static size_t rx_size;
 
 	rx_size += MSS_UART_get_rx(this_uart, rx_buff + rx_size, sizeof(rx_buff));

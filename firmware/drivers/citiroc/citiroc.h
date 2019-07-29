@@ -33,9 +33,13 @@
 #include <stdint.h>
 #include "../cubes_hw_platform.h"
 
+/** Base address definition */
+#define CITIROC_CSR_BASE	CITIROC_INTF
+
 /** Citiroc CSR struct definition */
 struct citiroc_csr {
-	uint32_t	ROCSR;
+	uint32_t	ROCR;
+	uint32_t	ROSR;
 	uint32_t	TEMPR;
 	uint32_t	CH0HCR;
 	uint32_t	CH1HCR;
@@ -73,25 +77,27 @@ struct citiroc_csr {
 
 typedef struct citiroc_csr citiroc_csr_t;
 
-/** Citiroc CSR bit fields definition */
+/** Define helper access macro */
+#define CITIROC			((citiroc_csr_t *)CITIROC_CSR_BASE)
+
+
+/** Citiroc ROCR bit fields definition */
 #define NEWSC			( 0)
 #define ASICPRBEN		( 1)
-#define DAQZEROSUP		( 2)
-#define DAQDUR			( 3)
-#define DAQSTART		(11)
-#define DAQSTOP			(12)
-#define FORCETRIG		(13)
-#define CHXHCR_RST		(14)
-#define HISTRST			(15)
-#define SCBUSY			(16)
-#define DAQRDY			(17)
-#define HISTRSTONGO		(18)
+#define READREGDBG		( 2)
+#define READREGCHAN		( 3)
+#define DAQDUR			(16)
+#define DAQZEROSUP		(24)
+#define DAQSTART		(25)
+#define DAQSTOP			(26)
+#define FORCETRIG		(27)
+#define RSTALLHCR		(28)
+#define RSTHIST			(29)
 
-/** Base address and register definitions*/
-#define CITIROC_CSR_BASE	CITIROC_INTF
-
-#define CITIROC_CSR			((citiroc_csr_t *) CITIROC_CSR_BASE)	// formal
-#define CITIROC				CITIROC_CSR								// convenient
+/** Citiroc ROSR bit fields definitions */
+#define SCBUSY			(0)
+#define DAQRDY			(1)
+#define HISTRSTONGO		(2)
 
 /** Function definitions */
 /* TODO: return something?

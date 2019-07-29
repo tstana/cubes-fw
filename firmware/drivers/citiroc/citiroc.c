@@ -31,41 +31,36 @@
 
 void citiroc_init()
 {
-	CITIROC->ROCSR = 0x0000;
+	CITIROC->ROCR = 0x0000;
 }
 
 void citiroc_daq_set_dur(uint8_t duration)
 {
 	/* Reset DAQDUR bits and apply new setting */
-	CITIROC->ROCSR &= ~(0xFF << DAQDUR);
-	CITIROC->ROCSR |= (duration << DAQDUR);
+	CITIROC->ROCR &= ~(0xFF << DAQDUR);
+	CITIROC->ROCR |= (duration << DAQDUR);
 }
 
 uint8_t citiroc_daq_get_dur()
 {
-	return (CITIROC->ROCSR >> DAQDUR) & 0xFF;
+	return (CITIROC->ROCR >> DAQDUR) & 0xFF;
 }
 
 void citiroc_daq_start()
 {
 	/* DAQSTART bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
-	CITIROC->ROCSR |= (1 << DAQSTART);
+	CITIROC->ROCR |= (1 << DAQSTART);
 }
 
 void citiroc_daq_stop()
 {
 	/* DAQSTOP bit self-clears on read. Use citiroc_daq_is_rdy() to get info DAQ status. */
-	CITIROC->ROCSR |= (1 << DAQSTOP);
+	CITIROC->ROCR |= (1 << DAQSTOP);
 }
 
 uint32_t citiroc_daq_is_rdy()
 {
-	return ( (CITIROC->ROCSR & (1 << DAQRDY)) ? 1 : 0 );
-}
-
-uint32_t citiroc_get_rocsr()
-{
-	return CITIROC->ROCSR;
+	return ( (CITIROC->ROSR & (1 << DAQRDY)) ? 1 : 0 );
 }
 
 uint32_t citiroc_hcr_get(uint32_t channel_num)
@@ -76,31 +71,31 @@ uint32_t citiroc_hcr_get(uint32_t channel_num)
 
 void citiroc_hcr_reset()
 {
-	CITIROC->ROCSR |= (1 << CHXHCR_RST);
+	CITIROC->ROCR |= (1 << RSTALLHCR);
 	// No clearing needed, bit self-resets.
 }
 
 void citiroc_send_slow_control()
 {
 	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
-	CITIROC->ROCSR |= (1 << NEWSC);
-	while (CITIROC->ROCSR & (1 << SCBUSY))
+	CITIROC->ROCR |= (1 << NEWSC);
+	while (CITIROC->ROSR & (1 << SCBUSY))
 		;
 }
 
 void citiroc_send_probes()
 {
 	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
-	CITIROC->ROCSR |= (1 << ASICPRBEN);
-	CITIROC->ROCSR |= (1 << NEWSC);
-	while (CITIROC->ROCSR & (1 << SCBUSY))
+	CITIROC->ROCR |= (1 << ASICPRBEN);
+	CITIROC->ROCR |= (1 << NEWSC);
+	while (CITIROC->ROSR & (1 << SCBUSY))
 		;
-	CITIROC->ROCSR &= ~(1 << ASICPRBEN);
+	CITIROC->ROCR &= ~(1 << ASICPRBEN);
 }
 
 void citiroc_histo_reset()
 {
-	CITIROC->ROCSR |= (1 << HISTRST);
-	while (CITIROC->ROCSR & (1 << HISTRSTONGO))
+	CITIROC->ROCR |= (1 << RSTHIST);
+	while (CITIROC->ROSR & (1 << HISTRSTONGO))
 		;
 }

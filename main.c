@@ -83,6 +83,11 @@ int main(void)
 					mem_ram_write(RAM_CITI_PROBE, msp_get_recv());
 					citiroc_send_probes();
 					break;
+				case MSP_OP_SEND_READ_REG_DEBUG:
+				{
+					uint8_t rrd = msp_get_recv()[0];
+					citiroc_rrd(rrd & 0x20, rrd & 0x1f);
+				}
 				case MSP_OP_SEND_CUBES_DAQ_DUR:
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);

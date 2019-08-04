@@ -84,8 +84,9 @@ typedef struct citiroc_csr citiroc_csr_t;
 /** Citiroc ROCR bit fields definition */
 #define NEWSC			( 0)
 #define ASICPRBEN		( 1)
-#define READREGDBG		( 2)
-#define READREGCHAN		( 3)
+#define RRDEN			( 2)
+#define RRDCHAN			( 3)
+#define RRDNEW			( 8)
 #define DAQDUR			(16)
 #define DAQZEROSUP		(24)
 #define DAQSTART		(25)
@@ -106,8 +107,6 @@ typedef struct citiroc_csr citiroc_csr_t;
  */
 void 		citiroc_init();
 
-uint32_t 	citiroc_get_rocsr();
-
 void 		citiroc_daq_set_dur(uint8_t duration);
 uint8_t 	citiroc_daq_get_dur();
 void		citiroc_daq_start();
@@ -119,11 +118,12 @@ void		citiroc_hcr_reset(void);
 
 void		citiroc_send_slow_control();
 void		citiroc_send_probes();
+void		citiroc_rrd(uint32_t enable, uint8_t chan);
 
 /**
  * citiroc_histo_reset()
  *
- * @brief Set the ROCSR.HISTO_RST bit and wait for reset to complete
+ * @brief Set the ROCSR.RSTHIST bit and wait for reset to complete
  */
 void 		citiroc_histo_reset();
 

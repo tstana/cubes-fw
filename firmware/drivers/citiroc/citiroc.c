@@ -93,6 +93,18 @@ void citiroc_send_probes()
 	CITIROC->ROCR &= ~(1 << ASICPRBEN);
 }
 
+void citiroc_rrd(uint32_t enable, uint8_t chan)
+{
+	/* Start by clearing the existing RRD bits */
+	CITIROC->ROCR &= ~(1 << RRDEN);
+	CITIROC->ROCR &= ~(0x1f << RRDCHAN);
+
+	/* Now, apply the new setting */
+	CITIROC->ROCR |= ((enable ? 1 : 0) << RRDEN);
+	CITIROC->ROCR |= ((chan & 0x1f) << RRDCHAN);
+	CITIROC->ROCR |= (1 << RRDNEW);
+}
+
 void citiroc_histo_reset()
 {
 	CITIROC->ROCR |= (1 << RSTHIST);

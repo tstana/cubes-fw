@@ -143,9 +143,8 @@ int hvps_set_temporary_voltage(uint16_t v)
 		return -1;
 
 	/* Format string to UART and send it on */
-	uint8_t HBV[12];
-	getarray(HBV, cmd);
-	MSS_UART_polled_tx(&g_mss_uart0, HBV, strlen((char *)HBV));
+	getarray(send, cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 
 	return 0;
 }

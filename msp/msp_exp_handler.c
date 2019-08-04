@@ -13,10 +13,10 @@
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[25000]="";
-static unsigned char send_data_hk[400] = "";
+static unsigned char send_data_hk[64] = "";
 
-unsigned char recv_data[2000] = "";
-static unsigned long recv_maxlen = 2000;
+#define RECV_MAXLEN 	256
+static unsigned char recv_data[RECV_MAXLEN] = "";
 static unsigned long recv_length;
 
 unsigned int has_send = 0;
@@ -93,7 +93,7 @@ void msp_exprecv_start(unsigned char opcode, unsigned long len){
 }
 void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned long len, unsigned long offset){
 	for(unsigned long i=0; i<len; i++){
-		if((i+offset) < recv_maxlen){
+		if((i+offset) < RECV_MAXLEN){
 			recv_data[i+offset] = buf[i];
 		}
 		else

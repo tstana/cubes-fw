@@ -86,7 +86,8 @@ int main(void)
 				case MSP_OP_SEND_READ_REG_DEBUG:
 				{
 					uint8_t rrd = msp_get_recv()[0];
-					citiroc_rrd(rrd & 0x20, rrd & 0x1f);
+					citiroc_rrd(rrd & 0x01, (rrd & 0x3e)>>1);
+					break;
 				}
 				case MSP_OP_SEND_CUBES_DAQ_DUR:
 					daq_dur = msp_get_recv()[0];

@@ -14,6 +14,7 @@
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
+#include "../firmware/drivers/citiroc/citiroc.h"
 #include "hvps_c11204-02.h"
 #include "../msp/msp_i2c.h"
 
@@ -26,6 +27,7 @@ static uint8_t send[40];
 static uint32_t *memadr;
 
 static uint16_t hvps_status;
+static uint8_t hvps_hk[12];
 
 
 
@@ -208,9 +210,19 @@ uint8_t hvps_is_on(void)
 	return (uint8_t)(hvps_status & 0x0001);
 }
 
+void hvps_tempr_write(void)
+{
+	uint8_t values[4];
+	for(int i=0; i<4; i++){
+		values[i] = hvps_hk[8+i];
+	}
+	uint16_t temp = strtol((char*)values, NULL, 16);
+	CITIROC->TEMPR &= ~(0xFF);
+	CITIROC->TEMPR ^= temp && 0xFF;
+
+}
 
 /* UART handler for RX from HVPS */
-static uint8_t hvps_hk[12];
 
 static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 {
@@ -293,8 +305,8 @@ void hvps_init(uint32_t memory)
 
 	/* Set a 1-second timeout on the timer (multiply with 100MHz clock freq.)*/
 	unsigned long long settimer  = 1 * 100000000;
-	long timer1 = settimer & 0xFFFFFFFF;
-	long timer2 = (settimer >> 32) & 0xFFFFFFFF;
+	unsigned long timer1 = settimer & 0xFFFFFFFF;
+	unsigned long timer2 = (settimer >> 32) & 0xFFFFFFFF;
 
 	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
 	MSS_TIM64_load_immediate(timer2, timer1);

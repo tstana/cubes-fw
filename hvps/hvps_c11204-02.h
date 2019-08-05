@@ -97,4 +97,14 @@ uint8_t hvps_is_on(void);
  */
 void hvps_get_temp_corr_factor(void);
 
+/**
+ * hvps_tempr_write
+ *
+ * Writes the current temperature located in the housekeeping values
+ * to the first 16 bits of CITIROC->TEMPR
+ */
+
+void hvps_tempr_write(void);
+
+
 #endif /* HM_HVPS_H_ */

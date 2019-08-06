@@ -14,7 +14,7 @@
 
 void mem_ram_write(uint32_t modul, uint8_t *data){
 	uint32_t length=0;
-	uint32_t *addr = (uint32_t *) 0x60000000;
+	uint32_t *addr = (uint32_t *) 0x00000000;
 
 	switch(modul){
 	case RAM_HVPS:

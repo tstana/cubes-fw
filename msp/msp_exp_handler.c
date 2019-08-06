@@ -26,9 +26,7 @@ unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
-static uint8_t comp_date[70] = "CUBES Firmware version 1.0. \n Compiled __DATE__ at __TIME__";
-sprintf(comp_date, "CUBES Firmware version 1.0. \n Compiled %s at %s", __DATE__, __TIME__);
-/* TODO: Use this variable in a expsend_start condition */
+static uint8_t comp_date[70];
 
 
 
@@ -68,6 +66,12 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		to_bigendian32(send_data_hk+12, hcr);
 		send_data = (uint8_t *)send_data_hk;
 		*len = 28;
+	}
+	else if(opcode == MSP_OP_REQ_VER)
+	{
+		sprintf((char*)comp_date, "CUBES Firmware version 1.0. \n Compiled %s at %s", __DATE__, __TIME__);
+		send_data = (uint8_t *)comp_date;
+		*len = 70;
 	}
 	else
 		*len = 0;

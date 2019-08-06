@@ -26,8 +26,10 @@ unsigned int has_recv = 0;
 static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
+static uint8_t comp_date[70] = "CUBES Firmware version 1.0. \n Compiled __DATE__ at __TIME__";
+sprintf(comp_date, "CUBES Firmware version 1.0. \n Compiled %s at %s", __DATE__, __TIME__);
+/* TODO: Use this variable in a expsend_start condition */
 
-volatile uint8_t hk_add_done = 0;
 
 
 

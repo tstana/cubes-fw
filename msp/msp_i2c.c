@@ -49,6 +49,6 @@ int msp_save_seqflags(void){
 void msp_read_seqflags(void){
 	msp_seqflags_t seqflags;
 	NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
-	mem_read(NVM_SEQFLAG, &seqflags);
+	mem_read(NVM_SEQFLAG, (uint32_t *)&seqflags);
 	msp_exp_state_initialize(seqflags);
 }

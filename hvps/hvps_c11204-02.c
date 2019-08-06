@@ -49,10 +49,45 @@ static void getarray(uint8_t *array, uint8_t cmd[28])
 	sprintf(chkstr, "%02X", chksm);
 	memmove(array+2+cmdlen, chkstr, 2);
 	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', sizeof(cmd));
+	memset(cmd, '\0', 28);
 }
 
+static void hvps_to_mem(uint8_t data[24])
+{
+	uint8_t temp[4] ="";
+	uint16_t temp2[6];
+	for(int i=0; i<=24; i=i+4)
+	{
+		memcpy(temp, data+i, 4);
+		temp2[i/4]= strtol((char *)temp, NULL, 16);
+	}
+	mem_nvm_write(NVM_HVPS, (uint8_t *)temp2);
+}
 
+static void hvps_from_mem(uint8_t *data){
+	/* Start by reading HVPS settings from NVM */
+	uint32_t hvps_settings[3];
+	mem_read(NVM_HVPS, hvps_settings);
+
+	/* Convert these into ASCII; see memory layout diagram for details */
+	uint16_t dtp1, dtp2;
+	uint16_t dt1, dt2;
+	uint16_t v, t;
+	dtp1 = hvps_settings[0] & 0xFFFF;
+	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
+	dt1 = hvps_settings[1] & 0xFFFF;
+	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
+	v = hvps_settings[2] & 0xFFFF;
+	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
+
+	/* Compose command string, converting int16's into ASCII*/
+	itoa(dtp1, (char *)&data[3], 16);
+	itoa(dtp2, (char *)&data[7], 16);
+	itoa(dt1, (char *)&data[11], 16);
+	itoa(dt2, (char *)&data[15], 16);
+	itoa(v, (char *)&data[19], 16);
+	itoa(t, (char *)&data[23], 16);
+}
 
 
 
@@ -81,30 +116,9 @@ static int voltage_check(uint8_t cmd[28])
 }
 
 static void start_hvps(void)
-{
-	/* Start by reading HVPS settings from NVM */
-	uint32_t hvps_settings[3];
-	mem_read(NVM_HVPS, hvps_settings);
-
-	/* Convert these into ASCII; see memory layout diagram for details */
-	uint16_t dtp1, dtp2;
-	uint16_t dt1, dt2;
-	uint16_t v, t;
-	dtp1 = hvps_settings[0] & 0xFFFF;
-	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
-	dt1 = hvps_settings[1] & 0xFFFF;
-	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
-	v = hvps_settings[2] & 0xFFFF;
-	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
-
-	/* Compose command string, converting int16's into ASCII*/
+{	/* Compose command string, converting int16's into ASCII*/
 	uint8_t HST[28] = "HST";
-	itoa(dtp1, (char *)&HST[3], 16);
-	itoa(dtp2, (char *)&HST[7], 16);
-	itoa(dt1, (char *)&HST[11], 16);
-	itoa(dt2, (char *)&HST[15], 16);
-	itoa(v, (char *)&HST[19], 16);
-	itoa(t, (char *)&HST[23], 16);
+	hvps_from_mem(HST);
 
 	if(voltage_check(HST)==-1)
 		return;
@@ -119,10 +133,8 @@ static void start_hvps(void)
 
 int hvps_set_voltage(uint8_t* command)
 {
-	uint8_t HST[30]="HST"; /* Standard input, ~44.5V, no temp correction */
-	for (int j=0; j<24; j++){
-		HST[j]=memadr[j];
-	}
+	uint8_t HST[28]="HST"; /* Standard input, ~44.5V, no temp correction */
+	hvps_from_mem(HST);
 	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor command */
 		HST[19+i]=command[i];
 	}
@@ -241,7 +253,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t')
 			memcpy(&hvps_hk[8], &rx_buff[4], 4);
 		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t')
-			mem_nvm_write(NVM_HVPS, &rx_buff[4]);
+			hvps_to_mem(&rx_buff[4]);
 		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
 		{
 			hvps_status = (uint16_t) strtol((char *)&rx_buff[4], NULL, 16);

@@ -14,6 +14,7 @@
 #define NVM_CITIROC 	0x01u
 #define NVM_HVPS 		0x02u
 #define NVM_SEQFLAG		0x03u
+#define NVM_RESET		0x04u
 #define RAM_CITI_CONF	0x11u
 #define RAM_HVPS		0x12u
 #define RAM_HISTO		0x13u
@@ -63,5 +64,27 @@ uint32_t mem_read(uint32_t modul, uint32_t *data);
  */
 
 int mem_nvm_write(uint32_t modul, uint8_t* data);
+
+
+/**
+ *  nvm_reset_counter_increment
+ * @brief nvm reset counter which increments by 1 every time it's called
+ * 		then saves to nvm location.
+ */
+void nvm_reset_counter_increment(void);
+
+/**
+ * nvm_reset_counter_read
+ * @brief Read function of NVM reset counter.
+ * @return uint32_t Value of counter
+ */
+
+uint32_t nvm_reset_counter_read(void);
+
+/**
+ * nvm_reset_counter_reset
+ * @brief Reset value for NVM reset counter
+ */
+void nvm_reset_counter_reset(void);
 
 #endif /* MEM_MGMT_MEM_MGMT_H_ */

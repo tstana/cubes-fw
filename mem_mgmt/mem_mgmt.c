@@ -59,6 +59,10 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		length=SEQFLAG_LEN;
 		addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
 		break;
+	case NVM_RESET:
+		length = 4;
+		addr=(uint32_t *)(NVM_ADDR+0xEF00); /* Free offset */
+		break;
 	default:
 		return -1;
 	}
@@ -90,6 +94,10 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
 		// TODO: Gateware currently does not allow reading the CFG_RAM. Remove?
+		case NVM_RESET:
+			length = 4;
+			addr= (uint32_t *)(NVM_ADDR+0xEF00); /* Free offset */
+			break;
 		case RAM_HVPS:
 			length = HVPS_LEN;
 			addr=(uint32_t *)(RAM_ADDR+HVPS_OFFSET);
@@ -121,3 +129,28 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 	/* and return the number of bytes copied */
 	return length*4;
 }
+
+void nvm_reset_counter_increment(void)
+{
+	uint32_t counter = 0;
+	mem_read(NVM_RESET, &counter);
+	counter++;
+	uint8_t insert[4];
+	for(int i = 3; i<4; i--){
+		insert[i] = (counter >> (8*i)) & 0xFF;
+	}
+	mem_nvm_write(NVM_RESET, insert);
+}
+
+uint32_t nvm_reset_counter_read(void)
+{
+	uint32_t counter = 0;
+	mem_read(NVM_RESET, &counter);
+	return counter;
+}
+
+void nvm_reset_counter_reset(void){
+	uint8_t resetvalue[4] = {0, 0, 0, 0};
+	mem_nvm_write(NVM_RESET, resetvalue);
+}
+

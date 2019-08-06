@@ -36,6 +36,7 @@ int main(void)
 	msp_init_i2c(SLAVE_ADDR);
 	hvps_init(NVM_ADDR);
 	hvps_turn_off();
+	nvm_reset_counter_increment();
 	while(1){
 		if(has_send != 0){
 			switch(has_send){
@@ -117,6 +118,9 @@ int main(void)
 				break;
 			case MSP_OP_CUBES_DAQ_STOP:
 				citiroc_daq_stop();
+				break;
+			case MSP_OP_CUBES_RST_RST:
+				nvm_reset_counter_reset();
 				break;
 			}
 			has_syscommand=0;

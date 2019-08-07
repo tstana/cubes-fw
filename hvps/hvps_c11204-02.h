@@ -14,7 +14,7 @@
  * Output: None
  *
  */
-void hvps_init(uint32_t memory);
+void hvps_init(void);
 
 /**
  * hvps_set_voltage()
@@ -105,6 +105,7 @@ void hvps_get_temp_corr_factor(void);
  */
 
 void hvps_tempr_write(void);
+
 
 
 #endif /* HM_HVPS_H_ */

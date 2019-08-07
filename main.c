@@ -34,8 +34,8 @@ int main(void)
 		;
 
 	msp_init_i2c(SLAVE_ADDR);
-	hvps_init(NVM_ADDR);
-	hvps_turn_off();
+	hvps_init();
+	//hvps_turn_off();
 	while(1){
 		if(has_send != 0){
 			switch(has_send){

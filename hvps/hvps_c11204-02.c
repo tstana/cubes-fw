@@ -81,12 +81,7 @@ static void hvps_from_mem(uint8_t *data){
 	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
 
 	/* Compose command string, converting int16's into ASCII*/
-	itoa(dtp1, (char *)&data[3], 16);
-	itoa(dtp2, (char *)&data[7], 16);
-	itoa(dt1, (char *)&data[11], 16);
-	itoa(dt2, (char *)&data[15], 16);
-	itoa(v, (char *)&data[19], 16);
-	itoa(t, (char *)&data[23], 16);
+	sprintf(&data[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
 }
 
 
@@ -117,7 +112,7 @@ static int voltage_check(uint8_t cmd[28])
 
 static void start_hvps(void)
 {	/* Compose command string, converting int16's into ASCII*/
-	uint8_t HST[28] = "HST";
+	uint8_t HST[28] = "HST000000000000000000000000";
 	hvps_from_mem(HST);
 
 	if(voltage_check(HST)==-1)
@@ -306,9 +301,8 @@ void Timer1_IRQHandler(void)
  * Timer: periodic mode, loads value in load_immediate
  * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
  */
-void hvps_init(uint32_t memory)
+void hvps_init(void)
 {
-	memadr= (uint32_t*)memory;
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
 			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	NVIC_SetPriority(UART0_IRQn, 1);

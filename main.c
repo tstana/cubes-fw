@@ -32,11 +32,10 @@ int main(void)
 	/* Startup delay */
 	for (int i = 0; i < 1000; i++)
 		;
-
+	nvm_reset_counter_increment();
 	msp_init_i2c(SLAVE_ADDR);
 	hvps_init(NVM_ADDR);
 	hvps_turn_off();
-	nvm_reset_counter_increment();
 	while(1){
 		if(has_send != 0){
 			switch(has_send){

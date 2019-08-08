@@ -93,6 +93,25 @@ int main(void)
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					break;
+				case MSP_OP_SEND_CUBES_RST:
+				{
+					uint8_t resetvalue = msp_get_recv()[0];
+					if(resetvalue & 0b00000001)
+						nvm_reset_counter_reset();
+					if(resetvalue & 0b00000010)
+						citiroc_hcr_reset();
+					if(resetvalue & 0b00000100)
+						citiroc_histo_reset();
+					if(resetvalue & 0b00001000)
+						//citiroc_psc_reset();
+					if(resetvalue & 0b00010000)
+						//citiroc_sr_reset();
+					if(resetvalue & 0b00100000)
+						//citiroc_pa_reset();
+					if(resetvalue & 0b01000000)
+						//citiroc_or32_reset();
+					break;
+				}
 			}
 			has_recv=0;
 		}
@@ -117,9 +136,6 @@ int main(void)
 				break;
 			case MSP_OP_CUBES_DAQ_STOP:
 				citiroc_daq_stop();
-				break;
-			case MSP_OP_CUBES_RST_RST:
-				nvm_reset_counter_reset();
 				break;
 			}
 			has_syscommand=0;

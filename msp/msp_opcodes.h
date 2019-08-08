@@ -35,7 +35,6 @@
 #define MSP_OP_CUBES_HVPS_ON	0x52
 #define MSP_OP_CUBES_DAQ_START	0x53
 #define MSP_OP_CUBES_DAQ_STOP	0x54
-#define MSP_OP_CUBES_RST_RST	0x55
 
 #define MSP_OP_SEND_CUBES_HVPS_CONF				0x71
 #define MSP_OP_SEND_CUBES_CITI_CONF     		0x72
@@ -43,6 +42,7 @@
 #define MSP_OP_SEND_CUBES_DAQ_DUR				0x74
 #define MSP_OP_SEND_CUBES_HVPS_TMP_VOLT			0x75
 #define MSP_OP_SEND_READ_REG_DEBUG				0x76
+#define MSP_OP_SEND_CUBES_RST					0x77
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

@@ -24,7 +24,6 @@
 
 static uint8_t chkstr[2];
 static uint8_t send[40];
-static uint32_t *memadr;
 
 static uint16_t hvps_status;
 static uint8_t hvps_hk[12];
@@ -52,18 +51,23 @@ static void getarray(uint8_t *array, uint8_t cmd[28])
 	memset(cmd, '\0', 28);
 }
 
+/* Prepares HVPS configuration for NVM saving and saves writes it to memory. */
 static void hvps_to_mem(uint8_t data[24])
 {
 	uint8_t temp[4] ="";
 	uint16_t temp2[6];
 	for(int i=0; i<=24; i=i+4)
 	{
+		/* For every 4 bytes, copy over to temp variable and convert into integer*/
 		memcpy(temp, data+i, 4);
 		temp2[i/4]= strtol((char *)temp, NULL, 16);
 	}
 	mem_nvm_write(NVM_HVPS, (uint8_t *)temp2);
 }
 
+/* Reads the HVPS settings from memory and converts them into usable string in the
+ * array provided by parameters.
+ */
 static void hvps_from_mem(uint8_t *data){
 	/* Start by reading HVPS settings from NVM */
 	uint32_t hvps_settings[3];

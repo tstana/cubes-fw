@@ -89,11 +89,6 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
-		// TODO: Gateware currently does not allow reading the CFG_RAM. Remove?
-		case RAM_HVPS:
-			length = HVPS_LEN;
-			addr=(uint32_t *)(RAM_ADDR+HVPS_OFFSET);
-			break;
 		case NVM_SEQFLAG:
 			length = SEQFLAG_LEN;
 			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);

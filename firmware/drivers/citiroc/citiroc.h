@@ -87,13 +87,17 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define RRDEN			( 2)
 #define RRDCHAN			( 3)
 #define RRDNEW			( 8)
+#define RSTALLHCR		( 9)
+#define RSTSR			(10)
 #define DAQDUR			(16)
 #define DAQZEROSUP		(24)
 #define DAQSTART		(25)
 #define DAQSTOP			(26)
 #define FORCETRIG		(27)
-#define RSTALLHCR		(28)
-#define RSTHIST			(29)
+#define RSTHIST			(28)
+#define RSTPSC			(29)
+#define RSTPA			(30)
+#define RSTASICTRIGS	(31)
 
 /** Citiroc ROSR bit fields definitions */
 #define SCBUSY			(0)
@@ -126,5 +130,9 @@ void		citiroc_rrd(uint32_t enable, uint8_t chan);
  * @brief Set the ROCSR.RSTHIST bit and wait for reset to complete
  */
 void 		citiroc_histo_reset();
+
+void 		citiroc_psc_reset();
+
+void 		citiroc_pa_reset();
 
 #endif // _CITIROC_H_

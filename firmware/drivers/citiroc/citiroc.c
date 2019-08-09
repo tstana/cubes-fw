@@ -111,3 +111,24 @@ void citiroc_histo_reset()
 	while (CITIROC->ROSR & (1 << HISTRSTONGO))
 		;
 }
+
+void citiroc_psc_reset()
+{
+	uint32_t r;
+
+	CITIROC->ROCR |= (1 << RSTPSC);
+	for (r = 0; r < 16; ++r)
+		;
+	CITIROC->ROCR &= ~(1 << RSTPSC);
+}
+
+void citiroc_pa_reset()
+{
+	uint32_t r;
+
+	CITIROC->ROCR |= (1 << RSTPA);
+	for (r = 0; r < 16; ++r)
+		;
+	CITIROC->ROCR &= ~(1 << RSTPA);
+}
+

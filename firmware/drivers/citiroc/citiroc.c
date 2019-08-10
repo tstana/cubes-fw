@@ -132,3 +132,24 @@ void citiroc_pa_reset()
 	CITIROC->ROCR &= ~(1 << RSTPA);
 }
 
+void citiroc_sr_reset()
+{
+	uint32_t r;
+
+	CITIROC->ROCR |= (1 << RSTSR);
+	for (r = 0; r < 16; ++r)
+		;
+	CITIROC->ROCR &= ~(1 << RSTSR);
+}
+
+void citiroc_asic_trigs_reset()
+{
+	uint32_t r;
+
+	CITIROC->ROCR |= (1 << RSTASICTRIGS);
+	for (r = 0; r < 16; ++r)
+		;
+	CITIROC->ROCR &= ~(1 << RSTASICTRIGS);
+}
+
+

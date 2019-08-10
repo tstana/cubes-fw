@@ -125,14 +125,16 @@ void		citiroc_send_probes();
 void		citiroc_rrd(uint32_t enable, uint8_t chan);
 
 /**
- * citiroc_histo_reset()
+ * Reset functions
  *
- * @brief Set the ROCSR.RSTHIST bit and wait for reset to complete
+ * @brief Set the relevant bit in the ROCR and delay for a period before
+ * 		  clearing the bit. For "citiroc_histo_reset()", the function wait until
+ * 		  the hardware reset completes, indicated by the ROSR.HISTRSTONGO bit.
  */
-void 		citiroc_histo_reset();
-
-void 		citiroc_psc_reset();
-
-void 		citiroc_pa_reset();
+void 	citiroc_histo_reset();
+void 	citiroc_psc_reset();
+void 	citiroc_pa_reset();
+void 	citiroc_sr_reset();
+void	citiroc_asic_trigs_reset();
 
 #endif // _CITIROC_H_

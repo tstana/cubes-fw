@@ -105,11 +105,11 @@ int main(void)
 					if(resetvalue & 0b00001000)
 						citiroc_psc_reset();
 					if(resetvalue & 0b00010000)
-						//citiroc_sr_reset();
+						citiroc_sr_reset();
 					if(resetvalue & 0b00100000)
 						citiroc_pa_reset();
 					if(resetvalue & 0b01000000)
-						//citiroc_or32_reset();
+						citiroc_asic_trigs_reset();
 					break;
 				}
 			}

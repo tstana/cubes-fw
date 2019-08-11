@@ -201,6 +201,15 @@ void hvps_get_status(void)
 	uint8_t cmd[] = "HGS";
 	getarray(send, cmd);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
+	memset(send, '\0', sizeof(send));
+}
+
+void hvps_reset(void)
+{
+	uint8_t cmd[] = "HRE";
+	getarray(send, cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
+	memset(send, '\0', sizeof(send));
 }
 
 uint8_t hvps_is_on(void)

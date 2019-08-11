@@ -110,6 +110,8 @@ int main(void)
 						citiroc_pa_reset();
 					if(resetvalue & 0b01000000)
 						citiroc_asic_trigs_reset();
+					if(resetvalue & 0b10000000)
+						hvps_reset();
 					break;
 				}
 			}

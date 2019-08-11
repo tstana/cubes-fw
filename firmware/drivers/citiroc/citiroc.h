@@ -89,6 +89,7 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define RRDNEW			( 8)
 #define RSTALLHCR		( 9)
 #define RSTSR			(10)
+#define RSTREADREG		(11)
 #define DAQDUR			(16)
 #define DAQZEROSUP		(24)
 #define DAQSTART		(25)
@@ -135,6 +136,7 @@ void 	citiroc_histo_reset();
 void 	citiroc_psc_reset();
 void 	citiroc_pa_reset();
 void 	citiroc_sr_reset();
-void	citiroc_asic_trigs_reset();
+void	citiroc_trigs_reset();
+void 	citiroc_read_reg_reset();
 
 #endif // _CITIROC_H_

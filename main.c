@@ -95,22 +95,25 @@ int main(void)
 					break;
 				case MSP_OP_SEND_CUBES_RST:
 				{
-					uint8_t resetvalue = msp_get_recv()[0];
-					if(resetvalue & 0b00000001)
+					uint8_t *resetvalue;
+					resetvalue = msp_get_recv();
+					if (resetvalue[0] & 0b00000001)
 						nvm_reset_counter_reset();
-					if(resetvalue & 0b00000010)
+					if (resetvalue[0] & 0b00000010)
 						citiroc_hcr_reset();
-					if(resetvalue & 0b00000100)
+					if (resetvalue[0] & 0b00000100)
 						citiroc_histo_reset();
-					if(resetvalue & 0b00001000)
+					if (resetvalue[0] & 0b00001000)
 						citiroc_psc_reset();
-					if(resetvalue & 0b00010000)
+					if (resetvalue[0] & 0b00010000)
 						citiroc_sr_reset();
-					if(resetvalue & 0b00100000)
+					if (resetvalue[0] & 0b00100000)
 						citiroc_pa_reset();
-					if(resetvalue & 0b01000000)
-						citiroc_asic_trigs_reset();
-					if(resetvalue & 0b10000000)
+					if (resetvalue[0] & 0b01000000)
+						citiroc_trigs_reset();
+					if (resetvalue[0] & 0b10000000)
+						citiroc_read_reg_reset();
+					if (resetvalue[1] & 0b00000001)
 						hvps_reset();
 					break;
 				}

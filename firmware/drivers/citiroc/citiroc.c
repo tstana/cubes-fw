@@ -142,7 +142,7 @@ void citiroc_sr_reset()
 	CITIROC->ROCR &= ~(1 << RSTSR);
 }
 
-void citiroc_asic_trigs_reset()
+void citiroc_trigs_reset()
 {
 	uint32_t r;
 
@@ -152,4 +152,13 @@ void citiroc_asic_trigs_reset()
 	CITIROC->ROCR &= ~(1 << RSTASICTRIGS);
 }
 
+void citiroc_read_reg_reset()
+{
+	uint32_t r;
+
+	CITIROC->ROCR |= (1 << RSTREADREG);
+	for (r = 0; r < 16; ++r)
+		;
+	CITIROC->ROCR &= ~(1 << RSTREADREG);
+}
 

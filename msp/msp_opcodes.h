@@ -44,7 +44,7 @@
 #define MSP_OP_SEND_CUBES_DAQ_DUR				0x74
 #define MSP_OP_SEND_CUBES_HVPS_TMP_VOLT			0x75
 #define MSP_OP_SEND_READ_REG_DEBUG				0x76
-#define MSP_OP_SEND_CUBES_RST					0x77
+#define MSP_OP_SEND_CUBES_GATEWARE_CONF			0x77
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

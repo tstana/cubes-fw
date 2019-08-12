@@ -130,13 +130,23 @@ static void start_hvps(void)
 	memset(send, '\0', sizeof(send));
 }
 
-int hvps_set_voltage(uint8_t* command)
+int hvps_set_temp_corr_factor(uint8_t* command)
 {
 	uint8_t HST[28]="HST"; /* Standard input, ~44.5V, no temp correction */
-	hvps_from_mem(HST);
-	for (int i=0; i<4; i++){ /* Move voltage into temperature correction factor command */
-		HST[19+i]=command[i];
-	}
+
+	/* Convert input into ASCII; see memory layout diagram for details */
+	uint16_t dtp1, dtp2;
+	uint16_t dt1, dt2;
+	uint16_t v, t;
+	dtp1 = (command[0]<<8) | command[1];
+	dtp2 = (command[2]<<8) | command[3];
+	dt1 = (command[4]<<8) | command[5];
+	dt2 = (command[6]<<8) | command[7];
+	v = (command[8]<<8) | command[9];
+	t = (command[10]<<8) | command[11];
+
+	/* Compose command string, converting int16's into ASCII*/
+	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
 	if(voltage_check(HST) == -1)
 		return -1;
 	getarray(send, HST); /* Format string to UART and send it on */
@@ -149,7 +159,7 @@ int hvps_set_temporary_voltage(uint16_t v)
 {
 	/* Prep command string and parameter */
 	uint8_t cmd[8] = "HBV";
-	itoa(v, (char *)(cmd+3), 16);
+	sprintf(&cmd[3], "%04X", v);
 
 	/* Give up early if voltage is too high */
 	if(voltage_check(cmd) == -1)

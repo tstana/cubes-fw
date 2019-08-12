@@ -23,7 +23,7 @@ void hvps_init(void);
  * @param A string literal with voltage in decimal form
  * @return Return -1 for fail, 0 for pass.
  */
-int hvps_set_voltage(uint8_t* command);
+int hvps_set_temp_corr_factor(uint8_t* command);
 
 /**
  * hvps_set_temporary_voltage()

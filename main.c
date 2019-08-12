@@ -56,13 +56,24 @@ int main(void)
 				case MSP_OP_SEND_PUS:
 					break;
 				case MSP_OP_SEND_CUBES_HVPS_CONF:
-					// TODO: Call hvps_set_temp_corr_factor() and turn HVPS on
-					// 		 (see MSP_OP_SEND_CUBES_HVPS_TMP_VOLT below)
-					hvps_set_voltage(msp_get_recv());
+				{
+					uint8_t turn_on = (uint8_t)msp_get_recv()[0] & 0x01;
+					uint8_t hvps_resetval = (uint8_t)msp_get_recv()[0] & 0x02;
+
+					if (turn_on && !hvps_is_on())
+						hvps_turn_on();
+					else if (!turn_on && hvps_is_on())
+						hvps_turn_off();
+					if(hvps_resetval && hvps_is_on() && turn_on)
+						hvps_reset();
+
+					hvps_set_temp_corr_factor(&msp_get_recv()[1]);
 					break;
+				}
 				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
 				{
-					uint8_t turn_on = (uint8_t)msp_get_recv()[0];
+					uint8_t turn_on = (uint8_t)msp_get_recv()[0] & 0x01;
+					uint8_t hvps_resetval = (uint8_t)msp_get_recv()[0] & 0x02;
 					uint16_t volt = (uint16_t)((msp_get_recv()[1] << 8) |
 											   (msp_get_recv()[2]));
 
@@ -70,6 +81,8 @@ int main(void)
 						hvps_turn_on();
 					else if (!turn_on && hvps_is_on())
 						hvps_turn_off();
+					if(hvps_resetval && hvps_is_on() && turn_on)
+						hvps_reset();
 
 					hvps_set_temporary_voltage(volt);
 
@@ -93,7 +106,7 @@ int main(void)
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					break;
-				case MSP_OP_SEND_CUBES_RST:
+				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 				{
 					uint8_t *resetvalue;
 					resetvalue = msp_get_recv();
@@ -113,8 +126,6 @@ int main(void)
 						citiroc_trigs_reset();
 					if (resetvalue[0] & 0b10000000)
 						citiroc_read_reg_reset();
-					if (resetvalue[1] & 0b00000001)
-						hvps_reset();
 					break;
 				}
 			}

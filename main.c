@@ -148,6 +148,7 @@ int main(void)
 			case MSP_OP_CUBES_DAQ_START:
 				citiroc_hcr_reset();
 				citiroc_histo_reset();
+				hvps_tempr_write();
 				citiroc_daq_start();
 				break;
 			case MSP_OP_CUBES_DAQ_STOP:

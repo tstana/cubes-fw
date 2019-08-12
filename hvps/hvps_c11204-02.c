@@ -172,7 +172,7 @@ int hvps_set_temporary_voltage(uint16_t v)
 	return 0;
 }
 
-void hvps_send_cmd(uint8_t * cmd)
+void hvps_send_cmd(uint8_t  cmd[])
 {
 	getarray(send, cmd);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));

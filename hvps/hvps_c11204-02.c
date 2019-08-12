@@ -22,33 +22,40 @@
 
 
 
-static uint8_t chkstr[2];
-static uint8_t send[40];
+static uint8_t hvps_cmd_array[40];
 
 static uint16_t hvps_status;
 static uint8_t hvps_hk[12];
 
 
 
-static void getarray(uint8_t *array, uint8_t *cmd)
+static void prep_hvps_cmd_array(char *cmd)
 {
-	const uint8_t stx = 0x02;
-	const uint8_t etx = 0x03;
+	const uint8_t STX = 0x02;
+	const uint8_t ETX = 0x03;
 	const uint8_t CR = 0x0D;
+
 	uint16_t chksm=0x00;
-	/* Memmove is used with offset for the adress because strcat did not give the proper format when sending it on to the HVPS */
+	char chkstr[3];
+
+	/* Start with fresh command array */
+	memset(hvps_cmd_array, '\0', sizeof(hvps_cmd_array));
+
+	/*
+	 * Memmove is used with offset for the adress because strcat did not give
+	 * the proper format when sending it on to the HVPS
+	 */
 	int cmdlen = strlen((char *)cmd);
-	memmove(array, &stx, 1);
-	memmove(array+1, cmd, cmdlen);
-	memmove(array+1+cmdlen, &etx, 1);
-	for(int i = 0; array[i-1]!=0x03; i++){
-		chksm+=array[i];
+	memmove(hvps_cmd_array, &STX, 1);
+	memmove(hvps_cmd_array+1, cmd, cmdlen);
+	memmove(hvps_cmd_array+1+cmdlen, &ETX, 1);
+	for(int i = 0; hvps_cmd_array[i-1] != 0x03; i++){
+		chksm+=hvps_cmd_array[i];
 	}
 	chksm = (chksm & 0xFF); /* Mask so only lower 2 bytes get sent */
 	sprintf(chkstr, "%02X", chksm);
-	memmove(array+2+cmdlen, chkstr, 2);
-	memmove(array+4+cmdlen, &CR, 1);
-	memset(cmd, '\0', 28);
+	memmove(hvps_cmd_array+2+cmdlen, chkstr, 2);
+	memmove(hvps_cmd_array+4+cmdlen, &CR, 1);
 }
 
 /* Prepares HVPS configuration for NVM saving and saves writes it to memory. */
@@ -68,7 +75,8 @@ static void hvps_to_mem(uint8_t data[24])
 /* Reads the HVPS settings from memory and converts them into usable string in the
  * array provided by parameters.
  */
-static void hvps_from_mem(uint8_t *data){
+static void hvps_from_mem(char *data)
+{
 	/* Start by reading HVPS settings from NVM */
 	uint32_t hvps_settings[3];
 	mem_read(NVM_HVPS, hvps_settings);
@@ -90,9 +98,9 @@ static void hvps_from_mem(uint8_t *data){
 
 
 
-static int voltage_check(uint8_t cmd[28])
+static int voltage_check(char *cmd)
 {
-	uint8_t data[4] = "";
+	char data[4] = "";
 	double val = 0;
 	/* Check for which command that came to decide on array location */
 	if((cmd[0]=='H' && cmd[1]=='S' && cmd[2]=='T')) {
@@ -106,7 +114,7 @@ static int voltage_check(uint8_t cmd[28])
 		}
 	}
 	/* Convert to long and check value for limit of 55 */
-	val=strtol((char*)data, NULL, 16);
+	val=strtol(data, NULL, 16);
 	val=val*(1.812/pow(10, 3));
 	if(val > 55)
 		return -1;
@@ -116,23 +124,20 @@ static int voltage_check(uint8_t cmd[28])
 
 static void start_hvps(void)
 {	/* Compose command string, converting int16's into ASCII*/
-	uint8_t HST[28] = "HST000000000000000000000000";
+	char HST[28] = "HST000000000000000000000000";
 	hvps_from_mem(HST);
 
 	if(voltage_check(HST)==-1)
 		return;
 
-	/* Prepend STX and append checksum and CR, then send*/
-	getarray(send, HST);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-
-	/* Clear send buffer */
-	memset(send, '\0', sizeof((char *)send));
+	/* Prepend STX and append checksum and CR, then hvps_cmd_array*/
+	prep_hvps_cmd_array(HST);
+	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 }
 
 int hvps_set_temp_corr_factor(uint8_t* command)
 {
-	uint8_t HST[28]="HST"; /* Standard input, ~44.5V, no temp correction */
+	char HST[28]="HST";
 
 	/* Convert input into ASCII; see memory layout diagram for details */
 	uint16_t dtp1, dtp2;
@@ -149,34 +154,32 @@ int hvps_set_temp_corr_factor(uint8_t* command)
 	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
 	if(voltage_check(HST) == -1)
 		return -1;
-	getarray(send, HST); /* Format string to UART and send it on */
-	MSS_UART_polled_tx(&g_mss_uart0, send,strlen((char *)send));
-	memset(send, '\0', sizeof(send));
+	prep_hvps_cmd_array(HST); /* Format string to UART and hvps_cmd_array it on */
+	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array,strlen((char *)hvps_cmd_array));
 	return 0;
 }
 
 int hvps_set_temporary_voltage(uint16_t v)
 {
 	/* Prep command string and parameter */
-	uint8_t cmd[8] = "HBV";
+	char cmd[8] = "HBV";
 	sprintf(&cmd[3], "%04X", v);
 
 	/* Give up early if voltage is too high */
 	if(voltage_check(cmd) == -1)
 		return -1;
 
-	/* Format string to UART and send it on */
-	getarray(send, cmd);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
+	/* Format string to UART and hvps_cmd_array it on */
+	prep_hvps_cmd_array(cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 
 	return 0;
 }
 
-void hvps_send_cmd(uint8_t  cmd[])
+void hvps_send_cmd(char *cmd)
 {
-	getarray(send, cmd);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', 40);
+	prep_hvps_cmd_array(cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 }
 
 uint8_t hvps_is_on(void)
@@ -235,20 +238,25 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 void Timer1_IRQHandler(void)
 {
 	static uint8_t current_run = 0;
+	char cmd[4] = "HG-";
 
 	switch (current_run)
 	{
 	case 0:
-		hvps_send_cmd((uint8_t *)"HGS");
+		cmd[2] = 'S';
+		hvps_send_cmd(cmd);
 		break;
 	case 1:
-		hvps_send_cmd((uint8_t *)"HGV");
+		cmd[2] = 'V';
+		hvps_send_cmd(cmd);
 		break;
 	case 2:
-		hvps_send_cmd((uint8_t *)"HGC");
+		cmd[2] = 'C';
+		hvps_send_cmd(cmd);
 		break;
 	case 3:
-		hvps_send_cmd((uint8_t *)"HGT");
+		cmd[2] = 'T';
+		hvps_send_cmd(cmd);
 		break;
 	case 4:
 		msp_add_hk(hvps_hk, 12, 16);

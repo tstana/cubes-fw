@@ -61,11 +61,11 @@ int main(void)
 					uint8_t hvps_resetval = (uint8_t)msp_get_recv()[0] & 0x02;
 
 					if (turn_on && !hvps_is_on())
-						hvps_send_cmd((uint8_t *)"HON");
+						hvps_send_cmd("HON");
 					else if (!turn_on && hvps_is_on())
-						hvps_send_cmd((uint8_t *)"HOF");
+						hvps_send_cmd("HOF");
 					if(hvps_resetval && hvps_is_on() && turn_on)
-						hvps_send_cmd((uint8_t *)"HRE");
+						hvps_send_cmd("HRE");
 
 					hvps_set_temp_corr_factor(&msp_get_recv()[1]);
 					break;
@@ -78,11 +78,11 @@ int main(void)
 											   (msp_get_recv()[2]));
 
 					if (turn_on && !hvps_is_on())
-						hvps_send_cmd((uint8_t *)"HON");
+						hvps_send_cmd("HON");
 					else if (!turn_on && hvps_is_on())
-						hvps_send_cmd((uint8_t *)"HOF");
+						hvps_send_cmd("HOF");
 					if(hvps_resetval && hvps_is_on() && turn_on)
-						hvps_send_cmd((uint8_t *)"HRE");
+						hvps_send_cmd("HRE");
 
 					hvps_set_temporary_voltage(volt);
 
@@ -134,14 +134,14 @@ int main(void)
 		else if(has_syscommand != 0){
 			switch(has_syscommand){
 			case MSP_OP_ACTIVE:
-				hvps_send_cmd((uint8_t *)"HON");
+				hvps_send_cmd("HON");
 				break;
 			case MSP_OP_SLEEP:
-				hvps_send_cmd((uint8_t *)"HOF");
+				hvps_send_cmd("HOF");
 				citiroc_daq_stop();
 				break;
 			case MSP_OP_POWER_OFF:
-				hvps_send_cmd((uint8_t *)"HOF");
+				hvps_send_cmd("HOF");
 				citiroc_daq_stop();
 				msp_save_seqflags();
 				break;

@@ -41,7 +41,7 @@ int hvps_set_temporary_voltage(uint16_t v);
  * hvps_send_cmd(char* cmd)
  */
 
-void hvps_send_cmd(uint8_t cmd[]);
+void hvps_send_cmd(char *cmd);
 
 /**
  * hvps_is_on(void)

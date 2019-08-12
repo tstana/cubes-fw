@@ -30,14 +30,14 @@ static uint8_t hvps_hk[12];
 
 
 
-static void getarray(uint8_t *array, uint8_t cmd[28])
+static void getarray(uint8_t *array, uint8_t *cmd)
 {
 	const uint8_t stx = 0x02;
 	const uint8_t etx = 0x03;
 	const uint8_t CR = 0x0D;
 	uint16_t chksm=0x00;
 	/* Memmove is used with offset for the adress because strcat did not give the proper format when sending it on to the HVPS */
-	int cmdlen = strlen(cmd);
+	int cmdlen = strlen((char *)cmd);
 	memmove(array, &stx, 1);
 	memmove(array+1, cmd, cmdlen);
 	memmove(array+1+cmdlen, &etx, 1);
@@ -124,10 +124,10 @@ static void start_hvps(void)
 
 	/* Prepend STX and append checksum and CR, then send*/
 	getarray(send, HST);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 
 	/* Clear send buffer */
-	memset(send, '\0', sizeof(send));
+	memset(send, '\0', sizeof((char *)send));
 }
 
 int hvps_set_temp_corr_factor(uint8_t* command)
@@ -150,7 +150,7 @@ int hvps_set_temp_corr_factor(uint8_t* command)
 	if(voltage_check(HST) == -1)
 		return -1;
 	getarray(send, HST); /* Format string to UART and send it on */
-	MSS_UART_polled_tx(&g_mss_uart0, send,strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send,strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 	return 0;
 }
@@ -176,7 +176,7 @@ void hvps_turn_on(void)
 {
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
@@ -184,7 +184,7 @@ void hvps_turn_off(void)
 {
 	uint8_t HOF[] = "HOF";
 	getarray(send, HOF);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
@@ -192,7 +192,7 @@ void hvps_get_temp_corr_factor(void)
 {
 	uint8_t HRT[]="HRT";
 	getarray(send, HRT);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
@@ -200,7 +200,7 @@ void hvps_get_voltage(void)
 {
 	uint8_t HGV[]="HGV";
 	getarray(send, HGV);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
@@ -208,14 +208,14 @@ void hvps_get_current(void)
 {
 	uint8_t HGC[]="HGC";
 	getarray(send, HGC);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
 void hvps_get_temp(void){
 	uint8_t HGT[]="HGT";
 	getarray(send, HGT);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen(send));
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
 
@@ -225,6 +225,7 @@ void hvps_get_status(void)
 	getarray(send, cmd);
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
+	return;
 }
 
 void hvps_reset(void)
@@ -291,7 +292,6 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 void Timer1_IRQHandler(void)
 {
 	static uint8_t current_run = 0;
-	current_run = (current_run + 1) % 5;
 
 	switch (current_run)
 	{
@@ -314,7 +314,10 @@ void Timer1_IRQHandler(void)
 		break;
 	}
 
-	/*interrupt bit needs to be cleared after every call */
+	/* Increment current run counter */
+	current_run = (current_run + 1) % 5;
+
+	/* Interrupt bit needs to be cleared after every call */
 	MSS_TIM64_clear_irq();
 }
 

@@ -172,7 +172,13 @@ int hvps_set_temporary_voltage(uint16_t v)
 	return 0;
 }
 
-void hvps_turn_on(void)
+void hvps_send_cmd(uint8_t * cmd)
+{
+	getarray(send, cmd);
+	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
+	memset(send, '\0', 40);
+}
+/*void hvps_turn_on(void)
 {
 	uint8_t HON[] = "HON";
 	getarray(send, HON);
@@ -235,7 +241,7 @@ void hvps_reset(void)
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', sizeof(send));
 }
-
+*/
 uint8_t hvps_is_on(void)
 {
 	return (uint8_t)(hvps_status & 0x0001);
@@ -296,16 +302,16 @@ void Timer1_IRQHandler(void)
 	switch (current_run)
 	{
 	case 0:
-		hvps_get_status();
+		hvps_send_cmd((uint8_t *)"HGS");
 		break;
 	case 1:
-		hvps_get_voltage();
+		hvps_send_cmd((uint8_t *)"HGV");
 		break;
 	case 2:
-		hvps_get_current();
+		hvps_send_cmd((uint8_t *)"HGC");
 		break;
 	case 3:
-		hvps_get_temp();
+		hvps_send_cmd((uint8_t *)"HGT");
 		break;
 	case 4:
 		msp_add_hk(hvps_hk, 12, 16);

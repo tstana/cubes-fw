@@ -65,7 +65,10 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		hcr = citiroc_hcr_get(21);
 		to_bigendian32(send_data_hk+12, hcr);
 		send_data = (uint8_t *)send_data_hk;
-		*len = 28;
+		/* Re-use hcr variable for reading reset counters */
+		hcr = nvm_reset_counter_read();
+		to_bigendian32(send_data_hk+28, hcr);
+		*len = 32;
 	}
 	else if(opcode == MSP_OP_REQ_VER)
 	{

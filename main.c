@@ -32,7 +32,7 @@ int main(void)
 	/* Startup delay */
 	for (int i = 0; i < 1000; i++)
 		;
-
+	nvm_reset_counter_increment();
 	msp_init_i2c(SLAVE_ADDR);
 	hvps_init();
 	//hvps_turn_off();
@@ -93,6 +93,30 @@ int main(void)
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
 					break;
+				case MSP_OP_SEND_CUBES_RST:
+				{
+					uint8_t *resetvalue;
+					resetvalue = msp_get_recv();
+					if (resetvalue[0] & 0b00000001)
+						nvm_reset_counter_reset();
+					if (resetvalue[0] & 0b00000010)
+						citiroc_hcr_reset();
+					if (resetvalue[0] & 0b00000100)
+						citiroc_histo_reset();
+					if (resetvalue[0] & 0b00001000)
+						citiroc_psc_reset();
+					if (resetvalue[0] & 0b00010000)
+						citiroc_sr_reset();
+					if (resetvalue[0] & 0b00100000)
+						citiroc_pa_reset();
+					if (resetvalue[0] & 0b01000000)
+						citiroc_trigs_reset();
+					if (resetvalue[0] & 0b10000000)
+						citiroc_read_reg_reset();
+					if (resetvalue[1] & 0b00000001)
+						hvps_reset();
+					break;
+				}
 			}
 			has_recv=0;
 		}

@@ -105,7 +105,12 @@ void hvps_get_temp_corr_factor(void);
  */
 
 void hvps_tempr_write(void);
+/**
+ * hvps_reset(void)
+ *
+ * Sends a command to reset the hvps output.
+ */
 
-
+void hvps_reset(void);
 
 #endif /* HM_HVPS_H_ */

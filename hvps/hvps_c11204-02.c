@@ -178,70 +178,7 @@ void hvps_send_cmd(uint8_t  cmd[])
 	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
 	memset(send, '\0', 40);
 }
-/*void hvps_turn_on(void)
-{
-	uint8_t HON[] = "HON";
-	getarray(send, HON);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
 
-void hvps_turn_off(void)
-{
-	uint8_t HOF[] = "HOF";
-	getarray(send, HOF);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-
-void hvps_get_temp_corr_factor(void)
-{
-	uint8_t HRT[]="HRT";
-	getarray(send, HRT);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-
-void hvps_get_voltage(void)
-{
-	uint8_t HGV[]="HGV";
-	getarray(send, HGV);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-
-void hvps_get_current(void)
-{
-	uint8_t HGC[]="HGC";
-	getarray(send, HGC);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-
-void hvps_get_temp(void){
-	uint8_t HGT[]="HGT";
-	getarray(send, HGT);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-
-void hvps_get_status(void)
-{
-	uint8_t cmd[] = "HGS";
-	getarray(send, cmd);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-	return;
-}
-
-void hvps_reset(void)
-{
-	uint8_t cmd[] = "HRE";
-	getarray(send, cmd);
-	MSS_UART_polled_tx(&g_mss_uart0, send, strlen((char *)send));
-	memset(send, '\0', sizeof(send));
-}
-*/
 uint8_t hvps_is_on(void)
 {
 	return (uint8_t)(hvps_status & 0x0001);

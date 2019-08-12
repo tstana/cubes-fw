@@ -42,49 +42,6 @@ int hvps_set_temporary_voltage(uint16_t v);
  */
 
 void hvps_send_cmd(uint8_t cmd[]);
-/**
- * hvps_turn_on()
- * Command for turning on the hvps
- *
- */
-
-void hvps_turn_on(void);
-
-/**
- * hvps_turn_off()
- * Command for turning the hvps off
- */
-
-void hvps_turn_off(void);
-
-/**
- * hvps_get_voltage(void)
- *
- * Sends a command to retrieve voltage level from HVPS
- */
-
-void hvps_get_voltage(void);
-
-/**
- * hvps_get_current(void)
- *
- * Sends a command to retrieve current level from HVPS
- */
-void hvps_get_current(void);
-
-/**
- * hvps_get_temp(void)
- *
- * Sends a command to retrieve temperature from HVPS
- */
-void hvps_get_temp(void);
-
-/**
- * hvps_get_status(void)
- *
- * @brief Send a command to retrieve the status of the HVPS module.
- */
-void hvps_get_status(void);
 
 /**
  * hvps_is_on(void)
@@ -97,13 +54,6 @@ uint8_t hvps_is_on(void);
 
 
 /**
- * hvps_get_temp_corr_factor(void)
- *
- * Sends a command to retrieve temperature correction factor from HVPS.
- */
-void hvps_get_temp_corr_factor(void);
-
-/**
  * hvps_tempr_write
  *
  * Writes the current temperature located in the housekeeping values
@@ -111,12 +61,6 @@ void hvps_get_temp_corr_factor(void);
  */
 
 void hvps_tempr_write(void);
-/**
- * hvps_reset(void)
- *
- * Sends a command to reset the hvps output.
- */
 
-void hvps_reset(void);
 
 #endif /* HM_HVPS_H_ */

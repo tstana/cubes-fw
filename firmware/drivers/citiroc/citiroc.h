@@ -73,6 +73,7 @@ struct citiroc_csr {
 	uint32_t	CH29HCR;
 	uint32_t	CH30HCR;
 	uint32_t	CH31HCR;
+	uint32_t	HVPSR;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;
@@ -117,6 +118,9 @@ uint8_t 	citiroc_daq_get_dur();
 void		citiroc_daq_start();
 void		citiroc_daq_stop();
 uint32_t	citiroc_daq_is_rdy();
+void		citiroc_daq_set_hvps_temp(uint16_t temp);
+void		citiroc_daq_set_hvps_volt(uint16_t volt);
+void		citiroc_daq_set_hvps_curr(uint16_t curr);
 
 uint32_t	citiroc_hcr_get(uint32_t channel_num);
 void		citiroc_hcr_reset(void);

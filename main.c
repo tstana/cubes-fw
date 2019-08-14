@@ -105,7 +105,6 @@ int main(void)
 				case MSP_OP_SEND_CUBES_DAQ_DUR:
 					daq_dur = msp_get_recv()[0];
 					citiroc_daq_set_dur(daq_dur);
-					MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 				{
@@ -152,6 +151,7 @@ int main(void)
 				citiroc_daq_set_hvps_temp(hvps_get_latest_temp());
 				citiroc_daq_set_hvps_volt(hvps_get_latest_volt());
 				citiroc_daq_set_hvps_curr(hvps_get_latest_curr());
+				MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
 				MSS_TIM2_start();
 				citiroc_daq_start();
 				break;

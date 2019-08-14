@@ -65,20 +65,20 @@ uint32_t citiroc_daq_is_rdy()
 
 void citiroc_daq_set_hvps_temp(uint16_t temp)
 {
-	CITIROC->TEMPR &= ~(temp & 0xffff);
+	CITIROC->TEMPR &= ~(0xffff);
 	CITIROC->TEMPR |= (temp & 0xffff);
 }
 
 void citiroc_daq_set_hvps_volt(uint16_t volt)
 {
-	CITIROC->HVPSR &= ~(volt & 0x0000ffff);
-	CITIROC->HVPSR |= (volt & 0x0000ffff);
+	CITIROC->HVPSR &= ~(0xffff);
+	CITIROC->HVPSR |= (volt & 0xffff);
 }
 
 void citiroc_daq_set_hvps_curr(uint16_t curr)
 {
-	CITIROC->HVPSR &= ~(curr & 0xffff0000);
-	CITIROC->HVPSR |= (curr & 0xffff0000);
+	CITIROC->HVPSR &= ~((0xffff)<<16);
+	CITIROC->HVPSR |= ((curr & 0xffff)<<16);
 }
 
 uint32_t citiroc_hcr_get(uint32_t channel_num)

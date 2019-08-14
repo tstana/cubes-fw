@@ -188,7 +188,7 @@ uint8_t hvps_is_on(void)
 
 uint16_t hvps_get_latest_temp(void)
 {
-	uint8_t values[4];
+	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	for(int i=0; i<4; i++){
 		values[i] = hvps_hk[8+i];
 	}
@@ -197,7 +197,7 @@ uint16_t hvps_get_latest_temp(void)
 }
 uint16_t hvps_get_latest_volt(void)
 {
-	uint8_t values[4];
+	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	for(int i=0; i<4; i++){
 		values[i] = hvps_hk[i];
 	}
@@ -206,7 +206,7 @@ uint16_t hvps_get_latest_volt(void)
 }
 uint16_t hvps_get_latest_curr(void)
 {
-	uint8_t values[4];
+	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	for(int i=0; i<4; i++){
 		values[i] = hvps_hk[4+i];
 	}

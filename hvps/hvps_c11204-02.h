@@ -54,13 +54,27 @@ uint8_t hvps_is_on(void);
 
 
 /**
- * hvps_tempr_write
+ * hvps_get_latest_temp
  *
- * Writes the current temperature located in the housekeeping values
- * to the first 16 bits of CITIROC->TEMPR
+ * @return uint16_t with the latest values of temperature measured.
  */
 
-void hvps_tempr_write(void);
+uint16_t hvps_get_latest_temp(void);
+
+/**
+ * hvps_get_latest_volt
+ *
+ * @return uint16_t with the latest values of voltage measured.
+ */
+uint16_t hvps_get_latest_volt(void);
+
+/**
+ * hvps_get_latest_curr
+ *
+ * @return uint16_t with the latest values of current measured.
+ */
+uint16_t hvps_get_latest_curr(void);
+
 
 
 #endif /* HM_HVPS_H_ */

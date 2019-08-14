@@ -14,7 +14,6 @@
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
-#include "../firmware/drivers/citiroc/citiroc.h"
 #include "hvps_c11204-02.h"
 #include "../msp/msp_i2c.h"
 
@@ -187,16 +186,32 @@ uint8_t hvps_is_on(void)
 	return (uint8_t)(hvps_status & 0x0001);
 }
 
-void hvps_tempr_write(void)
+uint16_t hvps_get_latest_temp(void)
 {
 	uint8_t values[4];
 	for(int i=0; i<4; i++){
 		values[i] = hvps_hk[8+i];
 	}
 	uint16_t temp = strtol((char*)values, NULL, 16);
-	CITIROC->TEMPR &= ~(0xFF);
-	CITIROC->TEMPR ^= temp && 0xFF;
-
+	return temp;
+}
+uint16_t hvps_get_latest_volt(void)
+{
+	uint8_t values[4];
+	for(int i=0; i<4; i++){
+		values[i] = hvps_hk[i];
+	}
+	uint16_t volt = strtol((char*)values, NULL, 16);
+	return volt;
+}
+uint16_t hvps_get_latest_curr(void)
+{
+	uint8_t values[4];
+	for(int i=0; i<4; i++){
+		values[i] = hvps_hk[4+i];
+	}
+	uint16_t curr = strtol((char*)values, NULL, 16);
+	return curr;
 }
 
 /* UART handler for RX from HVPS */
@@ -269,8 +284,9 @@ void Timer1_IRQHandler(void)
 	current_run = (current_run + 1) % 5;
 
 	/* Interrupt bit needs to be cleared after every call */
-	MSS_TIM64_clear_irq();
+	MSS_TIM1_clear_irq();
 }
+
 
 
 /**
@@ -289,12 +305,13 @@ void hvps_init(void)
 	/* Set a 1-second timeout on the timer (multiply with 100MHz clock freq.)*/
 	unsigned long long settimer  = 1 * 100000000;
 	unsigned long timer1 = settimer & 0xFFFFFFFF;
-	unsigned long timer2 = (settimer >> 32) & 0xFFFFFFFF;
-
-	MSS_TIM64_init(MSS_TIMER_PERIODIC_MODE);
-	MSS_TIM64_load_immediate(timer2, timer1);
-	MSS_TIM64_enable_irq();
-	MSS_TIM64_start();
+	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
+	MSS_TIM2_load_immediate(timer1);
+	MSS_TIM2_enable_irq();
+	MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
+	MSS_TIM1_load_immediate(timer1);
+	MSS_TIM1_enable_irq();
+	MSS_TIM1_start();
 }
 
 

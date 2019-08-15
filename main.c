@@ -64,8 +64,10 @@ int main(void)
 						hvps_send_cmd("HON");
 					else if (!turn_on && hvps_is_on())
 						hvps_send_cmd("HOF");
-					if(hvps_resetval && hvps_is_on() && turn_on)
+					if(hvps_resetval && hvps_is_on()){
 						hvps_send_cmd("HRE");
+						break;
+					}
 
 					hvps_set_temp_corr_factor(&msp_get_recv()[1]);
 					hvps_send_cmd("HCM1");

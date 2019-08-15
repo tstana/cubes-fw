@@ -68,6 +68,7 @@ int main(void)
 						hvps_send_cmd("HRE");
 
 					hvps_set_temp_corr_factor(&msp_get_recv()[1]);
+					hvps_send_cmd("HCM1");
 					break;
 				}
 				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:

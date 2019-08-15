@@ -32,10 +32,19 @@ int main(void)
 	/* Startup delay */
 	for (int i = 0; i < 1000; i++)
 		;
+
+	/* Init timer with "infinite" value on startup - will be updated on MSP cmd. */
+	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
+	MSS_TIM2_load_immediate(0xffffffff);
+	MSS_TIM2_enable_irq();
+
+	/* Other init... */
 	nvm_reset_counter_increment();
 	msp_init_i2c(SLAVE_ADDR);
 	hvps_init();
 	//hvps_turn_off();
+
+	/* Infinite loop */
 	while(1){
 		if(has_send != 0){
 			switch(has_send){

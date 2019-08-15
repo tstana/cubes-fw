@@ -356,12 +356,10 @@ void hvps_init(void)
 	/* Set a 1-second timeout on the timer (multiply with 100MHz clock freq.)*/
 	unsigned long long settimer  = 1 * 100000000;
 	unsigned long timer1 = settimer & 0xFFFFFFFF;
-	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
-	MSS_TIM2_load_immediate(timer1);
-	MSS_TIM2_enable_irq();
 	MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
 	MSS_TIM1_load_immediate(timer1);
 	MSS_TIM1_enable_irq();
+	NVIC_SetPriority(Timer1_IRQn, 2);
 	MSS_TIM1_start();
 }
 

@@ -28,6 +28,7 @@ static uint8_t hvps_hk[12];
 static uint16_t hvps_sent = 0;
 static uint16_t hvps_ack = 0;
 static uint16_t hvps_failed = 0;
+static uint8_t wait = 0;
 
 
 
@@ -134,7 +135,10 @@ static void start_hvps(void)
 
 	/* Prepend STX and append checksum and CR, then hvps_cmd_array*/
 	prep_hvps_cmd_array(HST);
+	while(wait)
+		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	wait = 1;
 	hvps_sent++;
 }
 
@@ -158,7 +162,10 @@ int hvps_set_temp_corr_factor(uint8_t* command)
 	if(voltage_check(HST) == -1)
 		return -1;
 	prep_hvps_cmd_array(HST); /* Format string to UART and hvps_cmd_array it on */
-	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array,strlen((char *)hvps_cmd_array));
+	while(wait)
+		;
+	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	wait = 1;
 	hvps_sent++;
 	return 0;
 }
@@ -175,7 +182,10 @@ int hvps_set_temporary_voltage(uint16_t v)
 
 	/* Format string to UART and hvps_cmd_array it on */
 	prep_hvps_cmd_array(cmd);
+	while(wait)
+		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	wait = 1;
 	hvps_sent++;
 
 	return 0;
@@ -184,7 +194,10 @@ int hvps_set_temporary_voltage(uint16_t v)
 void hvps_send_cmd(char *cmd)
 {
 	prep_hvps_cmd_array(cmd);
+	while(wait)
+		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	wait = 1;
 	hvps_sent++;
 }
 
@@ -248,6 +261,9 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 	rx_size += MSS_UART_get_rx(this_uart, rx_buff + rx_size, sizeof(rx_buff));
 	if(rx_buff[rx_size-1] == 0x0d)
 	{
+		/* Clear wait flag */
+		wait = 0;
+
 		/* Increment command counters based on reply */
 		if ((rx_buff[1] == hvps_cmd_array[1] + 0x20) &&
 				(rx_buff[2] == hvps_cmd_array[2] + 0x20) &&

@@ -248,30 +248,31 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 	rx_size += MSS_UART_get_rx(this_uart, rx_buff + rx_size, sizeof(rx_buff));
 	if(rx_buff[rx_size-1] == 0x0d)
 	{
+		/* Increment command counters based on reply */
+		if ((rx_buff[1] == hvps_cmd_array[1] + 0x20) &&
+				(rx_buff[2] == hvps_cmd_array[2] + 0x20) &&
+				(rx_buff[3] == hvps_cmd_array[3] + 0x20))
+			hvps_ack++;
+		else if(rx_buff[1] == 'h' && rx_buff[2] == 'x' && rx_buff[3] == 'x')
+			hvps_failed++;
+
 		/* Copy to HK buffer */
 		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v'){
 			memcpy(&hvps_hk[0], &rx_buff[4], 4);
-			hvps_ack++;
 		}
 		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='c'){
 			memcpy(&hvps_hk[4], &rx_buff[4], 4);
-			hvps_ack++;
 		}
 		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t'){
 			memcpy(&hvps_hk[8], &rx_buff[4], 4);
-			hvps_ack++;
 		}
 		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t'){
 			hvps_to_mem(&rx_buff[4]);
-			hvps_ack++;
 		}
 		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
 		{
 			hvps_status = (uint16_t) strtol((char *)&rx_buff[4], NULL, 16);
-			hvps_ack++;
 		}
-		else if(rx_buff[1] == 'h' && rx_buff[2] == 'x' && rx_buff[3] == 'x')
-			hvps_failed++;
 
 		/* Clear RX buffer and prep for next round of RX... */
 		memset(rx_buff, '\0', sizeof(rx_buff));

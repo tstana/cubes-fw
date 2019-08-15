@@ -75,6 +75,6 @@ uint16_t hvps_get_latest_volt(void);
  */
 uint16_t hvps_get_latest_curr(void);
 
-
+uint16_t hvps_get_com_val(uint8_t val);
 
 #endif /* HM_HVPS_H_ */

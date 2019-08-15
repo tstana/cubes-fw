@@ -25,6 +25,9 @@ static uint8_t hvps_cmd_array[40];
 
 static uint16_t hvps_status;
 static uint8_t hvps_hk[12];
+static uint16_t hvps_sent = 0;
+static uint16_t hvps_ack = 0;
+static uint16_t hvps_failed = 0;
 
 
 
@@ -132,6 +135,7 @@ static void start_hvps(void)
 	/* Prepend STX and append checksum and CR, then hvps_cmd_array*/
 	prep_hvps_cmd_array(HST);
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	hvps_sent++;
 }
 
 int hvps_set_temp_corr_factor(uint8_t* command)
@@ -155,6 +159,7 @@ int hvps_set_temp_corr_factor(uint8_t* command)
 		return -1;
 	prep_hvps_cmd_array(HST); /* Format string to UART and hvps_cmd_array it on */
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array,strlen((char *)hvps_cmd_array));
+	hvps_sent++;
 	return 0;
 }
 
@@ -171,6 +176,7 @@ int hvps_set_temporary_voltage(uint16_t v)
 	/* Format string to UART and hvps_cmd_array it on */
 	prep_hvps_cmd_array(cmd);
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	hvps_sent++;
 
 	return 0;
 }
@@ -179,6 +185,7 @@ void hvps_send_cmd(char *cmd)
 {
 	prep_hvps_cmd_array(cmd);
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+	hvps_sent++;
 }
 
 uint8_t hvps_is_on(void)
@@ -213,6 +220,22 @@ uint16_t hvps_get_latest_curr(void)
 	uint16_t curr = strtol((char*)values, NULL, 16);
 	return curr;
 }
+uint16_t hvps_get_com_val(uint8_t val)
+{
+	switch(val){
+	case 1:
+		return hvps_sent;
+		break;
+	case 2:
+		return hvps_ack;
+		break;
+	case 3:
+		return hvps_failed;
+		break;
+	default:
+		return 0;
+	}
+}
 
 /* UART handler for RX from HVPS */
 
@@ -226,18 +249,29 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 	if(rx_buff[rx_size-1] == 0x0d)
 	{
 		/* Copy to HK buffer */
-		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v')
+		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v'){
 			memcpy(&hvps_hk[0], &rx_buff[4], 4);
-		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='c')
+			hvps_ack++;
+		}
+		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='c'){
 			memcpy(&hvps_hk[4], &rx_buff[4], 4);
-		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t')
+			hvps_ack++;
+		}
+		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t'){
 			memcpy(&hvps_hk[8], &rx_buff[4], 4);
-		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t')
+			hvps_ack++;
+		}
+		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t'){
 			hvps_to_mem(&rx_buff[4]);
+			hvps_ack++;
+		}
 		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
 		{
 			hvps_status = (uint16_t) strtol((char *)&rx_buff[4], NULL, 16);
+			hvps_ack++;
 		}
+		else if(rx_buff[1] == 'h' && rx_buff[2] == 'x' && rx_buff[3] == 'x')
+			hvps_failed++;
 
 		/* Clear RX buffer and prep for next round of RX... */
 		memset(rx_buff, '\0', sizeof(rx_buff));

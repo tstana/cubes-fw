@@ -68,7 +68,16 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		/* Re-use hcr variable for reading reset counters */
 		hcr = nvm_reset_counter_read();
 		to_bigendian32(send_data_hk+28, hcr);
-		*len = 32;
+		hcr = hvps_get_com_val(1);
+		send_data_hk[32] = (unsigned char) (hcr >> 8)  & 0xff;
+		send_data_hk[33] = (unsigned char) (hcr >> 0)  & 0xff;
+		hcr = hvps_get_com_val(2);
+		send_data_hk[34] = (unsigned char) (hcr >> 8)  & 0xff;
+		send_data_hk[35] = (unsigned char) (hcr >> 0)  & 0xff;
+		hcr = hvps_get_com_val(3);
+		send_data_hk[36] = (unsigned char) (hcr >> 8)  & 0xff;
+		send_data_hk[37] = (unsigned char) (hcr >> 0)  & 0xff;
+		*len = 38;
 	}
 	else if(opcode == MSP_OP_REQ_VER)
 	{

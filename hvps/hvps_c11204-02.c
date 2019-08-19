@@ -62,11 +62,11 @@ static void prep_hvps_cmd_array(char *cmd)
 }
 
 /* Prepares HVPS configuration for NVM saving and saves writes it to memory. */
-static void hvps_to_mem(uint8_t data[24])
+static void hvps_to_mem(uint8_t *data)
 {
 	uint8_t temp[4] ="";
 	uint16_t temp2[6];
-	for(int i=0; i<=24; i=i+4)
+	for(int i=0; i<24; i=i+4)
 	{
 		/* For every 4 bytes, copy over to temp variable and convert into integer*/
 		memcpy(temp, data+i, 4);
@@ -127,7 +127,7 @@ static int voltage_check(char *cmd)
 
 static void start_hvps(void)
 {	/* Compose command string, converting int16's into ASCII*/
-	char HST[28] = "HST000000000000000000000000";
+	char HST[28] = "HST0000000004090409757DB7D7";
 	hvps_from_mem(HST);
 
 	if(voltage_check(HST)==-1)
@@ -281,9 +281,6 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 		}
 		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t'){
 			memcpy(&hvps_hk[8], &rx_buff[4], 4);
-		}
-		else if(rx_buff[1]=='h' && rx_buff[2]=='r' && rx_buff[3]=='t'){
-			hvps_to_mem(&rx_buff[4]);
 		}
 		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
 		{

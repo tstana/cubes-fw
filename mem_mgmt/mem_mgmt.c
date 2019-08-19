@@ -61,14 +61,14 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		break;
 	case NVM_RESET:
 		length = 4;
-		addr=(uint32_t *)(NVM_ADDR+0xEF00); /* Free offset address*/
+		addr=(uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address*/
 		break;
 	default:
 		return -1;
 	}
 	nvm_status_t status = NVM_unlock((uint32_t)addr, length);
 			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write((uint32_t)addr, data, length, NVM_LOCK_PAGE);
+				status=NVM_write((uint32_t)addr, data, length, NVM_DO_NOT_LOCK_PAGE);
 				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
 					return 0;
 				else
@@ -96,7 +96,7 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 		// TODO: Gateware currently does not allow reading the CFG_RAM. Remove?
 		case NVM_RESET:
 			length = 4;
-			addr= (uint32_t *)(NVM_ADDR+0xEF00); /* Free offset address */
+			addr= (uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address */
 			break;
 		case RAM_HVPS:
 			length = HVPS_LEN;

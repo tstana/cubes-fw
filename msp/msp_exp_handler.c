@@ -79,11 +79,13 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[37] = (unsigned char) (hcr >> 0)  & 0xff;
 		*len = 38;
 	}
-	else if(opcode == MSP_OP_REQ_VER)
+	else if(opcode == MSP_OP_REQ_CUBES_ID)
 	{
-		sprintf((char*)comp_date, "CUBES Firmware version 1.0. \n Compiled %s at %s", __DATE__, __TIME__);
+		sprintf((char*)comp_date, "%s %s",__DATE__, __TIME__);
+		uint32_t temp = citiroc_read_id();
+		to_bigendian32(comp_date+21, temp);
 		send_data = (uint8_t *)comp_date;
-		*len = 70;
+		*len = 25;
 	}
 	else
 		*len = 0;

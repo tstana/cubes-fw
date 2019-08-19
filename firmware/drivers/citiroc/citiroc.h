@@ -128,6 +128,7 @@ void		citiroc_hcr_reset(void);
 void		citiroc_send_slow_control();
 void		citiroc_send_probes();
 void		citiroc_rrd(uint32_t enable, uint8_t chan);
+uint32_t 	citiroc_read_id(void);
 
 /**
  * Reset functions

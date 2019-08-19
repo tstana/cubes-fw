@@ -180,3 +180,13 @@ void citiroc_read_reg_reset()
 	CITIROC->ROCR &= ~(1 << RSTREADREG);
 }
 
+uint32_t citiroc_read_id()
+{
+	uint16_t boardid = 0b1010101010101010;
+	uint16_t gwid = 0b0010101010101011;
+	//boardid = CITIROC->BOARDID;
+	//gwid = CITIROC->GWID;
+	uint32_t output = 0;
+	output = ((boardid<<16) | gwid) ;
+	return output;
+}

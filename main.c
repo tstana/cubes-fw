@@ -63,8 +63,15 @@ int main(void)
 		else if(has_recv != 0){
 			switch(has_recv){
 				case MSP_OP_SEND_TIME:
-					cubes_set_time((uint32_t) strtoul((char*)msp_get_recv(), NULL, 10));
+				{
+					uint8_t *buf = msp_get_recv();
+					uint32_t time = (buf[0] << 24) |
+							(buf[1] << 16) |
+							(buf[2] <<  8) |
+							(buf[3]);
+					cubes_set_time(time);
 					break;
+				}
 				case MSP_OP_SEND_PUS:
 					break;
 				case MSP_OP_SEND_CUBES_HVPS_CONF:

@@ -182,11 +182,9 @@ void citiroc_read_reg_reset()
 
 uint32_t citiroc_read_id()
 {
-	uint16_t boardid = 0b1010101010101010;
-	uint16_t gwid = 0b0010101010101011;
-	//boardid = CITIROC->BOARDID;
-	//gwid = CITIROC->GWID;
-	uint32_t output = 0;
-	output = ((boardid<<16) | gwid) ;
-	return output;
+//	uint16_t boardid;
+//	uint32_t gwid;
+//	boardid = *(uint32_t *)(CITIROC + 0x100);
+//	gwid = *(uint32_t *)(CITIROC + 0x104);
+	return 0; // (((boardid & 0xff)<<24) | (gwid & 0x00ffffff)) ;
 }

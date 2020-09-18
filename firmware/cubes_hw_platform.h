@@ -2,7 +2,7 @@
 #define cubes_HW_PLATFORM_H_
 /*****************************************************************************
 *
-*Created by Microsemi SmartDesign  Tue Mar 26 18:42:58 2019
+*Created by Microsemi SmartDesign  Fri Sep 18 11:04:41 2020
 *
 *Memory map specification for peripherals in cubes
 */

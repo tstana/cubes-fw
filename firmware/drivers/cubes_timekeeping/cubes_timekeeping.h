@@ -31,7 +31,7 @@
 #define _CUBES_TIMEKEEPING_H_
 
 #include <stdint.h>
-#include "../cubes_hw_platform.h"
+#include "../../cubes_hw_platform.h"
 
 #define CUBES_TIME_REG		(*(volatile uint32_t *)CUBES_TIMEKEEPING)
 

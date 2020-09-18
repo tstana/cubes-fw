@@ -31,7 +31,7 @@
 #define _CITIROC_H_
 
 #include <stdint.h>
-#include "../cubes_hw_platform.h"
+#include "../../cubes_hw_platform.h"
 
 /** Base address definition */
 #define CITIROC_CSR_BASE	CITIROC_INTF

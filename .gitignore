@@ -6,3 +6,4 @@ README.txt
 *.cxf
 filelists/
 .vscode
+/Release/

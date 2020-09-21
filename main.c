@@ -42,10 +42,6 @@ int main(void)
 	nvm_reset_counter_increment();
 	msp_init_i2c(SLAVE_ADDR);
 	hvps_init();
-	uint8_t temp[144] ="";
-	mem_read(NVM_CITIROC, (uint32_t *)temp);
-	mem_ram_write(RAM_CITI_CONF, temp);
-	citiroc_send_slow_control();
 
 	/* Infinite loop */
 	while(1){

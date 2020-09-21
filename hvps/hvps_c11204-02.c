@@ -75,31 +75,6 @@ static void hvps_to_mem(uint8_t *data)
 	mem_nvm_write(NVM_HVPS, (uint8_t *)temp2);
 }
 
-/* Reads the HVPS settings from memory and converts them into usable string in the
- * array provided by parameters.
- */
-static void hvps_from_mem(char *data)
-{
-	/* Start by reading HVPS settings from NVM */
-	uint32_t hvps_settings[3];
-	mem_read(NVM_HVPS, hvps_settings);
-
-	/* Convert these into ASCII; see memory layout diagram for details */
-	uint16_t dtp1, dtp2;
-	uint16_t dt1, dt2;
-	uint16_t v, t;
-	dtp1 = hvps_settings[0] & 0xFFFF;
-	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
-	dt1 = hvps_settings[1] & 0xFFFF;
-	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
-	v = hvps_settings[2] & 0xFFFF;
-	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
-
-	/* Compose command string, converting int16's into ASCII*/
-	sprintf(&data[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
-}
-
-
 
 static int voltage_check(char *cmd)
 {
@@ -123,23 +98,6 @@ static int voltage_check(char *cmd)
 		return -1;
 	else
 		return 0;
-}
-
-static void start_hvps(void)
-{	/* Compose command string, converting int16's into ASCII*/
-	char HST[28] = "HST0000000004090409757DB7D7";
-	hvps_from_mem(HST);
-
-	if(voltage_check(HST)==-1)
-		return;
-
-	/* Prepend STX and append checksum and CR, then hvps_cmd_array*/
-	prep_hvps_cmd_array(HST);
-	while(wait)
-		;
-	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
-	wait = 1;
-	hvps_sent++;
 }
 
 int hvps_set_temp_corr_factor(uint8_t* command)
@@ -294,7 +252,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 }
 
 /**
- * @brief Timer interrupt for sending commands to the HVPS
+ * @brief Timer interrupt for sending "get" commands to the HVPS
  *        Each second, a separate command is sent to the HVPS.
  *
  */
@@ -344,13 +302,65 @@ void Timer1_IRQHandler(void)
  */
 void hvps_init(void)
 {
+	/*
+	 * --------------------------------------------
+	 * Init UART for communicating to HVPS module
+	 * --------------------------------------------
+	 */
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
 			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
-	start_hvps();
 
-	/* Set a 1-second timeout on the timer (multiply with 100MHz clock freq.)*/
+
+	/*
+	 * -------------------------------------
+	 * Write default HVPS setting from NVM
+	 * -------------------------------------
+	 */
+//	/* Compose command string, converting int16's into ASCII */
+//	// TODO: Figure out what default string stands for...
+//	char HST[28] = "HST0000000004090409757DB7D7";
+//
+//	/* Start by reading HVPS settings from NVM */
+//	uint32_t hvps_settings[3];
+//	mem_read(NVM_HVPS, hvps_settings);
+//
+//	/* Convert these into ASCII; see memory layout diagram for details */
+//	uint16_t dtp1, dtp2;
+//	uint16_t dt1, dt2;
+//	uint16_t v, t;
+//	dtp1 = hvps_settings[0] & 0xFFFF;
+//	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
+//	dt1 = hvps_settings[1] & 0xFFFF;
+//	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
+//	v = hvps_settings[2] & 0xFFFF;
+//	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
+//
+//	/* Compose command string, converting int16's into ASCII*/
+//	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
+//
+//	/* Send command to HVPS if voltage check on NVM readout is successful */
+//	if(voltage_check(HST) == 0)
+//	{
+//		prep_hvps_cmd_array(HST);
+//		while(wait)
+//			;
+//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+//		wait = 1;
+//		hvps_sent++;
+//	}
+
+
+	/*
+	 * ------------------------------------------------------------------------
+	 * Initialize hardware timer for periodically polling the HVPS status
+	 *
+	 * A one-second timeout is set on the timer (multiply with 100MHz clock
+	 * frequency on the gateware). Every second, the IRQ handler is called,
+	 * which prepares a different "get" command to be sent to the HVPS.
+	 * ------------------------------------------------------------------------
+	 */
 	unsigned long long settimer  = 1 * 100000000;
 	unsigned long timer1 = settimer & 0xFFFFFFFF;
 	MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);

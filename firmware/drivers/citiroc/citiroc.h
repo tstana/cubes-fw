@@ -41,6 +41,7 @@ struct citiroc_csr {
 	uint32_t	ROCR;
 	uint32_t	ROSR;
 	uint32_t	TEMPR;
+	uint32_t	HVPSR;
 	uint32_t	CH0HCR;
 	uint32_t	CH1HCR;
 	uint32_t	CH2HCR;
@@ -73,7 +74,7 @@ struct citiroc_csr {
 	uint32_t	CH29HCR;
 	uint32_t	CH30HCR;
 	uint32_t	CH31HCR;
-	uint32_t	HVPSR;
+	uint32_t	OR32HCR;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;

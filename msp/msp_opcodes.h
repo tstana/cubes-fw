@@ -31,6 +31,7 @@
 #define MSP_OP_SEND_PUS    0x31
 
 /* CUBES custom opcodes */
+// TODO: Remove HVPS_ON/OFF and re-def DAQ_START and DAQ_STOP as 0x51, 0x52
 #define MSP_OP_CUBES_HVPS_OFF	0x51
 #define MSP_OP_CUBES_HVPS_ON	0x52
 #define MSP_OP_CUBES_DAQ_START	0x53

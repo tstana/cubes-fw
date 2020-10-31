@@ -62,7 +62,8 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		to_bigendian32(send_data_hk+4, hcr);
 		hcr = citiroc_hcr_get(31);
 		to_bigendian32(send_data_hk+8, hcr);
-		hcr = citiroc_hcr_get(21);
+		/* OR32 is "channel 32" */
+		hcr = citiroc_hcr_get(32);
 		to_bigendian32(send_data_hk+12, hcr);
 		send_data = (uint8_t *)send_data_hk;
 		/* Re-use hcr variable for reading reset counters */

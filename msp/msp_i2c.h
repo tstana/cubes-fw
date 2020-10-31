@@ -10,8 +10,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "../firmware/CMSIS/system_m2sxxx.h"
-#include "../firmware/drivers/mss_i2c/mss_i2c.h"
+
 #include "msp_exp.h"
 
 extern unsigned int has_send;

@@ -9,9 +9,14 @@
 #define NVM_SEQFLAG_ADDR	0x6000F000
 
 #include <stdint.h>
-#include "msp_i2c.h"
+
+#include "../firmware/drivers/mss_i2c/mss_i2c.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "../mem_mgmt/mem_mgmt.h"
+
+#include "msp_i2c.h"
+
+
 uint8_t i2c_tx_buffer[550] = "";
 uint8_t i2c_rx_buffer[550] = "";
 uint32_t slave_buffer_size = 550;

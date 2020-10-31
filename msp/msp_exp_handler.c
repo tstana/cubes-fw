@@ -6,10 +6,17 @@
  */
 
 #include "msp_i2c.h"
-#include "../msp/msp_exp.h"
+#include "msp_exp.h"
+
 #include "../mem_mgmt/mem_mgmt.h"
-#include "../firmware/drivers/citiroc/citiroc.h"
+
 #include "../hvps/hvps_c11204-02.h"
+
+#include "../firmware/drivers/citiroc/citiroc.h"
+#include "../firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
+#include "../firmware/drivers/citiroc/citiroc.h"
+#include "../firmware/drivers/mss_timer/mss_timer.h"
+
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[25000]="";
@@ -28,11 +35,26 @@ static unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
 static uint8_t comp_date[70];
 
+static uint8_t daq_dur;
 
 
-
-/* Prototype in msp_exp_handler.h */
-
+/*
+ *------------------------------------------------------------------------------
+ * Experiment Send Callbacks
+ *------------------------------------------------------------------------------
+ */
+/**
+ * @brief MSP callback at start of experiment send
+ *
+ * This function is called by the MSP API right after a REQ-type command was
+ * received over MSP from the OBC. The experiment will need to send data.
+ *
+ * The function is used to prepare the data to send to the OBC, based on the
+ * REQ op-code received.
+ *
+ * @param opcode[in]  The REQ opcode that was received from the OBC
+ * @param len[out]    The length of data CUBES has to send to the OBC
+ */
 void msp_expsend_start(unsigned char opcode, unsigned long *len)
 {
 	uint32_t *long_data = (uint32_t *)HISTO_RAM;
@@ -92,27 +114,101 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		*len = 0;
 }
 
-void msp_expsend_data(unsigned char opcode, unsigned char *buf, unsigned long len, unsigned long offset){
+/**
+ * @brief MSP callback before each data frame while experiment is sending data
+ *
+ * This function is called by the MSP API when a data block is to be sent
+ * over MSP to the OBC. It is used by the experiment to fill up the frame with
+ * data.
+ *
+ * @param opcode      The REQ opcode that was received from the OBC
+ * @param buf[out]    The data buffer to be written to the frame
+ * @param len         The length of data that should be inserted into `buf`.
+ * @param offset      The offset at which data should be inserted into `buf`.
+ *                    This is the number of bytes already sent by the experiment
+ *                    to the OBC.
+ */
+void msp_expsend_data(unsigned char opcode,
+                      unsigned char *buf,
+                      unsigned long len,
+                      unsigned long offset)
+{
 	for(unsigned long i = 0; i<len; i++){
 		buf[i] = send_data[offset+i];
 	}
 }
 
-void msp_expsend_complete(unsigned char opcode){
+/**
+ * @brief MSP callback when experiment data sending completed (successfully)
+ *
+ * This function is called by the MSP API when experiment data sending has
+ * proceeded successfully.
+ *
+ * @param opcode The opcode for the transaction that succeeded
+ */
+void msp_expsend_complete(unsigned char opcode)
+{
 	has_send = opcode;
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
 }
-void msp_expsend_error(unsigned char opcode, int error){
+
+/**
+ * @brief MSP callback when experiment send transaction failed
+ *
+ * This function is called when an MSP transaction had to be aborted by the OBC
+ * due to an unrecoverable error.
+ *
+ * @param opcode The opcode for the transaction which failed
+ * @param error  The error code, defined in `msp_exp_error.h`
+ */
+void msp_expsend_error(unsigned char opcode, int error)
+{
 	has_send_error = opcode;
 	has_send_errorcode = error;
 }
 
-void msp_exprecv_start(unsigned char opcode, unsigned long len){
+
+/*
+ *------------------------------------------------------------------------------
+ * Experiment Receive Callbacks
+ *------------------------------------------------------------------------------
+ */
+/**
+ * @brief MSP callback at start of experiment reception
+ *
+ * This function is called by the MSP API before the OBC sends data to the
+ * experiment.
+ *
+ * @param opcode The SEND opcode for the upcoming transaction
+ * @param len    The length of data to be sent by the OBC to the experiment
+ */
+void msp_exprecv_start(unsigned char opcode, unsigned long len)
+{
 	recv_length = len;
 	memset(recv_data, '\0', sizeof(recv_data));
 }
-void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned long len, unsigned long offset){
+
+
+/**
+ * @brief MSP callback after each data frame during experiment reception
+ *
+ * This function is called by the MSP API once a new batch of data has been
+ * received from the OBC.
+ *
+ * @param opcode The SEND opcode for the on-going transaction
+ * @param buf    Data received from the OBC
+ * @param len    The length of data received in this data frame from the OBC
+ * @param offset The number of data bytes already sent by the OBC
+ *               Note that this number can be the same as in a previous data
+ *               frame, if the frame was for some reason not received correctly
+ *               by the OBC.
+ */
+void msp_exprecv_data(unsigned char opcode,
+                      const unsigned char *buf,
+                      unsigned long len,
+                      unsigned long offset)
+{
 	for(unsigned long i=0; i<len; i++){
 		if((i+offset) < RECV_MAXLEN){
 			recv_data[i+offset] = buf[i];
@@ -122,25 +218,183 @@ void msp_exprecv_data(unsigned char opcode, const unsigned char *buf, unsigned l
 	}
 }
 
-void msp_exprecv_complete(unsigned char opcode){
+/**
+ * @brief MSP callback for when the transaction completed successfully
+ *
+ * This function is used by CUBES to apply the data received as part of the
+ * transaction. The `opcode` parameter dictates where the received data is to be
+ * applied.
+ *
+ * @param opcode The SEND opcode for the transaction that completed successfully
+ */
+void msp_exprecv_complete(unsigned char opcode)
+{
+	switch (opcode) {
+		case MSP_OP_SEND_TIME:
+			cubes_set_time((recv_data[0] << 24) |
+						   (recv_data[1] << 16) |
+						   (recv_data[2] <<  8) |
+						   (recv_data[3]));
+			break;
+
+		case MSP_OP_SEND_CUBES_HVPS_CONF:
+		{
+			uint8_t turn_on = recv_data[0] & 0x01;
+			uint8_t hvps_resetval = (uint8_t)recv_data[0] & 0x02;
+
+			if (turn_on && !hvps_is_on())
+				hvps_send_cmd("HON");
+			else if (!turn_on && hvps_is_on())
+				hvps_send_cmd("HOF");
+			if(hvps_resetval && hvps_is_on()){
+				hvps_send_cmd("HRE");
+				break;
+			}
+
+			hvps_set_temp_corr_factor(&recv_data[1]);
+			hvps_send_cmd("HCM1");
+			break;
+		}
+
+		case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
+		{
+			uint8_t turn_on = recv_data[0] & 0x01;
+			uint8_t hvps_resetval = recv_data[0] & 0x02;
+			uint16_t volt = (((uint16_t)recv_data[1]) << 8) |
+			                 ((uint16_t)recv_data[2]);
+
+			if (turn_on && !hvps_is_on())
+				hvps_send_cmd("HON");
+			else if (!turn_on && hvps_is_on())
+				hvps_send_cmd("HOF");
+			if(hvps_resetval && hvps_is_on() && turn_on)
+				hvps_send_cmd("HRE");
+
+			hvps_set_temporary_voltage(volt);
+
+			break;
+		}
+
+		case MSP_OP_SEND_CUBES_CITI_CONF:
+			mem_ram_write(RAM_CITI_CONF, recv_data);
+			citiroc_send_slow_control();
+			break;
+
+		case MSP_OP_SEND_CUBES_PROB_CONF:
+			mem_ram_write(RAM_CITI_PROBE, recv_data);
+			citiroc_send_probes();
+			break;
+
+		case MSP_OP_SEND_READ_REG_DEBUG:
+		{
+			citiroc_rrd(recv_data[0] & 0x01, (recv_data[0] & 0x3e)>>1);
+			break;
+		}
+
+		case MSP_OP_SEND_CUBES_DAQ_DUR:
+			daq_dur = recv_data[0];
+			citiroc_daq_set_dur(daq_dur);
+			break;
+
+		case MSP_OP_SEND_CUBES_GATEWARE_CONF:
+		{
+			uint8_t resetvalue = recv_data[0];
+			if (resetvalue & 0b00000001)
+				nvm_reset_counter_reset();
+			if (resetvalue & 0b00000010)
+				citiroc_hcr_reset();
+			if (resetvalue & 0b00000100)
+				citiroc_histo_reset();
+			if (resetvalue & 0b00001000)
+				citiroc_psc_reset();
+			if (resetvalue & 0b00010000)
+				citiroc_sr_reset();
+			if (resetvalue & 0b00100000)
+				citiroc_pa_reset();
+			if (resetvalue & 0b01000000)
+				citiroc_trigs_reset();
+			if (resetvalue & 0b10000000)
+				citiroc_read_reg_reset();
+			break;
+		}
+	}
+
 	has_recv=opcode;
 }
 
+/**
+ * @brief MSP callback for when the experiment receive transaction failed
+ *
+ * @param opcode The opcode for the transaction that failed
+ * @param error  The error code, defined in `msp_exp_error.h`
+ */
 void msp_exprecv_error(unsigned char opcode, int error){
 	has_recv_error=opcode;
 	has_recv_errorcode = error;
 }
 
-void msp_exprecv_syscommand(unsigned char opcode){
+/*
+ *------------------------------------------------------------------------------
+ * System Command Callbacks
+ *------------------------------------------------------------------------------
+ */
+/**
+ * @brief MSP callback for when a system command has been received
+ *
+ * @param opcode The opcode for the received system command
+ */
+void msp_exprecv_syscommand(unsigned char opcode)
+{
+	switch(opcode) {
+		case MSP_OP_ACTIVE:
+			hvps_send_cmd("HON");
+			break;
+		case MSP_OP_SLEEP:
+			hvps_send_cmd("HOF");
+			citiroc_daq_stop();
+			break;
+		case MSP_OP_POWER_OFF:
+			hvps_send_cmd("HOF");
+			citiroc_daq_stop();
+			msp_save_seqflags();
+			break;
+		case MSP_OP_CUBES_DAQ_START:
+			citiroc_hcr_reset();
+			citiroc_histo_reset();
+			citiroc_daq_set_hvps_temp(hvps_get_latest_temp());
+			citiroc_daq_set_hvps_volt(hvps_get_latest_volt());
+			citiroc_daq_set_hvps_curr(hvps_get_latest_curr());
+			MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
+			MSS_TIM2_start();
+			citiroc_daq_start();
+			break;
+		case MSP_OP_CUBES_DAQ_STOP:
+			citiroc_daq_stop();
+			break;
+	}
+
 	has_syscommand = opcode;
 }
 
+
+/*
+ *------------------------------------------------------------------------------
+ * Other CUBES-specific MSP functions
+ *------------------------------------------------------------------------------
+ */
+// TODO: Fix the logic of adding HK from HVPS and remove this function.
+//       Something like having the HVPS HK globally available, perhaps?
 void msp_add_hk(unsigned char *buff, unsigned long len, int offset){
 	for (unsigned long i=0; i<len; i++){
 		send_data_hk[i+offset] = buff[i];
 	}
 }
 
-unsigned char* msp_get_recv(void){
-	return (unsigned char*)recv_data;
+
+void Timer2_IRQHandler(void)
+{
+	citiroc_daq_set_hvps_temp(hvps_get_latest_temp());
+	citiroc_daq_set_hvps_volt(hvps_get_latest_volt());
+	citiroc_daq_set_hvps_curr(hvps_get_latest_curr());
+	MSS_TIM2_clear_irq();
 }

@@ -16,7 +16,6 @@
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
 
-#define SLAVE_ADDR 0x35
 
 
 int main(void)
@@ -34,7 +33,7 @@ int main(void)
 	 * 	      write new HVPS readouts to the Citiroc HVPSR and TEMPR before
 	 * 	      DAQ ends.
 	 */
-	msp_init_i2c(SLAVE_ADDR);
+	msp_init_i2c(MSP_EXP_ADDR);
 
 	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
 	MSS_TIM2_load_immediate(0xffffffff);

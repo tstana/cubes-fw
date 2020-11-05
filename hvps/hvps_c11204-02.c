@@ -1,8 +1,27 @@
 /*
- * hvps_c11204-02.c
+ * Source file for communicating to Hamamatsu C11204-02 MPPC bias module
  *
- *  Created on: 10 jan. 2019
- *      Author: Marcus Persson
+ *  Created on: 5 Nov. 2020
+ *
+ * Copyright © 2020 Theodor Stana (based on old code by Marcus Persson)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 
@@ -12,7 +31,6 @@
 #include <math.h>
 
 #include "../firmware/drivers/mss_uart/mss_uart.h"
-#include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 #include "hvps_c11204-02.h"
 #include "../msp/msp_i2c.h"
@@ -20,17 +38,95 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 
+/* Local Function Prototypes */
+static void UART0_RXHandler(mss_uart_instance_t * this_uart);
 
+
+/* Local Variables */
 static uint8_t hvps_cmd_array[40];
 
 static uint16_t hvps_status;
 static uint8_t hvps_hk[12];
-static uint16_t hvps_sent = 0;
-static uint16_t hvps_ack = 0;
-static uint16_t hvps_failed = 0;
+static uint16_t cmds_sent = 0;
+static uint16_t cmds_acked = 0;
+static uint16_t cmds_failed = 0;
 static uint8_t wait = 0;
 
 
+
+
+#include <../firmware/drivers/mss_timer/mss_timer.h>
+
+
+
+/**
+ * @brief Initialize and configure UART
+ *
+ * Configure MMUART_0 for communication to the C11204-02 HVPS module:
+ *   - 38400 baud
+ *   - 8 bits
+ *   - 1 stop bit
+ *   - even parity
+ */
+void hvps_init(void)
+{
+	/* Init UART for communicating to HVPS module */
+	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
+			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
+	NVIC_SetPriority(UART0_IRQn, 1);
+	MSS_UART_set_rx_handler(&g_mss_uart0, UART0_RXHandler,
+			MSS_UART_FIFO_FOUR_BYTES);
+
+
+
+   unsigned long long settimer  = 1 * 100000000;
+   unsigned long timer1 = settimer & 0xFFFFFFFF;
+   MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
+   MSS_TIM1_load_immediate(timer1);
+   MSS_TIM1_enable_irq();
+   NVIC_SetPriority(Timer1_IRQn, 2);
+   MSS_TIM1_start();
+
+
+
+	/*
+	 * -------------------------------------
+	 * Write default HVPS setting from NVM
+	 * -------------------------------------
+	 */
+//	/* Compose command string, converting int16's into ASCII */
+//	// TODO: Figure out what default string stands for...
+//	char HST[28] = "HST0000000004090409757DB7D7";
+//
+//	/* Start by reading HVPS settings from NVM */
+//	uint32_t hvps_settings[3];
+//	mem_read(NVM_HVPS, hvps_settings);
+//
+//	/* Convert these into ASCII; see memory layout diagram for details */
+//	uint16_t dtp1, dtp2;
+//	uint16_t dt1, dt2;
+//	uint16_t v, t;
+//	dtp1 = hvps_settings[0] & 0xFFFF;
+//	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
+//	dt1 = hvps_settings[1] & 0xFFFF;
+//	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
+//	v = hvps_settings[2] & 0xFFFF;
+//	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
+//
+//	/* Compose command string, converting int16's into ASCII*/
+//	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
+//
+//	/* Send command to HVPS if voltage check on NVM readout is successful */
+//	if(voltage_check(HST) == 0)
+//	{
+//		prep_hvps_cmd_array(HST);
+//		while(wait)
+//			;
+//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+//		wait = 1;
+//		cmds_sent++;
+//	}
+}
 
 static void prep_hvps_cmd_array(char *cmd)
 {
@@ -61,21 +157,10 @@ static void prep_hvps_cmd_array(char *cmd)
 	memmove(hvps_cmd_array+4+cmdlen, &CR, 1);
 }
 
-/* Prepares HVPS configuration for NVM saving and saves writes it to memory. */
-static void hvps_to_mem(uint8_t *data)
-{
-	uint8_t temp[4] ="";
-	uint16_t temp2[6];
-	for(int i=0; i<24; i=i+4)
-	{
-		/* For every 4 bytes, copy over to temp variable and convert into integer*/
-		memcpy(temp, data+i, 4);
-		temp2[i/4]= strtol((char *)temp, NULL, 16);
-	}
-	mem_nvm_write(NVM_HVPS, (uint8_t *)temp2);
-}
 
-
+// TODO: Rename to "voltage_less_than"
+// TODO: Add param for voltage value
+// TODO: Remove cmd param, use hvps_cmd_array for selection...
 static int voltage_check(char *cmd)
 {
 	char data[4] = "";
@@ -124,7 +209,7 @@ int hvps_set_temp_corr_factor(uint8_t* command)
 		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 	wait = 1;
-	hvps_sent++;
+	cmds_sent++;
 	return 0;
 }
 
@@ -144,7 +229,7 @@ int hvps_set_temporary_voltage(uint16_t v)
 		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 	wait = 1;
-	hvps_sent++;
+	cmds_sent++;
 
 	return 0;
 }
@@ -156,7 +241,7 @@ void hvps_send_cmd(char *cmd)
 		;
 	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
 	wait = 1;
-	hvps_sent++;
+	cmds_sent++;
 }
 
 uint8_t hvps_is_on(void)
@@ -173,6 +258,7 @@ uint16_t hvps_get_latest_temp(void)
 	uint16_t temp = strtol((char*)values, NULL, 16);
 	return temp;
 }
+
 uint16_t hvps_get_latest_volt(void)
 {
 	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -182,6 +268,7 @@ uint16_t hvps_get_latest_volt(void)
 	uint16_t volt = strtol((char*)values, NULL, 16);
 	return volt;
 }
+
 uint16_t hvps_get_latest_curr(void)
 {
 	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -191,26 +278,30 @@ uint16_t hvps_get_latest_curr(void)
 	uint16_t curr = strtol((char*)values, NULL, 16);
 	return curr;
 }
-uint16_t hvps_get_com_val(uint8_t val)
+
+/**
+ * @brief Get the number of sent/acked/failed commands since startup
+ *
+ * @param c Command counter to retrieve (type `enum hvps_cmd_counter`)
+ *
+ * @return The number of commands of the requested type sent/acked/failed
+ */
+uint16_t hvps_get_cmd_counter(enum hvps_cmd_counter c)
 {
-	switch(val){
-	case 1:
-		return hvps_sent;
-		break;
-	case 2:
-		return hvps_ack;
-		break;
-	case 3:
-		return hvps_failed;
-		break;
-	default:
-		return 0;
+	switch(c) {
+		case HVPS_CMDS_SENT:
+			return cmds_sent;
+		case HVPS_CMDS_ACKED:
+			return cmds_acked;
+		case HVPS_CMDS_FAILED:
+			return cmds_failed;
+		default:
+			return 0;
 	}
 }
 
 /* UART handler for RX from HVPS */
-
-static void uart0_rx_handler(mss_uart_instance_t * this_uart)
+static void UART0_RXHandler(mss_uart_instance_t * this_uart)
 {
 	// TODO: Make rx_buff 51-byte long, to account for max HVPS reply length.
 	static uint8_t rx_buff[16]="";
@@ -226,9 +317,9 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 		if ((rx_buff[1] == hvps_cmd_array[1] + 0x20) &&
 				(rx_buff[2] == hvps_cmd_array[2] + 0x20) &&
 				(rx_buff[3] == hvps_cmd_array[3] + 0x20))
-			hvps_ack++;
+			cmds_acked++;
 		else if(rx_buff[1] == 'h' && rx_buff[2] == 'x' && rx_buff[3] == 'x')
-			hvps_failed++;
+			cmds_failed++;
 
 		/* Copy to HK buffer */
 		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v'){
@@ -251,6 +342,7 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
 	}
 }
 
+
 /**
  * @brief Timer interrupt for sending "get" commands to the HVPS
  *        Each second, a separate command is sent to the HVPS.
@@ -258,117 +350,37 @@ static void uart0_rx_handler(mss_uart_instance_t * this_uart)
  */
 void Timer1_IRQHandler(void)
 {
-	static uint8_t current_run = 0;
-	char cmd[4] = "HG-";
+   static uint8_t current_run = 0;
+   char cmd[4] = "HG-";
 
-	switch (current_run)
-	{
-	case 0:
-		cmd[2] = 'S';
-		hvps_send_cmd(cmd);
-		break;
-	case 1:
-		cmd[2] = 'V';
-		hvps_send_cmd(cmd);
-		break;
-	case 2:
-		cmd[2] = 'C';
-		hvps_send_cmd(cmd);
-		break;
-	case 3:
-		cmd[2] = 'T';
-		hvps_send_cmd(cmd);
-		break;
-	case 4:
-		msp_add_hk(hvps_hk, 12, 16);
-		break;
-	default:
-		break;
-	}
+   switch (current_run)
+   {
+   case 0:
+       cmd[2] = 'S';
+       hvps_send_cmd(cmd);
+       break;
+   case 1:
+       cmd[2] = 'V';
+       hvps_send_cmd(cmd);
+       break;
+   case 2:
+       cmd[2] = 'C';
+       hvps_send_cmd(cmd);
+       break;
+   case 3:
+       cmd[2] = 'T';
+       hvps_send_cmd(cmd);
+       break;
+   case 4:
+       msp_add_hk(hvps_hk, 12, 16);
+       break;
+   default:
+       break;
+   }
 
-	/* Increment current run counter */
-	current_run = (current_run + 1) % 5;
+   /* Increment current run counter */
+   current_run = (current_run + 1) % 5;
 
-	/* Interrupt bit needs to be cleared after every call */
-	MSS_TIM1_clear_irq();
+   /* Interrupt bit needs to be cleared after every call */
+   MSS_TIM1_clear_irq();
 }
-
-
-
-/**
- * Initialize and configure UART and timer
- * Timer: periodic mode, loads value in load_immediate
- * UART: 38400 BAUD, 8 bits, 1 stop bit, even parity
- */
-void hvps_init(void)
-{
-	/*
-	 * --------------------------------------------
-	 * Init UART for communicating to HVPS module
-	 * --------------------------------------------
-	 */
-	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
-			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
-	NVIC_SetPriority(UART0_IRQn, 1);
-	MSS_UART_set_rx_handler(&g_mss_uart0, uart0_rx_handler, MSS_UART_FIFO_FOUR_BYTES);
-
-
-	/*
-	 * -------------------------------------
-	 * Write default HVPS setting from NVM
-	 * -------------------------------------
-	 */
-//	/* Compose command string, converting int16's into ASCII */
-//	// TODO: Figure out what default string stands for...
-//	char HST[28] = "HST0000000004090409757DB7D7";
-//
-//	/* Start by reading HVPS settings from NVM */
-//	uint32_t hvps_settings[3];
-//	mem_read(NVM_HVPS, hvps_settings);
-//
-//	/* Convert these into ASCII; see memory layout diagram for details */
-//	uint16_t dtp1, dtp2;
-//	uint16_t dt1, dt2;
-//	uint16_t v, t;
-//	dtp1 = hvps_settings[0] & 0xFFFF;
-//	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
-//	dt1 = hvps_settings[1] & 0xFFFF;
-//	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
-//	v = hvps_settings[2] & 0xFFFF;
-//	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
-//
-//	/* Compose command string, converting int16's into ASCII*/
-//	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
-//
-//	/* Send command to HVPS if voltage check on NVM readout is successful */
-//	if(voltage_check(HST) == 0)
-//	{
-//		prep_hvps_cmd_array(HST);
-//		while(wait)
-//			;
-//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
-//		wait = 1;
-//		hvps_sent++;
-//	}
-
-
-	/*
-	 * ------------------------------------------------------------------------
-	 * Initialize hardware timer for periodically polling the HVPS status
-	 *
-	 * A one-second timeout is set on the timer (multiply with 100MHz clock
-	 * frequency on the gateware). Every second, the IRQ handler is called,
-	 * which prepares a different "get" command to be sent to the HVPS.
-	 * ------------------------------------------------------------------------
-	 */
-	unsigned long long settimer  = 1 * 100000000;
-	unsigned long timer1 = settimer & 0xFFFFFFFF;
-	MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
-	MSS_TIM1_load_immediate(timer1);
-	MSS_TIM1_enable_irq();
-	NVIC_SetPriority(Timer1_IRQn, 2);
-	MSS_TIM1_start();
-}
-
-
-

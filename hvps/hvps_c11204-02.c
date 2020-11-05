@@ -38,25 +38,27 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 
-/* Local Function Prototypes */
-static void UART0_RXHandler(mss_uart_instance_t * this_uart);
+/*
+ * =============================================================================
+ *  Local Function Prototypes
+ * =============================================================================
+ */
+static void UART0_RXHandler(mss_uart_instance_t* this_uart);
+static int send_cmd_and_check_reply(char* cmd);
+static int voltage_less_than(double v);
 
-
-/* Local Variables */
-static uint8_t hvps_cmd_array[40];
-
-static uint16_t hvps_status;
-static uint8_t hvps_hk[12];
+/*
+ * =============================================================================
+ *  Local Variables
+ * =============================================================================
+ */
+static char hvps_cmd[36];
 static uint16_t cmds_sent = 0;
 static uint16_t cmds_acked = 0;
 static uint16_t cmds_failed = 0;
-static uint8_t wait = 0;
 
-
-
-
-#include <../firmware/drivers/mss_timer/mss_timer.h>
-
+static char hvps_reply[51];
+static volatile uint8_t hvps_reply_ready = 0;
 
 
 /**
@@ -76,18 +78,6 @@ void hvps_init(void)
 	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, UART0_RXHandler,
 			MSS_UART_FIFO_FOUR_BYTES);
-
-
-
-   unsigned long long settimer  = 1 * 100000000;
-   unsigned long timer1 = settimer & 0xFFFFFFFF;
-   MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
-   MSS_TIM1_load_immediate(timer1);
-   MSS_TIM1_enable_irq();
-   NVIC_SetPriority(Timer1_IRQn, 2);
-   MSS_TIM1_start();
-
-
 
 	/*
 	 * -------------------------------------
@@ -117,166 +107,148 @@ void hvps_init(void)
 //	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
 //
 //	/* Send command to HVPS if voltage check on NVM readout is successful */
-//	if(voltage_check(HST) == 0)
+//	if(voltage_less_than(HST) == 0)
 //	{
 //		prep_hvps_cmd_array(HST);
 //		while(wait)
 //			;
-//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
+//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd, strlen((char *)hvps_cmd));
 //		wait = 1;
 //		cmds_sent++;
 //	}
+
 }
 
-static void prep_hvps_cmd_array(char *cmd)
+/**
+ * @Brief Turn HV output on
+ *
+ * This function sends an `HON` command over UART to the C11204-02 MPPC bias
+ * module to turn the HV output on.
+ *
+ * @return 0 if the MPPC bias module acknowledges the command (reply `hon`)
+ *         1 if any other reply than `hon` was received from the HVPS
+ */
+int hvps_turn_on()
 {
-	const uint8_t STX = 0x02;
-	const uint8_t ETX = 0x03;
-	const uint8_t CR = 0x0D;
+	return send_cmd_and_check_reply("HON");
+}
 
-	uint16_t chksm=0x00;
-	char chkstr[3];
 
-	/* Start with fresh command array */
-	memset(hvps_cmd_array, '\0', sizeof(hvps_cmd_array));
+/**
+ * @Brief Turn HV output off
+ *
+ * This function sends an `HOF` command over UART to the C11204-02 MPPC bias
+ * module to turn the HV output on.
+ *
+ * @return 0 if the HVPS acknowledges the command (reply `hof`)
+ *         1 if any other reply than `hof` was received from the HVPS
+ */
+int hvps_turn_off()
+{
+	return send_cmd_and_check_reply("HOF");
+}
+
+
+/**
+ * @brief Reset HVPS module
+ *
+ * This function sends an `HRE` command over UART to the C11204-02 MPPC bias
+ * module to reset it.
+ *
+ * @return 0 if the HVPS acknowledges the command (reply `hre`)
+ *         1 if any other reply than `hre` was received from the HVPS
+ */
+int hvps_reset()
+{
+	return send_cmd_and_check_reply("HRE");
+}
+
+
+int hvps_set_temp_corr_factor(struct hvps_temp_corr_factor *f)
+{
+	char cmd[28]="HST";
 
 	/*
-	 * Memmove is used with offset for the adress because strcat did not give
-	 * the proper format when sending it on to the HVPS
+	 * Compose command string, converting int16's into ASCII; check that
+	 * the applied voltage is acceptable; then compose the command string
+	 * and send it over UART
 	 */
-	int cmdlen = strlen((char *)cmd);
-	memmove(hvps_cmd_array, &STX, 1);
-	memmove(hvps_cmd_array+1, cmd, cmdlen);
-	memmove(hvps_cmd_array+1+cmdlen, &ETX, 1);
-	for(int i = 0; hvps_cmd_array[i-1] != 0x03; i++){
-		chksm+=hvps_cmd_array[i];
-	}
-	chksm = (chksm & 0xFF); /* Mask so only lower 2 bytes get sent */
-	sprintf(chkstr, "%02X", chksm);
-	memmove(hvps_cmd_array+2+cmdlen, chkstr, 2);
-	memmove(hvps_cmd_array+4+cmdlen, &CR, 1);
-}
-
-
-// TODO: Rename to "voltage_less_than"
-// TODO: Add param for voltage value
-// TODO: Remove cmd param, use hvps_cmd_array for selection...
-static int voltage_check(char *cmd)
-{
-	char data[4] = "";
-	double val = 0;
-	/* Check for which command that came to decide on array location */
-	if((cmd[0]=='H' && cmd[1]=='S' && cmd[2]=='T')) {
-		for(int i=0; i<4; i++){
-			data[i] = cmd[i+19];
-		}
-	}
-	else if(cmd[0]=='H' && cmd[1]=='B' && cmd[2]=='V'){
-		for(int i=0; i<4; i++){
-			data[i] = cmd[i+3];
-		}
-	}
-	/* Convert to long and check value for limit of 55 */
-	val=strtol(data, NULL, 16);
-	val=val*(1.812/pow(10, 3));
-	if(val > 55)
+	sprintf(&cmd[3], "%04X%04X%04X%04X%04X%04X", f->dtp1, f->dtp2, f->dt1,
+			f-> dt2, f->vb, f->tb);
+	if (!voltage_less_than(55.0))
 		return -1;
-	else
-		return 0;
+
+	return send_cmd_and_check_reply(cmd);
 }
 
-int hvps_set_temp_corr_factor(uint8_t* command)
+int hvps_temp_compens_en()
 {
-	char HST[28]="HST";
-
-	/* Convert input into ASCII; see memory layout diagram for details */
-	uint16_t dtp1, dtp2;
-	uint16_t dt1, dt2;
-	uint16_t v, t;
-	dtp1 = (command[0]<<8) | command[1];
-	dtp2 = (command[2]<<8) | command[3];
-	dt1 = (command[4]<<8) | command[5];
-	dt2 = (command[6]<<8) | command[7];
-	v = (command[8]<<8) | command[9];
-	t = (command[10]<<8) | command[11];
-
-	/* Compose command string, converting int16's into ASCII*/
-	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
-	if(voltage_check(HST) == -1)
-		return -1;
-	prep_hvps_cmd_array(HST); /* Format string to UART and hvps_cmd_array it on */
-	while(wait)
-		;
-	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
-	wait = 1;
-	cmds_sent++;
-	return 0;
+	return send_cmd_and_check_reply("HCM1");
 }
 
-int hvps_set_temporary_voltage(uint16_t v)
+
+int hvps_temp_compens_dis()
+{
+	return send_cmd_and_check_reply("HCM0");
+}
+
+
+int hvps_set_temporary_voltage(uint16_t vb)
 {
 	/* Prep command string and parameter */
 	char cmd[8] = "HBV";
-	sprintf(&cmd[3], "%04X", v);
+	sprintf(&cmd[3], "%04X", vb);
 
 	/* Give up early if voltage is too high */
-	if(voltage_check(cmd) == -1)
+	if(!voltage_less_than(55.0))
 		return -1;
 
-	/* Format string to UART and hvps_cmd_array it on */
-	prep_hvps_cmd_array(cmd);
-	while(wait)
-		;
-	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
-	wait = 1;
-	cmds_sent++;
-
-	return 0;
+	/* Attempt to send command */
+	return send_cmd_and_check_reply(cmd);
 }
 
-void hvps_send_cmd(char *cmd)
-{
-	prep_hvps_cmd_array(cmd);
-	while(wait)
-		;
-	MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd_array, strlen((char *)hvps_cmd_array));
-	wait = 1;
-	cmds_sent++;
-}
 
-uint8_t hvps_is_on(void)
+uint16_t hvps_get_temp(void)
 {
-	return (uint8_t)(hvps_status & 0x0001);
-}
+	uint16_t temp = 1; // default should not be valid reading
 
-uint16_t hvps_get_latest_temp(void)
-{
-	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	for(int i=0; i<4; i++){
-		values[i] = hvps_hk[8+i];
-	}
-	uint16_t temp = strtol((char*)values, NULL, 16);
+	if (send_cmd_and_check_reply("HGT") == 0)
+		temp = strtol((char*)hvps_reply+4, NULL, 16);
+
 	return temp;
 }
 
-uint16_t hvps_get_latest_volt(void)
+
+uint16_t hvps_get_volt(void)
 {
-	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	for(int i=0; i<4; i++){
-		values[i] = hvps_hk[i];
-	}
-	uint16_t volt = strtol((char*)values, NULL, 16);
-	return volt;
+	uint16_t v = 0xffff; // default should not be valid reading
+
+	if (send_cmd_and_check_reply("HGV") == 0)
+		v = strtol((char*)hvps_reply+4, NULL, 16);
+
+	return v;
 }
 
-uint16_t hvps_get_latest_curr(void)
+
+uint16_t hvps_get_curr(void)
 {
-	uint8_t values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	for(int i=0; i<4; i++){
-		values[i] = hvps_hk[4+i];
-	}
-	uint16_t curr = strtol((char*)values, NULL, 16);
-	return curr;
+	uint16_t c = 0xffff; // default should not be valid reading
+
+	if (send_cmd_and_check_reply("HGC") == 0)
+		c = strtol((char*)hvps_reply+4, NULL, 16);
+
+	return c;
+}
+
+
+int hvps_is_on(void)
+{
+	uint16_t status = 0xffff; // default should not be valid reading
+
+	if (send_cmd_and_check_reply("HGS") == 0)
+		status = strtol((char*)hvps_reply+4, NULL, 16);
+
+	return (int)(status & 0x0001);
 }
 
 /**
@@ -300,87 +272,115 @@ uint16_t hvps_get_cmd_counter(enum hvps_cmd_counter c)
 	}
 }
 
-/* UART handler for RX from HVPS */
-static void UART0_RXHandler(mss_uart_instance_t * this_uart)
+/*
+ * =============================================================================
+ *  Local functions
+ * =============================================================================
+ */
+static int send_cmd_and_check_reply(char *cmd)
 {
-	// TODO: Make rx_buff 51-byte long, to account for max HVPS reply length.
-	static uint8_t rx_buff[16]="";
-	static size_t rx_size;
+	/* ------------------- Step 1: Prepare command array -------------------- */
+	const uint8_t STX = 0x02;
+	const uint8_t ETX = 0x03;
+	const uint8_t CR = '\r';
 
-	rx_size += MSS_UART_get_rx(this_uart, rx_buff + rx_size, sizeof(rx_buff));
-	if(rx_buff[rx_size-1] == 0x0d)
-	{
-		/* Clear wait flag */
-		wait = 0;
+	int cmdlen = 5 + strlen((char *)cmd); // incl. extra char's around cmd.
 
-		/* Increment command counters based on reply */
-		if ((rx_buff[1] == hvps_cmd_array[1] + 0x20) &&
-				(rx_buff[2] == hvps_cmd_array[2] + 0x20) &&
-				(rx_buff[3] == hvps_cmd_array[3] + 0x20))
-			cmds_acked++;
-		else if(rx_buff[1] == 'h' && rx_buff[2] == 'x' && rx_buff[3] == 'x')
-			cmds_failed++;
+	uint16_t chksum = 0x00;
+	char chkstr[3];
 
-		/* Copy to HK buffer */
-		if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='v'){
-			memcpy(&hvps_hk[0], &rx_buff[4], 4);
-		}
-		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='c'){
-			memcpy(&hvps_hk[4], &rx_buff[4], 4);
-		}
-		else if(rx_buff[1]=='h' && rx_buff[2]=='g' && rx_buff[3]=='t'){
-			memcpy(&hvps_hk[8], &rx_buff[4], 4);
-		}
-		else if (rx_buff[1] == 'h' && rx_buff[2] == 'g' && rx_buff[3] == 's')
-		{
-			hvps_status = (uint16_t) strtol((char *)&rx_buff[4], NULL, 16);
-		}
+	int i = 0;
 
-		/* Clear RX buffer and prep for next round of RX... */
-		memset(rx_buff, '\0', sizeof(rx_buff));
-		rx_size = 0;
+	/*
+	 * Start with fresh command array. Memmove is then used with offset for the
+	 * address because strcat did not give the proper command format to send to
+	 * the HVPS.
+	 */
+	memset(hvps_cmd, '\0', sizeof(hvps_cmd));
+
+	memmove(hvps_cmd, &STX, 1);
+	memmove(hvps_cmd+1, cmd, cmdlen);
+	memmove(hvps_cmd+1+cmdlen, &ETX, 1);
+	for(i = 0; hvps_cmd[i-1] != ETX; i++){
+		chksum += hvps_cmd[i];
 	}
+	chksum &= 0xFF; // Mask so only lower 2 bytes get sent
+	sprintf(chkstr, "%02X", chksum);
+	memmove(hvps_cmd+2+cmdlen, chkstr, 2);
+	memmove(hvps_cmd+4+cmdlen, &CR, 1);
+
+
+	/* ----------------- Step 2: Send command over UART --------------------- */
+	MSS_UART_polled_tx(&g_mss_uart0, (uint8_t *)hvps_cmd, strlen(hvps_cmd));
+	cmds_sent++;
+	hvps_reply_ready = 0;
+
+	/* ---------------- Step 3: Wait for reply from HVPS -------------------- */
+	while (!hvps_reply_ready)
+		;
+
+	/* ---------------- Step 4: Check for correct reply --------------------- */
+	if ((hvps_reply[1] != hvps_cmd[1] + 0x20) ||
+			(hvps_reply[2] != hvps_cmd[2] + 0x20) ||
+			(hvps_reply[3] != hvps_cmd[3] + 0x20))
+		return 1;
+
+	return 0;
+}
+
+
+// TODO: Remove cmd param, use hvps_cmd for selection...
+static int voltage_less_than(double v)
+{
+	char data[4] = "";
+	double val = 0;
+
+	/* Check for which command that came to decide on array location */
+	if((hvps_cmd[1]=='H' && hvps_cmd[2]=='S' && hvps_cmd[3]=='T')) {
+		for(int i=0; i<4; i++){
+			data[i] = hvps_cmd[i+19];
+		}
+	} else if(hvps_cmd[1]=='H' && hvps_cmd[2]=='B' && hvps_cmd[3]=='V') {
+		for(int i=0; i<4; i++){
+			data[i] = hvps_cmd[i+3];
+		}
+	}
+	/* Convert to long and check value for limit of 55 */
+	val = strtol(data, NULL, 16);
+	val = val * (1.812/pow(10, 3));
+	if(val > v)
+		return 0;
+
+	return 1;
 }
 
 
 /**
- * @brief Timer interrupt for sending "get" commands to the HVPS
- *        Each second, a separate command is sent to the HVPS.
+ *  @brief UART handler for RX from HVPS
  *
+ *  @param this_uart Pointer to the UART instance being handled
  */
-void Timer1_IRQHandler(void)
+static void UART0_RXHandler(mss_uart_instance_t* this_uart)
 {
-   static uint8_t current_run = 0;
-   char cmd[4] = "HG-";
+	static size_t rx_size;
 
-   switch (current_run)
-   {
-   case 0:
-       cmd[2] = 'S';
-       hvps_send_cmd(cmd);
-       break;
-   case 1:
-       cmd[2] = 'V';
-       hvps_send_cmd(cmd);
-       break;
-   case 2:
-       cmd[2] = 'C';
-       hvps_send_cmd(cmd);
-       break;
-   case 3:
-       cmd[2] = 'T';
-       hvps_send_cmd(cmd);
-       break;
-   case 4:
-       msp_add_hk(hvps_hk, 12, 16);
-       break;
-   default:
-       break;
-   }
+	rx_size += MSS_UART_get_rx(this_uart, ((uint8_t*)hvps_reply) + rx_size,
+			sizeof(hvps_reply));
+	if(hvps_reply[rx_size-1] == '\r')
+	{
+		/* Increment command counters based on reply */
+		if ((hvps_reply[1] == hvps_cmd[1] + 0x20) &&
+				(hvps_reply[2] == hvps_cmd[2] + 0x20) &&
+				(hvps_reply[3] == hvps_cmd[3] + 0x20)) {
+			cmds_acked++;
+		}
+		else if(hvps_reply[1] == 'h' && hvps_reply[2] == 'x' && hvps_reply[3] == 'x')
+			cmds_failed++;
 
-   /* Increment current run counter */
-   current_run = (current_run + 1) % 5;
+		/* Inform sending command function that reply is available */
+		hvps_reply_ready = 1;
 
-   /* Interrupt bit needs to be cleared after every call */
-   MSS_TIM1_clear_irq();
+		/* Prep for next round of RX... */
+		rx_size = 0;
+	}
 }

@@ -27,22 +27,36 @@
 #ifndef _HVPS_C11204_02_H_
 #define _HVPS_C11204_02_H_
 
-
+/* Type Definitions */
 enum hvps_cmd_counter {
 	HVPS_CMDS_SENT = 1,
 	HVPS_CMDS_ACKED,      // Received proper reply from MPPC bias module
 	HVPS_CMDS_FAILED      // Received "hxx" reply from MPPC bias module
 };
 
+struct hvps_temp_corr_factor {
+	uint16_t dtp1;
+	uint16_t dtp2;
+	uint16_t dt1;
+	uint16_t dt2;
+	uint16_t vb;
+	uint16_t tb;
+};
 
+
+/* Function Definitions */
 void      hvps_init(void);
-int       hvps_set_temp_corr_factor(uint8_t* command);
-int       hvps_set_temporary_voltage(uint16_t v);
-void      hvps_send_cmd(char *cmd);
-uint8_t   hvps_is_on(void);
-uint16_t  hvps_get_latest_temp(void);
-uint16_t  hvps_get_latest_volt(void);
-uint16_t  hvps_get_latest_curr(void);
+int       hvps_turn_on();
+int       hvps_turn_off();
+int       hvps_reset();
+int       hvps_set_temp_corr_factor(struct hvps_temp_corr_factor *f);
+int       hvps_temp_compens_en();
+int       hvsp_temp_compens_dis();
+int       hvps_set_temporary_voltage(uint16_t vb);
+int       hvps_is_on(void);
+uint16_t  hvps_get_temp(void);
+uint16_t  hvps_get_volt(void);
+uint16_t  hvps_get_curr(void);
 uint16_t  hvps_get_cmd_counter(enum hvps_cmd_counter);
 
 

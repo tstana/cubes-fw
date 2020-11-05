@@ -77,29 +77,37 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 	}
 	else if(opcode == MSP_OP_REQ_HK)
 	{
-		uint32_t hcr = 0;
-		hcr = citiroc_hcr_get(0);
-		to_bigendian32(send_data_hk, hcr);
-		hcr = citiroc_hcr_get(16);
-		to_bigendian32(send_data_hk+4, hcr);
-		hcr = citiroc_hcr_get(31);
-		to_bigendian32(send_data_hk+8, hcr);
+		/* HCRs */
+		uint32_t count = 0;
+		count = citiroc_hcr_get(0);
+		to_bigendian32(send_data_hk, count);
+		count = citiroc_hcr_get(16);
+		to_bigendian32(send_data_hk+4, count);
+		count = citiroc_hcr_get(31);
+		to_bigendian32(send_data_hk+8, count);
 		/* OR32 is "channel 32" */
-		hcr = citiroc_hcr_get(32);
-		to_bigendian32(send_data_hk+12, hcr);
+		count = citiroc_hcr_get(32);
+		to_bigendian32(send_data_hk+12, count);
+
+		/* HVPS HK */
+		sprintf(((char*)send_data_hk)+16, "%04X", hvps_get_volt());
+		sprintf(((char*)send_data_hk)+20, "%04X", hvps_get_curr());
+		sprintf(((char*)send_data_hk)+24, "%04X", hvps_get_temp());
+
+		/* Re-use `count` variable for reading reset counters */
+		count = nvm_reset_counter_read();
+		to_bigendian32(send_data_hk+28, count);
+		count = hvps_get_cmd_counter(HVPS_CMDS_SENT);
+		send_data_hk[32] = (unsigned char) (count >> 8)  & 0xff;
+		send_data_hk[33] = (unsigned char) (count >> 0)  & 0xff;
+		count = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
+		send_data_hk[34] = (unsigned char) (count >> 8)  & 0xff;
+		send_data_hk[35] = (unsigned char) (count >> 0)  & 0xff;
+		count = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
+		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
+		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
+
 		send_data = (uint8_t *)send_data_hk;
-		/* Re-use hcr variable for reading reset counters */
-		hcr = nvm_reset_counter_read();
-		to_bigendian32(send_data_hk+28, hcr);
-		hcr = hvps_get_cmd_counter(HVPS_CMDS_SENT);
-		send_data_hk[32] = (unsigned char) (hcr >> 8)  & 0xff;
-		send_data_hk[33] = (unsigned char) (hcr >> 0)  & 0xff;
-		hcr = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
-		send_data_hk[34] = (unsigned char) (hcr >> 8)  & 0xff;
-		send_data_hk[35] = (unsigned char) (hcr >> 0)  & 0xff;
-		hcr = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
-		send_data_hk[36] = (unsigned char) (hcr >> 8)  & 0xff;
-		send_data_hk[37] = (unsigned char) (hcr >> 0)  & 0xff;
 		*len = 38;
 	}
 	else if(opcode == MSP_OP_REQ_CUBES_ID)
@@ -240,37 +248,56 @@ void msp_exprecv_complete(unsigned char opcode)
 		case MSP_OP_SEND_CUBES_HVPS_CONF:
 		{
 			uint8_t turn_on = recv_data[0] & 0x01;
-			uint8_t hvps_resetval = (uint8_t)recv_data[0] & 0x02;
+			uint8_t reset = (uint8_t)recv_data[0] & 0x02;
 
 			if (turn_on && !hvps_is_on())
-				hvps_send_cmd("HON");
+				hvps_turn_on();
 			else if (!turn_on && hvps_is_on())
-				hvps_send_cmd("HOF");
-			if(hvps_resetval && hvps_is_on()){
-				hvps_send_cmd("HRE");
-				break;
-			}
+				hvps_turn_off();
+			if(reset && hvps_is_on())
+				hvps_reset();
 
-			hvps_set_temp_corr_factor(&recv_data[1]);
-			hvps_send_cmd("HCM1");
+			/*
+			 * Apply temperature correction factor if the command was not a
+			 * "turn off" or a "reset"...
+			 */
+			if (turn_on && !reset) {
+				struct hvps_temp_corr_factor f;
+
+				f.dtp1 = (((uint16_t)recv_data[1]) << 8) |
+				          ((uint16_t)recv_data[2]);
+				f.dtp2 = (((uint16_t)recv_data[3]) << 8) |
+				          ((uint16_t)recv_data[4]);
+				f.dt1 = (((uint16_t)recv_data[5]) << 8) |
+				         ((uint16_t)recv_data[6]);
+				f.dt2 = (((uint16_t)recv_data[7]) << 8) |
+				         ((uint16_t)recv_data[8]);
+				f.vb = (((uint16_t)recv_data[ 9]) << 8) |
+				        ((uint16_t)recv_data[10]);
+				f.tb = (((uint16_t)recv_data[11]) << 8) |
+				        ((uint16_t)recv_data[12]);
+
+				hvps_set_temp_corr_factor(&f);
+				hvps_temp_compens_en();
+			}
 			break;
 		}
 
 		case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
 		{
 			uint8_t turn_on = recv_data[0] & 0x01;
-			uint8_t hvps_resetval = recv_data[0] & 0x02;
-			uint16_t volt = (((uint16_t)recv_data[1]) << 8) |
-			                 ((uint16_t)recv_data[2]);
+			uint8_t reset = recv_data[0] & 0x02;
 
 			if (turn_on && !hvps_is_on())
-				hvps_send_cmd("HON");
+				hvps_turn_on();
 			else if (!turn_on && hvps_is_on())
-				hvps_send_cmd("HOF");
-			if(hvps_resetval && hvps_is_on() && turn_on)
-				hvps_send_cmd("HRE");
+				hvps_turn_off();
+			if(reset && hvps_is_on())
+				hvps_reset();
 
-			hvps_set_temporary_voltage(volt);
+			if (turn_on && !reset)
+				hvps_set_temporary_voltage((((uint16_t)recv_data[1]) << 8) |
+				                            ((uint16_t)recv_data[2]));
 
 			break;
 		}
@@ -328,7 +355,8 @@ void msp_exprecv_complete(unsigned char opcode)
  * @param opcode The opcode for the transaction that failed
  * @param error  The error code, defined in `msp_exp_error.h`
  */
-void msp_exprecv_error(unsigned char opcode, int error){
+void msp_exprecv_error(unsigned char opcode, int error)
+{
 	has_recv_error=opcode;
 	has_recv_errorcode = error;
 }
@@ -347,23 +375,23 @@ void msp_exprecv_syscommand(unsigned char opcode)
 {
 	switch(opcode) {
 		case MSP_OP_ACTIVE:
-			hvps_send_cmd("HON");
+			hvps_turn_on();
 			break;
 		case MSP_OP_SLEEP:
-			hvps_send_cmd("HOF");
+			hvps_turn_off();
 			citiroc_daq_stop();
 			break;
 		case MSP_OP_POWER_OFF:
-			hvps_send_cmd("HOF");
+			hvps_turn_off();
 			citiroc_daq_stop();
 			msp_save_seqflags();
 			break;
 		case MSP_OP_CUBES_DAQ_START:
 			citiroc_hcr_reset();
 			citiroc_histo_reset();
-			citiroc_daq_set_hvps_temp(hvps_get_latest_temp());
-			citiroc_daq_set_hvps_volt(hvps_get_latest_volt());
-			citiroc_daq_set_hvps_curr(hvps_get_latest_curr());
+			citiroc_daq_set_hvps_temp(hvps_get_temp());
+			citiroc_daq_set_hvps_volt(hvps_get_volt());
+			citiroc_daq_set_hvps_curr(hvps_get_curr());
 			MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
 			MSS_TIM2_start();
 			citiroc_daq_start();
@@ -377,24 +405,10 @@ void msp_exprecv_syscommand(unsigned char opcode)
 }
 
 
-/*
- *------------------------------------------------------------------------------
- * Other CUBES-specific MSP functions
- *------------------------------------------------------------------------------
- */
-// TODO: Fix the logic of adding HK from HVPS and remove this function.
-//       Something like having the HVPS HK globally available, perhaps?
-void msp_add_hk(unsigned char *buff, unsigned long len, int offset){
-	for (unsigned long i=0; i<len; i++){
-		send_data_hk[i+offset] = buff[i];
-	}
-}
-
-
 void Timer2_IRQHandler(void)
 {
-	citiroc_daq_set_hvps_temp(hvps_get_latest_temp());
-	citiroc_daq_set_hvps_volt(hvps_get_latest_volt());
-	citiroc_daq_set_hvps_curr(hvps_get_latest_curr());
+	citiroc_daq_set_hvps_temp(hvps_get_temp());
+	citiroc_daq_set_hvps_volt(hvps_get_volt());
+	citiroc_daq_set_hvps_curr(hvps_get_curr());
 	MSS_TIM2_clear_irq();
 }

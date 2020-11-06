@@ -284,7 +284,7 @@ static int send_cmd_and_check_reply(char *cmd)
 	const uint8_t ETX = 0x03;
 	const uint8_t CR = '\r';
 
-	int cmdlen = 5 + strlen((char *)cmd); // incl. extra char's around cmd.
+	int cmdlen = strlen((char*)cmd);
 
 	uint16_t chksum = 0x00;
 	char chkstr[3];
@@ -306,8 +306,8 @@ static int send_cmd_and_check_reply(char *cmd)
 	}
 	chksum &= 0xFF; // Mask so only lower 2 bytes get sent
 	sprintf(chkstr, "%02X", chksum);
-	memmove(hvps_cmd+2+cmdlen, chkstr, 2);
-	memmove(hvps_cmd+4+cmdlen, &CR, 1);
+	memmove(hvps_cmd+1+cmdlen+1, chkstr, 2);
+	memmove(hvps_cmd+1+cmdlen+3, &CR, 1);
 
 
 	/* ----------------- Step 2: Send command over UART --------------------- */
@@ -315,9 +315,11 @@ static int send_cmd_and_check_reply(char *cmd)
 	cmds_sent++;
 	hvps_reply_ready = 0;
 
+
 	/* ---------------- Step 3: Wait for reply from HVPS -------------------- */
 	while (!hvps_reply_ready)
 		;
+
 
 	/* ---------------- Step 4: Check for correct reply --------------------- */
 	if ((hvps_reply[1] != hvps_cmd[1] + 0x20) ||

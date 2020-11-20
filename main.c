@@ -30,10 +30,10 @@ int main(void)
 	hvps_init();
 
 //	/* Init timer to write HK before DAQ end */
-	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
-	MSS_TIM2_load_immediate(0xffffffff);
-	MSS_TIM2_enable_irq();
-	NVIC_SetPriority(Timer2_IRQn, 1);
+	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);
+	MSS_TIM1_load_immediate(0xffffffff);
+	MSS_TIM1_enable_irq();
+	NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/* Infinite loop */
 	while(1){

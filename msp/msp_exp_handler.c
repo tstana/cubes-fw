@@ -392,8 +392,8 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_daq_set_hvps_temp(hvps_get_temp());
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
-			MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
-			MSS_TIM2_start();
+			MSS_TIM1_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
+			MSS_TIM1_start();
 			citiroc_daq_start();
 			break;
 		case MSP_OP_CUBES_DAQ_STOP:
@@ -405,10 +405,10 @@ void msp_exprecv_syscommand(unsigned char opcode)
 }
 
 
-void Timer2_IRQHandler(void)
+void Timer1_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
-	MSS_TIM2_clear_irq();
+	MSS_TIM1_clear_irq();
 }

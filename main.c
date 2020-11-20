@@ -21,12 +21,9 @@
 
 int main(void)
 {
-	//msp_read_seqflags();
 	nvm_reset_counter_increment();
 
-	/* Startup delay */
-	for (int i = 0; i < 1000; i++)
-		;
+//	msp_read_seqflags();
 
 	msp_init_i2c(SLAVE_ADDR);
 

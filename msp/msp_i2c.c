@@ -34,6 +34,8 @@ void msp_init_i2c(int slave_ser_addr){
 	MSS_I2C_clear_gca(&g_mss_i2c1); /* Can not be adressed by a general call adress */
 	MSS_I2C_register_write_handler(&g_mss_i2c1, slave_write_handler);
 	MSS_I2C_enable_slave(&g_mss_i2c1);
+	/* Set interrupt priority lower than UART's */
+	NVIC_SetPriority(g_mss_i2c1.irqn, 1);
 }
 
 

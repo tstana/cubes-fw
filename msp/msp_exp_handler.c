@@ -90,8 +90,8 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		to_bigendian32(send_data_hk+12, count);
 
 		/* HVPS HK */
-		sprintf(((char*)send_data_hk)+16, "%04X", hvps_get_volt());
-		sprintf(((char*)send_data_hk)+20, "%04X", hvps_get_curr());
+		sprintf(((char*)send_data_hk)+16, "%04X", hvps_get_voltage());
+		sprintf(((char*)send_data_hk)+20, "%04X", hvps_get_current());
 		sprintf(((char*)send_data_hk)+24, "%04X", hvps_get_temp());
 
 		/* Re-use `count` variable for reading reset counters */
@@ -390,8 +390,8 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_hcr_reset();
 			citiroc_histo_reset();
 			citiroc_daq_set_hvps_temp(hvps_get_temp());
-			citiroc_daq_set_hvps_volt(hvps_get_volt());
-			citiroc_daq_set_hvps_curr(hvps_get_curr());
+			citiroc_daq_set_hvps_volt(hvps_get_voltage());
+			citiroc_daq_set_hvps_curr(hvps_get_current());
 			MSS_TIM2_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
 			MSS_TIM2_start();
 			citiroc_daq_start();
@@ -408,7 +408,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 void Timer2_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
-	citiroc_daq_set_hvps_volt(hvps_get_volt());
-	citiroc_daq_set_hvps_curr(hvps_get_curr());
+	citiroc_daq_set_hvps_volt(hvps_get_voltage());
+	citiroc_daq_set_hvps_curr(hvps_get_current());
 	MSS_TIM2_clear_irq();
 }

@@ -75,7 +75,6 @@ void hvps_init(void)
 	/* Init UART for communicating to HVPS module */
 	MSS_UART_init(&g_mss_uart0, MSS_UART_38400_BAUD, MSS_UART_DATA_8_BITS |
 			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
-	NVIC_SetPriority(UART0_IRQn, 1);
 	MSS_UART_set_rx_handler(&g_mss_uart0, UART0_RXHandler,
 			MSS_UART_FIFO_FOUR_BYTES);
 
@@ -116,8 +115,8 @@ void hvps_init(void)
 //		wait = 1;
 //		cmds_sent++;
 //	}
-
 }
+
 
 /**
  * @Brief Turn HV output on
@@ -219,7 +218,7 @@ uint16_t hvps_get_temp(void)
 }
 
 
-uint16_t hvps_get_volt(void)
+uint16_t hvps_get_voltage(void)
 {
 	uint16_t v = 0xffff; // default should not be valid reading
 
@@ -230,7 +229,7 @@ uint16_t hvps_get_volt(void)
 }
 
 
-uint16_t hvps_get_curr(void)
+uint16_t hvps_get_current(void)
 {
 	uint16_t c = 0xffff; // default should not be valid reading
 
@@ -311,7 +310,7 @@ static int send_cmd_and_check_reply(char *cmd)
 
 
 	/* ----------------- Step 2: Send command over UART --------------------- */
-	MSS_UART_polled_tx(&g_mss_uart0, (uint8_t *)hvps_cmd, strlen(hvps_cmd));
+	MSS_UART_polled_tx(&g_mss_uart0, (uint8_t*)hvps_cmd, strlen(hvps_cmd));
 	cmds_sent++;
 	hvps_reply_ready = 0;
 
@@ -364,7 +363,7 @@ static int voltage_less_than(double v)
  */
 static void UART0_RXHandler(mss_uart_instance_t* this_uart)
 {
-	static size_t rx_size;
+	static size_t rx_size = 0;
 
 	rx_size += MSS_UART_get_rx(this_uart, ((uint8_t*)hvps_reply) + rx_size,
 			sizeof(hvps_reply));

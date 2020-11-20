@@ -55,8 +55,8 @@ int       hvsp_temp_compens_dis();
 int       hvps_set_temporary_voltage(uint16_t vb);
 int       hvps_is_on(void);
 uint16_t  hvps_get_temp(void);
-uint16_t  hvps_get_volt(void);
-uint16_t  hvps_get_curr(void);
+uint16_t  hvps_get_voltage(void);
+uint16_t  hvps_get_current(void);
 uint16_t  hvps_get_cmd_counter(enum hvps_cmd_counter);
 
 

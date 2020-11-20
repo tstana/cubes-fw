@@ -22,27 +22,21 @@
 int main(void)
 {
 	//msp_read_seqflags();
+	nvm_reset_counter_increment();
 
 	/* Startup delay */
 	for (int i = 0; i < 1000; i++)
 		;
 
-	/*
-	 * Initialize peripherals for use by MSP and associated commands:
-	 * 	    - I2C, for the communication link
-	 * 	    - Timer2, the timer to be set to "DAQ Duration - 1 s", used to
-	 * 	      write new HVPS readouts to the Citiroc HVPSR and TEMPR before
-	 * 	      DAQ ends.
-	 */
 	msp_init_i2c(SLAVE_ADDR);
 
+	hvps_init();
+
+//	/* Init timer to write HK before DAQ end */
 	MSS_TIM2_init(MSS_TIMER_ONE_SHOT_MODE);
 	MSS_TIM2_load_immediate(0xffffffff);
 	MSS_TIM2_enable_irq();
-
-	/* Other init... */
-	nvm_reset_counter_increment();
-	hvps_init();
+	NVIC_SetPriority(Timer2_IRQn, 1);
 
 	/* Infinite loop */
 	while(1){

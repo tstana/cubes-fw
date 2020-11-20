@@ -38,6 +38,8 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 
+#define HVPS_MAX_VB (55.0)
+
 /*
  * =============================================================================
  *  Local Function Prototypes
@@ -163,6 +165,22 @@ int hvps_reset()
 }
 
 
+/**
+ * @brief Set temperature correction factor
+ *
+ * This function sends an `HST` command over UART to the C11204-02 to apply
+ * new voltage, current and temperature coefficients for the temperature
+ * compensation functionality of the MPPC bias module.
+ *
+ * Note: The settings will be applied to non-volatile memory inside the HVPS,
+ *       thus the settings will be kept on power-down.
+ *
+ * @param f Structure containing the temperature correction factors, voltage
+ *          and current
+ * @return -1 if the bias voltage to be applied is greater than `HVPS_MAX_VB`
+ *          0 if the HVPS acknowledges the command (reply `hst`)
+ *          1 if any other reply than `hst` was received from the HVPS
+ */
 int hvps_set_temp_corr_factor(struct hvps_temp_corr_factor *f)
 {
 	char cmd[28]="HST";
@@ -174,24 +192,58 @@ int hvps_set_temp_corr_factor(struct hvps_temp_corr_factor *f)
 	 */
 	sprintf(&cmd[3], "%04X%04X%04X%04X%04X%04X", f->dtp1, f->dtp2, f->dt1,
 			f-> dt2, f->vb, f->tb);
-	if (!voltage_less_than(55.0))
+	if (!voltage_less_than(HVPS_MAX_VB))
 		return -1;
 
 	return send_cmd_and_check_reply(cmd);
 }
 
+
+/**-
+ * @brief Enable temperature compensation
+ *
+ * This function sends the `HCM` command with the parameter set to `1`, to
+ * enable the temperature compensation functionality in the C11204-02.
+ *
+ * @return 0 if the HVPS acknowledges the command (reply `hcm`)
+ *         1 if any other reply than `hcm` was received from the HVPS
+ */
 int hvps_temp_compens_en()
 {
 	return send_cmd_and_check_reply("HCM1");
 }
 
 
+/**-
+ * @brief Disable temperature compensation
+ *
+ * This function sends the `HCM` command with the parameter set to `0`, to
+ * disable the temperature compensation functionality in the C11204-02.
+ *
+ * @return 0 if the HVPS acknowledges the command (reply `hcm`)
+ *         1 if any other reply than `hcm` was received from the HVPS
+ */
 int hvps_temp_compens_dis()
 {
 	return send_cmd_and_check_reply("HCM0");
 }
 
 
+/**
+ * @brief Set temporary MPPC bias voltage
+ *
+ * This function sends an `HBV` command to the C11204-02 to apply a temporary
+ * bias voltage at the HVPS's output. Temporary means that the bias voltage is
+ * _not_ written to non-volatile memory (unlike the `HST` command called by the
+ * `hvps_set_temp_corr_factor()` function), thus the setting will not be kept
+ * after power-down.
+ *
+ * @param vb Bias voltage to be applied, `uint16_t` in the format expected by
+ *           the HVPS, see the C11204-02 Command Reference Manual.
+ * @return -1 if the voltage is less than `HVPS_MAX_VB`
+ *          0 if the HVPS acknowledges the command (reply `hbv`)
+ *          1 if any other reply than `hbv` was received from the HVPS
+ */
 int hvps_set_temporary_voltage(uint16_t vb)
 {
 	/* Prep command string and parameter */
@@ -199,7 +251,7 @@ int hvps_set_temporary_voltage(uint16_t vb)
 	sprintf(&cmd[3], "%04X", vb);
 
 	/* Give up early if voltage is too high */
-	if(!voltage_less_than(55.0))
+	if(!voltage_less_than(HVPS_MAX_VB))
 		return -1;
 
 	/* Attempt to send command */
@@ -207,6 +259,19 @@ int hvps_set_temporary_voltage(uint16_t vb)
 }
 
 
+/**
+ * @brief Get temperature readout from the C11204-02
+ *
+ * This function will send an `HGT` command to the HVPS to retrieve the
+ * temperature readout made by the HVPS.
+ *
+ * @return The temperature readout from the HVPS, in the format specified by the
+ *         C11204-02 Command Reference Manual.
+ *
+ *         If the readout was not successful (the reply was not `hgv`), the
+ *         value `1` is returned. This converts to 188.18 deg. C, a temperature
+ *         at which the HVPS can no longer operate - thus unreachable.
+ */
 uint16_t hvps_get_temp(void)
 {
 	uint16_t temp = 1; // default should not be valid reading
@@ -218,6 +283,19 @@ uint16_t hvps_get_temp(void)
 }
 
 
+/**
+ * @brief Get voltage readout from the C11204-02
+ *
+ * This function will send an `HGV` command to the HVPS to retrieve the
+ * temperature readout made by the HVPS.
+ *
+ * @return The voltage readout from the HVPS, in the format specified by the
+ *         C11204-02 Command Reference Manual.
+ *
+ *         If the readout was not successful (the reply was not `hgv`), the
+ *         value `0xffff` is returned. This converts to 118.7 V, a value that
+ *         cannot be produced at the output of the HVPS, thus unreachable.
+ */
 uint16_t hvps_get_voltage(void)
 {
 	uint16_t v = 0xffff; // default should not be valid reading
@@ -229,6 +307,19 @@ uint16_t hvps_get_voltage(void)
 }
 
 
+/**
+ * @brief Get current readout from the C11204-02
+ *
+ * This function will send an `HGC` command to the HVPS to retrieve the
+ * temperature readout made by the HVPS.
+ *
+ * @return The current readout from the HVPS, in the format specified by the
+ *         C11204-02 Command Reference Manual.
+ *
+ *         If the readout was not successful (the reply was not `hgc`), the
+ *         value `0xffff` is returned. This converts to 340.4 mA, a current that
+ *         cannot be supplied by the HVPS, thus unreachable.
+ */
 uint16_t hvps_get_current(void)
 {
 	uint16_t c = 0xffff; // default should not be valid reading
@@ -240,6 +331,16 @@ uint16_t hvps_get_current(void)
 }
 
 
+/**
+ * @brief Check whether the HVPS output is on
+ *
+ * This function requests the status of the MPPC bias module using the `HGS`
+ * command and returns the status of the first bit in the reply, which indicates
+ * the output status.
+ *
+ * @return 1 if HVPS output is _on_
+ *         0 if HVPS output is _off_
+ */
 int hvps_is_on(void)
 {
 	uint16_t status = 0xffff; // default should not be valid reading
@@ -275,6 +376,16 @@ uint16_t hvps_get_cmd_counter(enum hvps_cmd_counter c)
  * =============================================================================
  *  Local functions
  * =============================================================================
+ */
+
+/**
+ * @brief Prepare the command string to the MPPC bias module, send the command
+ *        and check for correct reply
+ * @param cmd Command string to send, including parameters but excluding the
+ *            start, end characters and checksum
+ * @return 0 if the reply to the command _is_ correct (lower-case representation
+ *           of the sent command)
+ *         1 if the reply to the command _is not_ correct (`hxx` or other reply)
  */
 static int send_cmd_and_check_reply(char *cmd)
 {
@@ -330,7 +441,16 @@ static int send_cmd_and_check_reply(char *cmd)
 }
 
 
-// TODO: Remove cmd param, use hvps_cmd for selection...
+/**
+ * @brief Check that MPPC bias voltage is less than a certain value
+ *
+ * This function is used to ensure that the voltage is not higher than the
+ * SPM can take, preventing its destruction.
+ *
+ * @param v The maximum bias voltage to check against
+ * @return 1 (true) if the voltage _is_ less than the parameter `v`
+ *         0 (false) if voltage _is not_ less than the parameter `v`
+ */
 static int voltage_less_than(double v)
 {
 	char data[4] = "";

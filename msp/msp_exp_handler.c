@@ -14,26 +14,50 @@
 
 #include "../firmware/drivers/citiroc/citiroc.h"
 #include "../firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
-#include "../firmware/drivers/citiroc/citiroc.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 
 
+/*
+ * Define the MSP send data buffer
+ *
+ * The max number of bytes that can be sent is for the histogram, assuming
+ * all 2048 bins are in use:
+ *
+ *  Histo-RAM Header     :   256
+ *  Histo-RAM HG, Ch.  0 :  4096 (2048 x 2-byte bins)
+ *  Histo-RAM LG, Ch.  0 :  4096
+ *  Histo-RAM HG, Ch. 16 :  4096
+ *  Histo-RAM LG, Ch. 16 :  4096
+ *  Histo-RAM HG, Ch. 31 :  4096
+ *  Histo-RAM LG, Ch. 31 :  4096
+ *                 ------------
+ *                 Total : 24832 bytes
+ */
 static uint8_t *send_data;
-static unsigned char send_data_payload[25000]="";
+static unsigned char send_data_payload[24832]="";
 static unsigned char send_data_hk[64] = "";
+static uint8_t comp_date[70];
 
-#define RECV_MAXLEN 	256
-static unsigned char recv_data[RECV_MAXLEN] = "";
+/*
+ * Define the MSP receive data buffer.
+ *
+ * The Citiroc configuration data is the largest number of bytes that can be
+ * received from the OBC.
+ */
+
+#define RECV_MAXLEN (CITIROC_LEN)
+
+static unsigned char recv_data[RECV_MAXLEN];
 static unsigned long recv_length;
 
+/* Other variables used by MSP */
 unsigned int has_send = 0;
-static unsigned int has_send_error = 0;
-static unsigned int has_send_errorcode = 0;
+unsigned int has_send_error = 0;
+unsigned int has_send_errorcode = 0;
 unsigned int has_recv = 0;
-static unsigned int has_recv_error = 0;
-static unsigned int has_recv_errorcode = 0;
+unsigned int has_recv_error = 0;
+unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
-static uint8_t comp_date[70];
 
 static uint8_t daq_dur;
 
@@ -141,7 +165,7 @@ void msp_expsend_data(unsigned char opcode,
                       unsigned long len,
                       unsigned long offset)
 {
-	for(unsigned long i = 0; i<len; i++){
+	for(unsigned long i = 0; i<len; i++) {
 		buf[i] = send_data[offset+i];
 	}
 }
@@ -217,10 +241,9 @@ void msp_exprecv_data(unsigned char opcode,
                       unsigned long len,
                       unsigned long offset)
 {
-	for(unsigned long i=0; i<len; i++){
-		if((i+offset) < RECV_MAXLEN){
+	for(unsigned long i=0; i<len; i++) {
+		if((i+offset) < RECV_MAXLEN)
 			recv_data[i+offset] = buf[i];
-		}
 		else
 			break;
 	}

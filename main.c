@@ -1,10 +1,25 @@
 /*
- * main.c
+ * Main file of CUBES Cortex-M3 Firmware
  *
- *  Created on: 25 okt. 2018
- *  Author: Marcus Persson
- *  V1.0
- *  FPGA firmware code
+ * Copyright © 2020 Theodor Stana and Marcus Persson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #include <stdint.h>
@@ -16,7 +31,6 @@
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
 
-#define SLAVE_ADDR 0x35
 
 
 int main(void)
@@ -25,7 +39,7 @@ int main(void)
 
 //	msp_read_seqflags();
 
-	msp_init_i2c(SLAVE_ADDR);
+	msp_init_i2c(MSP_EXP_ADDR);
 
 	hvps_init();
 

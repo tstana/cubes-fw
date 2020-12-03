@@ -407,7 +407,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 		case MSP_OP_POWER_OFF:
 			hvps_turn_off();
 			citiroc_daq_stop();
-			msp_save_seqflags();
+			nvm_save_msp_seqflags();
 			break;
 		case MSP_OP_CUBES_DAQ_START:
 			citiroc_hcr_reset();

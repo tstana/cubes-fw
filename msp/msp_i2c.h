@@ -1,8 +1,25 @@
 /**
- * @file I2C_comm_int.h
+ * @file msp_i2c.h
  *
- *  Created on: 26 okt. 2018
- *  @author Marcus Persson
+ *  Copyright 2020 Theodor Stana and Marcus Persson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #ifndef I2C_COMM_INT_H_
@@ -13,42 +30,9 @@
 
 #include "msp_exp.h"
 
-extern unsigned int has_send;
-extern unsigned int has_recv;
-extern unsigned int has_syscommand;
-
-/** **********************************************
- * void initI2C(void)
- * Function for initializing I2C parameters and interrupts
- * @param  slave_adress, on format 0x35
- * Output: None
- ********************************************** */
-
-void msp_init_i2c(int slave_adress);
-
-/** **************************************************
- * int msp_save_seqflags
- * Function for saving MSP sequenceflags to NVM memory at system power-off.
- * Input: none
- * @return: -1 if any failure, 0 if passed
- **************************************************** */
-int msp_save_seqflags(void);
 
 
-/** ****************************************************
- * int msp_save_seqflags
- * Function for reading MSP sequenceflags from NVM memory at system power-on.
- * Input: none
- * Return: none
- *************************************************** */
-void msp_read_seqflags(void);
-
-/*
- * This function is called in msp_exp_handler to add data to the housekeeping buffer
- *
- */
-void msp_add_hk(unsigned char *buff, unsigned long len, int offset);
+void msp_i2c_init(uint8_t slave_adress);
 
 
-unsigned char* msp_get_recv(void);
 #endif /* I2C_COMM_INT_H_ */

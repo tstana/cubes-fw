@@ -32,14 +32,22 @@
 #include "mem_mgmt/mem_mgmt.h"
 
 
+extern unsigned int has_recv;
+extern unsigned int has_send;
+extern unsigned int has_syscommand;
 
+
+/**
+ * @brief Main function, entry point of C code upon MSS reset
+ * @return -1 if the infinite loop stops for some reason
+ */
 int main(void)
 {
 	nvm_reset_counter_increment();
 
-//	msp_read_seqflags();
+//	nvm_restore_msp_seqflags();
 
-	msp_init_i2c(MSP_EXP_ADDR);
+	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
 
@@ -120,4 +128,6 @@ int main(void)
 			has_syscommand = 0;
 		}
 	}
+
+	return -1;
 }

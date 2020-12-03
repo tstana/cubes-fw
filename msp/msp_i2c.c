@@ -5,9 +5,6 @@
  *      Author: Marcus Persson
  */
 
-#define SLAVE_SER_ADDR_0   	0x35
-#define NVM_SEQFLAG_ADDR	0x6000F000
-
 #include <stdint.h>
 
 #include "../firmware/drivers/mss_i2c/mss_i2c.h"
@@ -30,25 +27,33 @@ static uint8_t i2c_rx_buffer[MSP_EXP_MAX_FRAME_SIZE];
 
 static uint32_t slave_buffer_size = 0;
 
-/*
- *
+/**
+ * @brief Slave write handler for the I2C slave dedicated to MSP communication
+ * @param this_i2c   Pointer to I2C interface (use g_mss_i2c0 or g_mss_i2c1)
+ * @param p_rx_data  Receive data buffer
+ * @param rx_size    Number of bytes that have been received in the receive data
+ *                   buffer
+ * @return MSS_I2C_REENABLE_SLAVE_RX  to indicate data buffer should be released
+ *         MSS_I2C_PAUSE_SLAVE_RX     to indicate data buffer should _not_ be
+ *                                    released
  */
 static
-mss_i2c_slave_handler_ret_t slave_write_handler(mss_i2c_instance_t * this_i2c,
-                                                uint8_t * p_rx_data,
-                                                uint16_t rx_size)
+mss_i2c_slave_handler_ret_t I2C1_SlaveWriteHandler(mss_i2c_instance_t * this_i2c,
+                                                   uint8_t * p_rx_data,
+                                                   uint16_t rx_size)
 {
 	msp_recv_callback(p_rx_data, rx_size);
 	msp_send_callback((unsigned char *)i2c_tx_buffer, (unsigned long *)&slave_buffer_size);
 	return MSS_I2C_REENABLE_SLAVE_RX;
 }
 
+
 /**
- * @brief Initialize MSS_I2C1 for use with MSP
+ * @brief  Initialize MSS_I2C1 for use with MSP
  *
- * @param slave_ser_addr   I2C slave address of CUBES, set it to `MSP_EXP_ADDR`
+ * @param slave_ser_addr  7-bit I2C address
  */
-void msp_init_i2c(int slave_ser_addr)
+void msp_i2c_init(uint8_t slave_ser_addr)
 {
 	/* `ser_clock_speed` param not important, CUBES is an I2C slave... */
 	MSS_I2C_init(&g_mss_i2c1, slave_ser_addr, MSS_I2C_PCLK_DIV_60);
@@ -59,30 +64,8 @@ void msp_init_i2c(int slave_ser_addr)
 	MSS_I2C_clear_gca(&g_mss_i2c1);
 
 	/* Register local write handler function and enable slave */
-	MSS_I2C_register_write_handler(&g_mss_i2c1, slave_write_handler);
+	MSS_I2C_register_write_handler(&g_mss_i2c1, I2C1_SlaveWriteHandler);
 	MSS_I2C_enable_slave(&g_mss_i2c1);
 	/* Set interrupt priority lower than UART's */
 	NVIC_SetPriority(g_mss_i2c1.irqn, 1);
-}
-
-
-int msp_save_seqflags(void){
-	msp_seqflags_t seqflags = msp_exp_state_get_seqflags();
-	nvm_status_t status;
-
-	status = NVM_unlock(NVM_SEQFLAG_ADDR, sizeof(msp_seqflags_t));
-	if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-		status = NVM_write(NVM_SEQFLAG_ADDR, (uint8_t*)&seqflags, sizeof(msp_seqflags_t), NVM_LOCK_PAGE);
-		if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-			return 0;
-		}
-	}
-	return -1;
-}
-
-void msp_read_seqflags(void){
-	msp_seqflags_t seqflags;
-	NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
-	mem_read(NVM_SEQFLAG, (uint32_t *)&seqflags);
-	msp_exp_state_initialize(seqflags);
 }

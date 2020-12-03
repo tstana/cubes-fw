@@ -60,6 +60,7 @@ unsigned int has_recv_errorcode = 0;
 unsigned int has_syscommand = 0;
 
 static uint8_t daq_dur;
+static uint8_t bin_cfg;
 
 
 /*
@@ -341,8 +342,9 @@ void msp_exprecv_complete(unsigned char opcode)
 			break;
 		}
 
-		case MSP_OP_SEND_CUBES_DAQ_DUR:
+		case MSP_OP_SEND_CUBES_DAQ_CONF:
 			daq_dur = recv_data[0];
+			bin_cfg = recv_data[1];
 			citiroc_daq_set_dur(daq_dur);
 			break;
 

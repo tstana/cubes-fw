@@ -97,7 +97,7 @@ int main(void)
 					break;
 				case MSP_OP_SEND_READ_REG_DEBUG:
 					break;
-				case MSP_OP_SEND_CUBES_DAQ_DUR:
+				case MSP_OP_SEND_CUBES_DAQ_CONF:
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 					break;

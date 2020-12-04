@@ -83,6 +83,7 @@ static uint8_t bin_cfg;
 void msp_expsend_start(unsigned char opcode, unsigned long *len)
 {
 	uint32_t *long_data = (uint32_t *)HISTO_RAM;
+
 	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy())
 	{
 		/*
@@ -345,6 +346,9 @@ void msp_exprecv_complete(unsigned char opcode)
 		case MSP_OP_SEND_CUBES_DAQ_CONF:
 			daq_dur = recv_data[0];
 			bin_cfg = recv_data[1];
+			// Ensure the bin configuration is not an unsupported one
+			if (bin_cfg > 3)
+				bin_cfg = 3;
 			citiroc_daq_set_dur(daq_dur);
 			break;
 

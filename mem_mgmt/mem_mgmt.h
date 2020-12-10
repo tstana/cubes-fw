@@ -47,7 +47,6 @@
 #define PROBE_LEN       (32u)
 
 #define SEQFLAG_LEN     sizeof(msp_seqflags_t)
-#define HISTO_LEN       (24832)
 
 #define RAM_ADDR        (0x20000000u)
 #define NVM_ADDR        (0x60000000u)
@@ -56,6 +55,10 @@
 #define SEQFLAG_OFFSET  (0xF100)
 
 #define HISTO_ADDR        (0x50030000)
+	#define HISTO_LEN            (24832)
+	#define HISTO_NUM_BINS       ( 2048)
+	#define HISTO_HDR_NUM_BYTES  (  256)
+
 #define NVM_SEQFLAG_ADDR  (0x6000F000)
 
 

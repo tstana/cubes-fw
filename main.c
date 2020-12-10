@@ -58,7 +58,7 @@ int main(void)
 	NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/* Infinite loop */
-	while(1){
+	while(1) {
 		/*
 		 * The "switch" statement below shows which REQ commands CUBES replies
 		 * to over MSP.
@@ -66,7 +66,7 @@ int main(void)
 		 * Code that handles preparing the send data can be found in the
 		 * function "msp_expsend_start()", in the file "msp_exp_handler.c"
 		 */
-		if(has_send != 0){
+		if(has_send != 0) {
 			switch(has_send) {
 				case MSP_OP_REQ_PAYLOAD:
 					break;
@@ -83,7 +83,7 @@ int main(void)
 		 * Code that handles using the receive data can be found in the function
 		 * "msp_exprecv_complete()", in the file "msp_exp_handler.c"
 		 */
-		else if(has_recv != 0){
+		else if(has_recv != 0) {
 			switch(has_recv) {
 				case MSP_OP_SEND_TIME:
 					break;
@@ -112,8 +112,8 @@ int main(void)
 		 * Code that handles using the receive data can be found in the function
 		 * "msp_exprecv_syscommand()", in the file "msp_exp_handler.c"
 		 */
-		else if(has_syscommand != 0){
-			switch(has_syscommand){
+		else if(has_syscommand != 0) {
+			switch(has_syscommand) {
 				case MSP_OP_ACTIVE:
 					break;
 				case MSP_OP_SLEEP:

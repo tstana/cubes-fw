@@ -63,6 +63,61 @@ static uint8_t daq_dur;
 static uint8_t bin_cfg;
 
 
+unsigned long prep_payload_data(uint8_t bin_config)
+{
+	uint32_t *histo_data = (uint32_t *)HISTO_RAM;
+	unsigned long i, j, k, m, n, len;
+	uint16_t num_bins;
+
+	if (bin_config == 0) {
+		num_bins = HISTO_NUM_BINS;
+		/*
+		 * Massage Histo-RAM data (16-bit, big-endian, organized into 2x 16-bit
+		 * big-endian) into MSP data array; see the CUBES Instrument Manual for
+		 * a depiction of this process.
+		 */
+		for (i = 0; i < HISTO_LEN/4; i++) {
+			send_data_payload[i*4+1] = histo_data[i] & 0xFF;
+			send_data_payload[i*4+0] = histo_data[i]>>8 & 0xFF;
+			send_data_payload[i*4+3] = histo_data[i]>>16 & 0xFF;
+			send_data_payload[i*4+2] = histo_data[i]>>24 & 0xFF;
+		}
+		len = HISTO_LEN;
+    } else {
+    	/* Re-binning... */
+    	uint8_t bin_size;
+		uint32_t bin;
+
+		num_bins = HISTO_NUM_BINS >> bin_config;
+		bin_size = 1 << bin_config;
+
+		for(n = 0; n < HISTO_HDR_NUM_BYTES/4; n++) {
+			send_data_payload[n*4+1] = histo_data[n] & 0xFF;
+			send_data_payload[n*4+0] = histo_data[n]>>8 & 0xFF;
+			send_data_payload[n*4+3] = histo_data[n]>>16 & 0xFF;
+			send_data_payload[n*4+2] = histo_data[n]>>24 & 0xFF;
+		}
+
+		for(m = 0; m < 6; m++) {
+			for(j = m*num_bins; j < (m+1)*num_bins; j++) {
+				for(k = j * bin_size/2 + HISTO_HDR_NUM_BYTES/4;
+				        k < (j+1) * bin_size/2 + HISTO_HDR_NUM_BYTES/4; k++) {
+					bin = (histo_data[k]>>16 & 0xFFFF)+(histo_data[k] & 0xFFFF);
+				}
+				bin = bin>>bin_config;
+				send_data_payload[j*2 + 1 + HISTO_HDR_NUM_BYTES] = bin & 0xFF;
+				send_data_payload[j*2 + HISTO_HDR_NUM_BYTES] = bin>>8 & 0xFF;
+				}
+		}
+		len = HISTO_HDR_NUM_BYTES + 12*num_bins;
+    }
+
+	send_data_payload[HISTO_HDR_NUM_BYTES-1] = bin_config;
+	return len;
+}
+
+
+
 /*
  *------------------------------------------------------------------------------
  * Experiment Send Callbacks
@@ -82,24 +137,11 @@ static uint8_t bin_cfg;
  */
 void msp_expsend_start(unsigned char opcode, unsigned long *len)
 {
-	uint32_t *long_data = (uint32_t *)HISTO_RAM;
-
 	if(opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy())
 	{
-		/*
-		 * Massage bin memory (16-bit, big-endian, organized into 2x 16-bit
-		 * big-endian) into MSP data array; see mem-addressing.png for a visual
-		 * description of this.
-		 */
-		for(int i=0; i<HISTO_LEN/4; i++) {
-			send_data_payload[i*4+1] = long_data[i] & 0xFF;
-			send_data_payload[i*4+0] = long_data[i]>>8 & 0xFF;
-			send_data_payload[i*4+3] = long_data[i]>>16 & 0xFF;
-			send_data_payload[i*4+2] = long_data[i]>>24 & 0xFF;
-		}
-
-		*len = HISTO_LEN;
-		send_data = (uint8_t*) send_data_payload;
+		// `bin_cfg` should have been set by SEND_DAQ_DUR command...
+		*len = prep_payload_data(bin_cfg);
+		send_data = (uint8_t*)send_data_payload;
 	}
 	else if(opcode == MSP_OP_REQ_HK)
 	{

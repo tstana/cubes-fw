@@ -100,11 +100,13 @@ unsigned long prep_payload_data(uint8_t bin_config)
 
 		for(m = 0; m < 6; m++) {
 			for(j = m*num_bins; j < (m+1)*num_bins; j++) {
+				bin = 0;
 				for(k = j * bin_size/2 + HISTO_HDR_NUM_BYTES/4;
 				        k < (j+1) * bin_size/2 + HISTO_HDR_NUM_BYTES/4; k++) {
-					bin = (histo_data[k]>>16 & 0xFFFF)+(histo_data[k] & 0xFFFF);
+					bin += (histo_data[k]>>16 & 0xFFFF) +
+					       (histo_data[k] & 0xFFFF);
 				}
-				bin = bin>>bin_config;
+				bin >>= bin_config;
 				send_data_payload[j*2 + 1 + HISTO_HDR_NUM_BYTES] = bin & 0xFF;
 				send_data_payload[j*2 + HISTO_HDR_NUM_BYTES] = bin>>8 & 0xFF;
 				}

@@ -54,9 +54,22 @@
 #define CITIROC_OFFSET  (0xF010u)
 #define SEQFLAG_OFFSET  (0xF100)
 
-#define HISTO_ADDR        (0x50030000)
+/*
+ * Histogram Organization
+ *
+ *  Histo-RAM Header     :   256
+ *  Histo-RAM HG, Ch.  0 :  4096 (2048 x 2-byte bins)
+ *  Histo-RAM LG, Ch.  0 :  4096
+ *  Histo-RAM HG, Ch. 16 :  4096
+ *  Histo-RAM LG, Ch. 16 :  4096
+ *  Histo-RAM HG, Ch. 31 :  4096
+ *  Histo-RAM LG, Ch. 31 :  4096
+ *                 ------------
+ *                 Total : 24832 bytes
+ */
+#define HISTO_ADDR      (HISTO_RAM)
 	#define HISTO_LEN            (24832)
-	#define HISTO_NUM_BINS       ( 2048)
+	#define HISTO_NUM_BINS_GW    ( 2048)
 	#define HISTO_HDR_NUM_BYTES  (  256)
 
 #define NVM_SEQFLAG_ADDR  (0x6000F000)

@@ -18,23 +18,11 @@
 
 
 /*
- * Define the MSP send data buffer
- *
- * The max number of bytes that can be sent is for the histogram, assuming
- * all 2048 bins are in use:
- *
- *  Histo-RAM Header     :   256
- *  Histo-RAM HG, Ch.  0 :  4096 (2048 x 2-byte bins)
- *  Histo-RAM LG, Ch.  0 :  4096
- *  Histo-RAM HG, Ch. 16 :  4096
- *  Histo-RAM LG, Ch. 16 :  4096
- *  Histo-RAM HG, Ch. 31 :  4096
- *  Histo-RAM LG, Ch. 31 :  4096
- *                 ------------
- *                 Total : 24832 bytes
+ * Define the MSP send data buffer. The max number of bytes that can be sent is
+ * for the histogram.
  */
 static uint8_t *send_data;
-static unsigned char send_data_payload[24832]="";
+static unsigned char send_data_payload[HISTO_LEN]="";
 static unsigned char send_data_hk[64] = "";
 static uint8_t comp_date[70];
 
@@ -66,16 +54,16 @@ static uint8_t bin_cfg;
 unsigned long prep_payload_data(uint8_t bin_config)
 {
 	uint32_t *histo_data = (uint32_t *)HISTO_RAM;
-	unsigned long i, j, k, m, n, len;
+	unsigned long i, j, k, len;
 	uint16_t num_bins;
 
 	if (bin_config == 0) {
-		num_bins = HISTO_NUM_BINS;
 		/*
 		 * Massage Histo-RAM data (16-bit, big-endian, organized into 2x 16-bit
 		 * big-endian) into MSP data array; see the CUBES Instrument Manual for
 		 * a depiction of this process.
 		 */
+		num_bins = HISTO_NUM_BINS_GW;
 		for (i = 0; i < HISTO_LEN/4; i++) {
 			send_data_payload[i*4+1] = histo_data[i] & 0xFF;
 			send_data_payload[i*4+0] = histo_data[i]>>8 & 0xFF;
@@ -83,36 +71,38 @@ unsigned long prep_payload_data(uint8_t bin_config)
 			send_data_payload[i*4+2] = histo_data[i]>>24 & 0xFF;
 		}
 		len = HISTO_LEN;
-    } else {
-    	/* Re-binning... */
-    	uint8_t bin_size;
+	} else {
+		/*
+		 * Re-binning...
+		 */
+		uint8_t bin_size;
 		uint32_t bin;
 
-		num_bins = HISTO_NUM_BINS >> bin_config;
+		num_bins = HISTO_NUM_BINS_GW >> bin_config;
 		bin_size = 1 << bin_config;
 
-		for(n = 0; n < HISTO_HDR_NUM_BYTES/4; n++) {
-			send_data_payload[n*4+1] = histo_data[n] & 0xFF;
-			send_data_payload[n*4+0] = histo_data[n]>>8 & 0xFF;
-			send_data_payload[n*4+3] = histo_data[n]>>16 & 0xFF;
-			send_data_payload[n*4+2] = histo_data[n]>>24 & 0xFF;
+		for(i = 0; i < HISTO_HDR_NUM_BYTES/4; i++) {
+			send_data_payload[i*4+1] = histo_data[i] & 0xFF;
+			send_data_payload[i*4+0] = histo_data[i]>>8 & 0xFF;
+			send_data_payload[i*4+3] = histo_data[i]>>16 & 0xFF;
+			send_data_payload[i*4+2] = histo_data[i]>>24 & 0xFF;
 		}
 
-		for(m = 0; m < 6; m++) {
-			for(j = m*num_bins; j < (m+1)*num_bins; j++) {
+		for(i = 0; i < 6; i++) {
+			for(j = i*num_bins; j < (i+1)*num_bins; j++) {
 				bin = 0;
 				for(k = j * bin_size/2 + HISTO_HDR_NUM_BYTES/4;
-				        k < (j+1) * bin_size/2 + HISTO_HDR_NUM_BYTES/4; k++) {
+						k < (j+1) * bin_size/2 + HISTO_HDR_NUM_BYTES/4; k++) {
 					bin += (histo_data[k]>>16 & 0xFFFF) +
-					       (histo_data[k] & 0xFFFF);
+						   (histo_data[k] & 0xFFFF);
 				}
 				bin >>= bin_config;
-				send_data_payload[j*2 + 1 + HISTO_HDR_NUM_BYTES] = bin & 0xFF;
-				send_data_payload[j*2 + HISTO_HDR_NUM_BYTES] = bin>>8 & 0xFF;
-				}
+				send_data_payload[HISTO_HDR_NUM_BYTES + j*2 + 1] = bin & 0xFF;
+				send_data_payload[HISTO_HDR_NUM_BYTES + j*2] = (bin>>8) & 0xFF;
+			}
 		}
 		len = HISTO_HDR_NUM_BYTES + 12*num_bins;
-    }
+	}
 
 	send_data_payload[HISTO_HDR_NUM_BYTES-1] = bin_config;
 	return len;

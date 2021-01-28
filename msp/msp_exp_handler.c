@@ -51,9 +51,9 @@ static uint8_t daq_dur;
 static uint8_t bin_cfg[6];
 
 
-unsigned short int *table;
+static unsigned short int *table;
 /*define logscale table*/
-unsigned short int table1[1025] = {
+static unsigned short int table1[1025] = {
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
@@ -123,7 +123,7 @@ unsigned short int table1[1025] = {
 	2028,2032,2036,2040,2044,2048
 };
 
-unsigned short int table2[129] = {
+static unsigned short int table2[129] = {
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,
@@ -137,7 +137,7 @@ unsigned short int table2[129] = {
 };
 
 
-unsigned long prep_payload_data(uint8_t *bin_config)
+static unsigned long prep_payload_data(uint8_t *bin_config)
 {
 	unsigned long i, j, k, len;
 	uint16_t num_bins;

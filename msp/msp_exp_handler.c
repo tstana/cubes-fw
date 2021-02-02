@@ -278,13 +278,12 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 	}
 
 	/* Set the `bin_cfg` fields in the Histo-RAM header */
-	for (i = 0; i < 7; i++) {
-		send_data_payload[HISTO_HDR_NUM_BYTES-7+i] = bin_cfg[i];
+	for (i = 0; i < 6; i++) {
+		send_data_payload[HISTO_HDR_NUM_BYTES-6+i] = bin_cfg[i];
 	}
 
 	return len;
 }
-
 
 
 /*

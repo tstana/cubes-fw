@@ -27,10 +27,11 @@
 #include <stdlib.h>
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
+#include "utils/led_error.h"
+#include "utils/led.h"
 #include "msp/msp_i2c.h"
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
-
 
 extern unsigned int has_recv;
 extern unsigned int has_send;
@@ -46,6 +47,9 @@ int main(void)
 	nvm_reset_counter_increment();
 
 //	nvm_restore_msp_seqflags();
+
+	/* Let GPIO0 LED flash to indicate power-on status */
+	led_blink(LED_RESET);
 
 	msp_i2c_init(MSP_EXP_ADDR);
 

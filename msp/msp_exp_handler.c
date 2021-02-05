@@ -692,6 +692,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_hcr_reset();
 			citiroc_histo_reset();
 			citiroc_daq_set_hvps_temp(hvps_get_temp());
+			// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
 			MSS_TIM1_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
@@ -710,6 +711,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 void Timer1_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
+	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
 	MSS_TIM1_clear_irq();

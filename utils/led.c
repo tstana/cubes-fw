@@ -27,17 +27,21 @@ volatile uint32_t g_gpio_pattern = LEDS_MASK;
 static uint8_t num_of_blinks, count;
 static uint32_t timer2_load_value = MSS_SYS_APB_0_CLK_FREQ;
 
+/* Local function prototypes */
+void led_set_high(void);
+void led_conf_tim2_periodic(void);
+
+
 /**
- * @brief Blink function for LED at GPIO0
+ * @brief Blink function for LED at GPIO0 called upon MSS power on reset
  *
- * This function is called to make LED at GPIO0 (configured as output) blink
- * a certain number of times defined by the enumeration #led_error_type_t present in
- * led_error.h file.
- *
- * @param blinks[in]      Number of blinks for LED
+ * This function is called is called in main() function at the start to indicate power on
+ * reset of MSS. It shall blink @b LED_RESET number of times (defined in led_error.h).
+ * It configures the GPIO0 in OUTPUT_MODE such that this GPIO0 configuration need not be
+ * changed afterwards before calling led_custom_blink().
  *
  */
-void led_blink(led_error_type_t blinks)
+void led_blink_reset(void)
 {
     /* Initialize MSS GPIOs */
     MSS_GPIO_init();
@@ -47,8 +51,24 @@ void led_blink(led_error_type_t blinks)
 
     MSS_GPIO_set_outputs(g_gpio_pattern);
 
-    num_of_blinks = blinks;
+    num_of_blinks = LED_RESET;
 
+    /* Configure TIM2 in periodic mode*/
+    led_conf_tim2_periodic();
+}
+
+
+/**
+ * @brief Configure TIM2 in periodic mode
+ *
+ * @b NOTE:
+ *
+ * - This function passes a pre-defined delay value to be loaded into the timer
+ * which is equal to 500ms.
+ *
+ */
+void led_conf_tim2_periodic(void)
+{
     /*
      * Configure Timer2 - Use the timer input frequency(100MHz) div by 2 as load value to achieve half a second
      * periodic interrupt.
@@ -60,6 +80,9 @@ void led_blink(led_error_type_t blinks)
     MSS_TIM2_start();
     MSS_TIM2_enable_irq();
 }
+
+
+
 
 /**
  * @brief Interrupt handler for Timer2
@@ -100,7 +123,8 @@ void Timer2_IRQHandler(void)
  *
  * @b NOTE:
  *
- * - Call this function only after led_blink() function.
+ * - Call this function only after led_blink_reset() function since it configures
+ * GPIO0 in OUTPUT_MODE upon MSS power on reset.
  *
  */
 void led_set_high(void)
@@ -111,3 +135,29 @@ void led_set_high(void)
     g_gpio_pattern |= 0x00000001u;
     MSS_GPIO_set_outputs(g_gpio_pattern);
 }
+
+
+/**
+ * @brief Blink function for LED at GPIO0
+ *
+ * This function is called to make LED at GPIO0 (configured as output) blink
+ * a certain number of times defined by the enumeration #led_error_type_t present in
+ * led_error.h file.
+ *
+ * @b NOTE:
+ *
+ * - Should be called after led_blink_reset() function since it configures
+ * GPIO0 in OUTPUT_MODE upon MSS power on reset.
+ *
+ * @param blinks[in]      Number of blinks for LED
+ *
+ */
+void led_custom_blink(led_error_type_t blinks)
+{
+    num_of_blinks = blinks;
+
+    /* Configure TIM2 in periodic mode*/
+    led_conf_tim2_periodic();
+}
+
+

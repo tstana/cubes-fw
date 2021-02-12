@@ -8,8 +8,9 @@
 #ifndef UTILS_LED_H_
 #define UTILS_LED_H_
 
-void led_blink(led_error_type_t blinks);
-void led_set_high(void);
+void led_blink_reset(void);
+void led_custom_blink(led_error_type_t blinks);
+
 
 
 

@@ -12,19 +12,11 @@
 #include "drivers/mss_timer/mss_timer.h"
 #include "drivers_config/sys_config/sys_config_mss_clocks.h"
 #include "mss_gpio/mss_gpio.h"
-//#include "led_error.h"
 #include "led.h"
 #include "CMSIS/system_m2sxxx.h"
 
 
-/*
- * LEDs masks used to switch on/off LED through GPIOs.
- */
-//#define LEDS_MASK   (uint32_t)0xFFFFFFFE
-//(uint32_t)0x00000000 //(uint32_t)0xAAAAAAAA //MSS_GPIO_0_MASK
-
-
-static uint32_t g_gpio_pattern; // = LEDS_MASK;
+static uint32_t g_gpio_pattern;
 static uint8_t num_of_blinks, count;
 static uint32_t timer2_load_value = MSS_SYS_APB_0_CLK_FREQ;
 
@@ -32,32 +24,6 @@ static uint32_t timer2_load_value = MSS_SYS_APB_0_CLK_FREQ;
 static void led_turn_on(void);
 void led_turn_off(void);
 static void led_tim2_start(void);
-
-
-/**
- * @brief Blink function for LED at GPIO0 called upon MSS power on reset
- *
- * This function is called is called in main() function at the start to indicate power on
- * reset of MSS. It shall blink @b LED_RESET number of times (defined in led_error.h).
- * It configures the GPIO0 in OUTPUT_MODE such that this GPIO0 configuration need not be
- * changed afterwards before calling led_custom_blink().
- *
- */
-//void led_blink_reset(void)
-//{
-//    /* Initialize MSS GPIOs */
-//    MSS_GPIO_init();
-//
-//    /* Configure MSS GPIO0 */
-//    MSS_GPIO_config( MSS_GPIO_0 , MSS_GPIO_OUTPUT_MODE);
-//
-//    MSS_GPIO_set_outputs(g_gpio_pattern);
-//
-//    num_of_blinks = LED_RESET;
-//
-//    /* Configure TIM2 in periodic mode*/
-//    led_tim2_start();
-//}
 
 
 
@@ -149,7 +115,7 @@ void led_turn_on(void)
     g_gpio_pattern = MSS_GPIO_get_outputs();
 
     /* Turn on GPIO0 output pattern by doing an exclusive OR */
-    g_gpio_pattern |= MSS_GPIO_0_MASK; //0x00000001u MSS_GPIO_0_MASK;
+    g_gpio_pattern |= MSS_GPIO_0_MASK;
     MSS_GPIO_set_outputs(g_gpio_pattern);
 }
 
@@ -169,7 +135,7 @@ void led_turn_off(void)
     g_gpio_pattern = MSS_GPIO_get_outputs();
 
     /* Turn off GPIO0 output pattern by doing an exclusive OR */
-    g_gpio_pattern &= ~(MSS_GPIO_0_MASK); //0x00000000u;
+    g_gpio_pattern &= ~(MSS_GPIO_0_MASK);
     MSS_GPIO_set_outputs(g_gpio_pattern);
 }
 
@@ -187,7 +153,7 @@ void Timer2_IRQHandler(void)
     g_gpio_pattern = MSS_GPIO_get_outputs();
 
     /* Toggle GPIO0 output pattern by doing an exclusive OR */
-    g_gpio_pattern ^= MSS_GPIO_0_MASK; //0x00000001u;
+    g_gpio_pattern ^= MSS_GPIO_0_MASK;
     MSS_GPIO_set_outputs(g_gpio_pattern);
 
     if(count%2 == 0)

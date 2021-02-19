@@ -8,7 +8,6 @@
 #ifndef UTILS_LED_H_
 #define UTILS_LED_H_
 
-//#include "led_error.h"
 
 /* LED Blink Type Definitions - based on number of times LED blinks, we can identify type of error occurred in MSS*/
 typedef enum {

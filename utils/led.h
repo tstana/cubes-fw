@@ -20,5 +20,8 @@ typedef enum {
 void led_init(void);
 void led_custom_blink(led_blink_t blinks);
 
+void led_turn_on(void);
+void led_turn_off(void);
+
 
 #endif /* UTILS_LED_H_ */

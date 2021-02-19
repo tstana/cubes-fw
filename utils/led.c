@@ -6,8 +6,8 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 #include "drivers/mss_timer/mss_timer.h"
 #include "drivers_config/sys_config/sys_config_mss_clocks.h"
@@ -21,8 +21,8 @@ static uint8_t num_of_blinks, count;
 static uint32_t timer2_load_value = MSS_SYS_APB_0_CLK_FREQ;
 
 /* Local function prototypes */
-static void led_turn_on(void);
-void led_turn_off(void);
+//static void led_turn_on(void);
+//static void led_turn_off(void);
 static void led_tim2_start(void);
 
 

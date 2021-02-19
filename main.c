@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
-#include "utils/led_error.h"
+//#include "utils/led_error.h"
 #include "utils/led.h"
 #include "msp/msp_i2c.h"
 #include "hvps/hvps_c11204-02.h"
@@ -48,8 +48,11 @@ int main(void)
 
 //	nvm_restore_msp_seqflags();
 
-	/* Let GPIO0 LED flash to indicate power-on status */
-	led_blink_reset();
+    /* Led Init to configure GPIO0 */
+	led_init();
+
+    /* Let GPIO0 LED flash to indicate power-on status */
+	led_custom_blink(LED_BLINK_RESET);
 
 	msp_i2c_init(MSP_EXP_ADDR);
 
@@ -60,9 +63,6 @@ int main(void)
 	MSS_TIM1_load_immediate(0xffffffff);
 	MSS_TIM1_enable_irq();
 	NVIC_SetPriority(Timer1_IRQn, 1);
-
-	/*For testing*/
-//	led_custom_blink(LED_OTHER_ERROR);
 
 	/* Infinite loop */
 	while(1) {

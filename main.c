@@ -36,6 +36,7 @@
 extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
+uint16_t result = 0;
 
 
 /**
@@ -53,8 +54,21 @@ int main(void)
 	hvps_init();
 
 	//testing
-//	hk_adc_init();
-	hk_adc_initialisation();
+	hk_adc_return_t err = 0;
+	err = hk_adc_init();
+	if (err == HK_ADC_NO_ERR)
+	{
+	    err = hk_adc_conv_config(HK_ADC_READ_VBAT_V);
+	    if (err == HK_ADC_NO_ERR)
+	    {
+	        err = hk_adc_reg_read_conv(&result);
+	        if (err == HK_ADC_NO_ERR)
+	        {
+	            err = HK_ADC_NO_ERR;
+	        }
+	    }
+	}
+//	hk_adc_initialisation();
 
 //	/* Init timer to write HK before DAQ end */
 	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);

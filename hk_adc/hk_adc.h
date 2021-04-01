@@ -15,6 +15,7 @@ typedef enum {
     HK_ADC_ERR_INIT_FAILED,             /* HK ADC Initialisation failed */
     HK_ADC_ERR_READ_FAILED,             /* HK ADC Read operation failed */
     HK_ADC_ERR_WRITE_FAILED,            /* HK ADC Write operation failed */
+    HK_ADC_ERR_CONV_CONFIG_FAILED,      /* HK ADC Configuration operation for conversion register failed */
 } hk_adc_return_t;
 
 
@@ -28,10 +29,23 @@ typedef enum {
 
 
 
-void hk_adc_init(void);
+/* HK ADC Conversion Type Definitions */
+typedef enum {
+    HK_ADC_READ_VBAT_I = 0x0100,         /* Read VBAT Current value stored in HK ADC Conversion register */
+    HK_ADC_READ_VBAT_V,             /* Read VBAT Voltage value stored in HK ADC Conversion register */
+    HK_ADC_READ_CITI_TEMP,          /* Read CITI Temperature value stored in HK ADC Conversion register */
+    HK_ADC_READ_CITI_DAC_PROBE      /* Read CITI DAC Probe value stored in HK ADC Conversion register */
+} hk_adc_conv_t;
+
+
+
+
+int hk_adc_init(void);
 int hk_adc_initialisation(void);
 int hk_adc_reg_read(hk_adc_reg_t reg, uint16_t *read_buffer);
 int hk_adc_reg_write(hk_adc_reg_t reg, uint8_t *write_buffer);
+int hk_adc_reg_read_conv(uint16_t *read_buffer);
+int hk_adc_conv_config(hk_adc_conv_t read_type);
 
 
 

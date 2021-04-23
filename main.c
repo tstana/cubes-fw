@@ -37,6 +37,7 @@ extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
 float result = 0;
+uint16_t temperature = 0;
 
 
 /**
@@ -61,7 +62,9 @@ int main(void)
 //	    err = hk_adc_conv_read_type(HK_ADC_READ_VBAT_V);
         //start the conversion - woken up after 25us
 //        hk_adc_start_conv();
-	    err = hk_adc_conv_read_volt(&result);
+//	    err = hk_adc_conv_read_volt(&result);
+        err = hk_adc_conv_read_curr(&result);
+        err = hk_adc_conv_read_citi_temp(&temperature);
         if (err == HK_ADC_NO_ERR)
         {
             err = HK_ADC_NO_ERR;

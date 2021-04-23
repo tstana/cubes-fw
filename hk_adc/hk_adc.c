@@ -26,14 +26,17 @@ uint8_t  rx_buffer[RX_LENGTH];
 //uint8_t  tx_buffer[TX_LENGTH];
 //uint8_t  write_length = TX_LENGTH;
 
+
+/* Variables */
 static mss_i2c_status_t status;
 static uint16_t read_value;
 static uint8_t os_bit = 0;
-float multiplier_to_volts = 1.0F;
+float multiplier_to_volts = 1.0F;   //millivolts
+float multiplier_to_current = 2.5F; //millamps
 static int fsr_setting = HK_ADC_CONFIG_FSR_2;
 
 
-
+/* Function prototypes */
 static void hk_adc_update_multiplier_volt(void);
 
 
@@ -145,34 +148,11 @@ int hk_adc_init(void)
 
 
 
-
-//int hk_adc_conv_read_type(hk_adc_mux_conversion_t read_type)
-//{
-//    uint8_t err = HK_ADC_ERR_CONV_CONFIG_FAILED;
-//
-//    // By default, ADC is configured to point towards CITI_TEMP as MUX input
-//    uint8_t send_buffer[2] = {0xff, 0x03}; //MSB, LSB
-////    send_buffer[0] = (((1u << 3) | read_type) << 4) | 0x03;
-//    send_buffer[0] = (read_type | 0x03);
-//
-//    // Write to the CONFIG register
-//    err = hk_adc_reg_write(HK_ADC_REG_CONFIG, &send_buffer[0]);
-//
-//    if (err == HK_ADC_NO_ERR)
-//    {
-//        return err;
-//    }
-//
-//    return err;
-//}
-
 int hk_adc_conv_read_volt(float * batt_volt)
 {
     uint8_t err = HK_ADC_ERR_VOLT_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
-//    send_buffer[0] = (((1u << 3) | read_type) << 4) | 0x03;
-//    send_buffer[0] = (read_type | 0x03);
 
     err = hk_adc_reg_read(HK_ADC_REG_CONFIG, &read_value);
 
@@ -205,6 +185,94 @@ int hk_adc_conv_read_volt(float * batt_volt)
                 // make sure we have the most recent PGA and multiplier settings
                 hk_adc_update_multiplier_volt();
                 *batt_volt = ((float)read_value * multiplier_to_volts) * VBAT_TO_VOUT_RATIO/1000;
+                return err;
+            }
+        }
+    }
+    return err;
+}
+
+
+
+
+int hk_adc_conv_read_curr(float * batt_curr)
+{
+    uint8_t err = HK_ADC_ERR_CURR_READ_FAILED;
+
+    uint8_t send_buffer[2] = {0};
+
+    err = hk_adc_reg_read(HK_ADC_REG_CONFIG, &read_value);
+
+    if (err == HK_ADC_NO_ERR)
+    {
+        // let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
+        read_value = read_value & 0x8fff;
+        read_value = read_value | HK_ADC_CONFIG_MUX_SINGLE_0;
+
+        send_buffer[0] = (read_value >> 8) | HK_ADC_CONFIG_OS_SINGLE_CONV;
+        send_buffer[1] = read_value;
+
+        // Write changed MUX input back to the CONFIG register
+        err = hk_adc_reg_write(HK_ADC_REG_CONFIG, &send_buffer[0]);
+
+        if (err == HK_ADC_NO_ERR)
+        {
+            //INSERT DELAY FN (1sec), do not use WHILE Loops
+            //Wait until OS bit turns 1
+            do{
+                hk_adc_reg_read(HK_ADC_REG_CONFIG, &read_value);
+                os_bit = read_value >> 15;
+            }while(os_bit == HK_ADC_CONFIG_OS_NOT_READY);
+
+            err = hk_adc_reg_read(HK_ADC_REG_CONVERSION, &read_value);
+            if (err == HK_ADC_NO_ERR)
+            {
+                // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
+                read_value = read_value >> 4;
+                *batt_curr = ((float)read_value/multiplier_to_current);     // /1000;
+                return err;
+            }
+        }
+    }
+    return err;
+}
+
+
+
+int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
+{
+    uint8_t err = HK_ADC_ERR_TEMP_READ_FAILED;
+
+    uint8_t send_buffer[2] = {0};
+
+    err = hk_adc_reg_read(HK_ADC_REG_CONFIG, &read_value);
+
+    if (err == HK_ADC_NO_ERR)
+    {
+        // let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
+        read_value = read_value & 0x8fff;
+        read_value = read_value | HK_ADC_CONFIG_MUX_SINGLE_2;
+
+        send_buffer[0] = (read_value >> 8) | HK_ADC_CONFIG_OS_SINGLE_CONV;
+        send_buffer[1] = read_value;
+
+        // Write changed MUX input back to the CONFIG register
+        err = hk_adc_reg_write(HK_ADC_REG_CONFIG, &send_buffer[0]);
+
+        if (err == HK_ADC_NO_ERR)
+        {
+            //INSERT DELAY FN (1sec), do not use WHILE Loops
+            //Wait until OS bit turns 1
+            do{
+                hk_adc_reg_read(HK_ADC_REG_CONFIG, &read_value);
+                os_bit = read_value >> 15;
+            }while(os_bit == HK_ADC_CONFIG_OS_NOT_READY);
+
+            err = hk_adc_reg_read(HK_ADC_REG_CONVERSION, &read_value);
+            if (err == HK_ADC_NO_ERR)
+            {
+                // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
+                *citi_temp = read_value >> 4;
                 return err;
             }
         }

@@ -171,6 +171,8 @@ int hk_adc_reg_read_conv(uint16_t *read_buffer);
 //int hk_adc_conv_read_type(hk_adc_mux_conversion_t read_type);
 //void hk_adc_start_conv(void);
 int hk_adc_conv_read_volt(float * batt_volt);
+int hk_adc_conv_read_curr(float * batt_curr);
+int hk_adc_conv_read_citi_temp(uint16_t * citi_temp);
 
 
 

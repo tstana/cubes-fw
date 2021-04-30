@@ -15,7 +15,6 @@
 #define HK_ADC_ADDRESS_SDA                  0x4A        /* not used */
 #define HK_ADC_ADDRESS_SCL                  0x4B        /* not used */
 
-//#define OS_BIT_MASK 0x8000
 
 /* HK ADC register address pointer */
 #define HK_ADC_REG_PTR_CONVERSION           (0x00)      /* HK ADC Conversion register - Register Pointer bits P[1:0] in Address Pointer Register */
@@ -92,7 +91,7 @@
 #define HK_ADC_REG_LOW_THRESH_MSB            (0x00)
 #define HK_ADC_REG_LOW_THRESH_LSB            (0x00)     /* Lowest 4-bits are read-only (value - 0h) */
 #define HK_ADC_REG_HI_THRESH_MSB             (0x80)
-#define HK_ADC_REG_HI_THRESH_LSB             (0x0f)   /* Lowest 4-bits are read-only (value - 1h) */
+#define HK_ADC_REG_HI_THRESH_LSB             (0x0f)     /* Lowest 4-bits are read-only (value - 1h) */
 
 
 
@@ -110,7 +109,7 @@ typedef enum {
 
 
 
-/* HK ADC Register Type Definitions */
+/* HK ADC Register Definitions */
 typedef enum {
     HK_ADC_REG_CONVERSION = 0,                  /* HK ADC Conversion register - Register Pointer bits P[1:0] in Address Pointer Register */
     HK_ADC_REG_CONFIG,                          /* HK ADC Configuration register - Register Pointer bits P[1:0] in Address Pointer Register */
@@ -120,63 +119,9 @@ typedef enum {
 
 
 
-/* HK ADC Conversion Type Definitions */
-//typedef enum {
-//    HK_ADC_READ_VBAT_I = 0x40,                 /* Read VBAT Current value stored in HK ADC Conversion register */
-//    HK_ADC_READ_VBAT_V = 0x50,                 /* Read VBAT Voltage value stored in HK ADC Conversion register */
-//    HK_ADC_READ_CITI_TEMP = 0x60,              /* Read CITI Temperature value stored in HK ADC Conversion register */
-//    HK_ADC_READ_CITI_DAC_PROBE = 0x70          /* Read CITI DAC Probe value stored in HK ADC Conversion register */
-//} hk_adc_mux_conversion_t;
 
-
-
-/* HK ADC Full Scale Voltage Range definitions for programmable amplifier */
-//typedef enum {
-//    HK_ADC_FSR_0 = 0x0,                 /* FSR = -6.144 <= V <= +6.144 */
-//    HK_ADC_FSR_1,                       /* FSR = -4.096 <= V <= +4.096 */
-//    HK_ADC_FSR_2,                       /* FSR = -2.048 <= V <= +2.048 */
-//    HK_ADC_FSR_3,                       /* FSR = -1.024 <= V <= +1.024 */
-//    HK_ADC_FSR_4,                       /* FSR = -0.512 <= V <= +0.512 */
-//    HK_ADC_FSR_5,                       /* FSR = -0.256 <= V <= +0.256 */
-//    HK_ADC_FSR_6,                       /* FSR = -0.256 <= V <= +0.256 */
-//    HK_ADC_FSR_7                        /* FSR = -0.256 <= V <= +0.256 */
-//} hk_adc_full_scale_range_t;
-
-
-
-/* HK ADC output data rate definitions. SPS stands for samples per second */
-//typedef enum {
-//    HK_ADC_DR_128_SPS = 0x0,            /* Output data rate = 128 SPS */
-//    HK_ADC_DR_250_SPS,                  /* Output data rate = 250 SPS */
-//    HK_ADC_DR_490_SPS,                  /* Output data rate = 490 SPS */
-//    HK_ADC_DR_920_SPS,                  /* Output data rate = 920 SPS */
-//    HK_ADC_DR_1600_SPS,                 /* Output data rate = 1600 SPS */
-//    HK_ADC_DR_2400_SPS,                 /* Output data rate = 2400 SPS */
-//    HK_ADC_DR_3300_SPS                  /* Output data rate = 3300 SPS */
-//    HK_ADC_DR_3300_SPS                  /* Output data rate = 3300 SPS. Since, the SPS is same, use the previous enum value */
-//} hk_adc_data_rate_t;
-
-
-
-/* HK ADC operating mode definitions */
-//typedef enum {
-//    HK_ADC_OP_CONTINUOUS_CONV = 0x0,    /* ADC Operation mode - continuous conversion */
-//    HK_ADC_OP_SINGLE_SHOT_CONV          /* ADC Operation mode - single-shot conversion */
-//} hk_adc_operation_mode_t;
-
-
-
-
-
-
-
+/* Exported Function prototypes */
 int hk_adc_init(void);
-//int hk_adc_initialisation(void);
-//int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
-//int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
-//int hk_adc_reg_read_conv(uint16_t *read_buffer);
-//int hk_adc_conv_read_type(hk_adc_mux_conversion_t read_type);
-//void hk_adc_start_conv(void);
 int hk_adc_conv_read_volt(float * batt_volt);
 int hk_adc_conv_read_curr(float * batt_curr);
 int hk_adc_conv_read_citi_temp(float * citi_temp);

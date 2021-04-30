@@ -58,27 +58,14 @@ int main(void)
 	err = hk_adc_init();
 	if (err == HK_ADC_NO_ERR)
 	{
-//	    err = hk_adc_conv_read_type(HK_ADC_READ_VBAT_V);
-        //start the conversion - woken up after 25us
-//        hk_adc_start_conv();
 	    err = hk_adc_conv_read_volt(&result);
         err = hk_adc_conv_read_curr(&result);
         err = hk_adc_conv_read_citi_temp(&result);
         if (err == HK_ADC_NO_ERR)
         {
+            // Values read successfully
             err = HK_ADC_NO_ERR;
         }
-//        err = hk_adc_reg_read_conv(&result);
-//        if (err == HK_ADC_NO_ERR)
-//        {
-//            err = hk_adc_conv_read_type(HK_ADC_READ_VBAT_I);
-//            hk_adc_start_conv();
-//            err = hk_adc_reg_read_conv(&result);
-//            if (err == HK_ADC_NO_ERR)
-//            {
-//                err = HK_ADC_NO_ERR;
-//            }
-//        }
 	}
 
 //	/* Init timer to write HK before DAQ end */

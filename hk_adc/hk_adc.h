@@ -88,6 +88,13 @@
 #define HK_ADC_CONFIG_CQUE_DISABLE          (0x0003)    /* Disable the comparator and put ALERT/RDY in high state (default) */
 
 
+/* HK ADC Low and High Threshold Registers configuration to set ALRT/RDY pin in conversion RDY mode */
+#define HK_ADC_REG_LOW_THRESH_MSB            (0x00)
+#define HK_ADC_REG_LOW_THRESH_LSB            (0x00)     /* Lowest 4-bits are read-only (value - 0h) */
+#define HK_ADC_REG_HI_THRESH_MSB             (0x80)
+#define HK_ADC_REG_HI_THRESH_LSB             (0x0f)   /* Lowest 4-bits are read-only (value - 1h) */
+
+
 
 /* HK ADC Return Type Definitions */
 typedef enum {
@@ -164,15 +171,15 @@ typedef enum {
 
 
 int hk_adc_init(void);
-int hk_adc_initialisation(void);
-int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
-int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
-int hk_adc_reg_read_conv(uint16_t *read_buffer);
+//int hk_adc_initialisation(void);
+//int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
+//int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
+//int hk_adc_reg_read_conv(uint16_t *read_buffer);
 //int hk_adc_conv_read_type(hk_adc_mux_conversion_t read_type);
 //void hk_adc_start_conv(void);
 int hk_adc_conv_read_volt(float * batt_volt);
 int hk_adc_conv_read_curr(float * batt_curr);
-int hk_adc_conv_read_citi_temp(uint16_t * citi_temp);
+int hk_adc_conv_read_citi_temp(float * citi_temp);
 
 
 

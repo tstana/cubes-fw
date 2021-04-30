@@ -20,6 +20,8 @@
 #define RX_LENGTH           2u
 #define DUMMY_SERIAL_ADDR   0xFF
 #define VBAT_TO_VOUT_RATIO  8u
+#define VOUT_TO_IBAT_RATIO  2.5
+#define VOLT_TO_MILLIVOLT_RATIO  1000
 
 uint8_t  rx_buffer[RX_LENGTH];
 //uint8_t  read_length = RX_LENGTH;
@@ -132,6 +134,15 @@ int hk_adc_init(void)
     uint16_t config = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 | HK_ADC_CONFIG_MODE_SINGLE_SHOT | HK_ADC_CONFIG_DR_128SPS | HK_ADC_CONFIG_CMODE_TRAD | HK_ADC_CONFIG_CPOL_ACTIVE_LOW | HK_ADC_CONFIG_CLAT_NON_LATCH | HK_ADC_CONFIG_CQUE_DISABLE;
     uint8_t send_buffer[2] = {config>>8, config};
 
+    // initialize and config GPIO_8 in output mode
+    MSS_GPIO_init();
+
+    /* Configure MSS GPIO0 in OUTPUT_MODE */
+    MSS_GPIO_config( MSS_GPIO_8, MSS_GPIO_INPUT_MODE);
+
+    g_gpio_pattern = MSS_GPIO_get_outputs();
+
+
     // Set the clock for i2c0 instance
     MSS_I2C_init(&g_mss_i2c0, DUMMY_SERIAL_ADDR, MSS_I2C_PCLK_DIV_256); //10^8/256 = 390,625Hz =~ 390KHz
 
@@ -146,6 +157,12 @@ int hk_adc_init(void)
     return err;
 }
 
+
+int hk_adc_read_conv_ready(void)
+{
+
+
+}
 
 
 int hk_adc_conv_read_volt(float * batt_volt)
@@ -182,9 +199,9 @@ int hk_adc_conv_read_volt(float * batt_volt)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // make sure we have the most recent PGA and multiplier settings
+                // make sure we have the most recent multiplier settings based on the currently configured PGA
                 hk_adc_update_multiplier_volt();
-                *batt_volt = ((float)read_value * multiplier_to_volts) * VBAT_TO_VOUT_RATIO/1000;
+                *batt_volt = ((float)read_value * multiplier_to_volts) * VBAT_TO_VOUT_RATIO/VOLT_TO_MILLIVOLT_RATIO;
                 return err;
             }
         }
@@ -229,7 +246,10 @@ int hk_adc_conv_read_curr(float * batt_curr)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                *batt_curr = ((float)read_value/multiplier_to_current);     // /1000;
+                // make sure we have the most recent multiplier settings based on the currently configured PGA
+                hk_adc_update_multiplier_volt();
+//                *batt_curr = (((float)read_value * multiplier_to_volts)/multiplier_to_current);     // Current in Amps;
+                *batt_curr = (((float)read_value * multiplier_to_volts)/(VOUT_TO_IBAT_RATIO * VOLT_TO_MILLIVOLT_RATIO));     // Current in Amps;
                 return err;
             }
         }
@@ -272,7 +292,10 @@ int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
             if (err == HK_ADC_NO_ERR)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
-                *citi_temp = read_value >> 4;
+                read_value = read_value >> 4;
+                // make sure we have the most recent multiplier settings based on the currently configured PGA
+                hk_adc_update_multiplier_volt();
+                *citi_temp = ((float)read_value * multiplier_to_volts)/VOLT_TO_MILLIVOLT_RATIO;    //result passed onto CITIROC UI should be in Volts (Vtemp)
                 return err;
             }
         }

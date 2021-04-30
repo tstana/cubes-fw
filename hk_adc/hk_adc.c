@@ -35,7 +35,17 @@ static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
 
 
 
-
+/**
+ * @brief HK ADC Init function
+ *
+ * This function is called once to initialize ADC with a certain configuration
+ * - FSR - +-4.096, Single-shot conversion, DR = 128SPS, MUX input CITI_TEMP and
+ * disabled comparator.
+ *
+ *
+ * @param none.
+ * @return HK_ADC_ERR_INIT_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ */
 int hk_adc_init(void)
 {
     uint8_t err = HK_ADC_ERR_INIT_FAILED;
@@ -58,12 +68,25 @@ int hk_adc_init(void)
         return err;
     }
 
+    err = HK_ADC_ERR_INIT_FAILED;
     return err;
 }
 
 
 
 
+/**
+ * @brief HK ADC read Battery Voltage function
+ *
+ * This function returns the battery voltage value (in Volts) as read by the ADC.
+ * ADC measures Vout value where Vout = V_Batt/8. V_Batt is found by performing
+ * appropriate conversion and returned in the float type parameter passed to the
+ * function as argument.
+ *
+ * @param batt_volt[in]     pointer to variable of float type to store the result in.
+ * @return HK_ADC_ERR_VOLT_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ *
+ */
 int hk_adc_conv_read_volt(float * batt_volt)
 {
     uint8_t err = HK_ADC_ERR_VOLT_READ_FAILED;
@@ -105,12 +128,26 @@ int hk_adc_conv_read_volt(float * batt_volt)
             }
         }
     }
+
+    err = HK_ADC_ERR_VOLT_READ_FAILED;
     return err;
 }
 
 
 
 
+/**
+ * @brief HK ADC read Battery Current function
+ *
+ * This function returns the battery current value (in Amps) as read by the ADC.
+ * ADC measures Vout where Vout = I_Batt[Amp] * 2.5. I_Batt is found by performing
+ * appropriate conversion and returned in the float type parameter passed to the
+ * function as argument.
+ *
+ * @param batt_curr[in]     pointer to variable of float type to store the result in.
+ * @return HK_ADC_ERR_CURR_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ *
+ */
 int hk_adc_conv_read_curr(float * batt_curr)
 {
     uint8_t err = HK_ADC_ERR_CURR_READ_FAILED;
@@ -152,11 +189,25 @@ int hk_adc_conv_read_curr(float * batt_curr)
             }
         }
     }
+
+    err = HK_ADC_ERR_CURR_READ_FAILED;
     return err;
 }
 
 
 
+
+/**
+ * @brief HK ADC read CITIROC temperature (deg. C) function
+ *
+ * This function returns the voltage value (Vtemp in Volts) as read by the ADC,
+ * equivalent to CITIROC ASIC temperature value. Conversion to actual temperature
+ * value is performed by the CITIROC UI tool.
+ *
+ * @param citi_temp[in]     pointer to variable of float type to store the result in.
+ * @return HK_ADC_ERR_TEMP_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ *
+ */
 int hk_adc_conv_read_citi_temp(float * citi_temp)
 {
     uint8_t err = HK_ADC_ERR_TEMP_READ_FAILED;
@@ -198,12 +249,29 @@ int hk_adc_conv_read_citi_temp(float * citi_temp)
             }
         }
     }
+
+    err = HK_ADC_ERR_TEMP_READ_FAILED;
     return err;
 }
 
 
 
 
+/**
+ * @brief HK ADC register write function
+ *
+ * This function performs register write operation. Usually, the value to be
+ * written is a 16-bit value as all the registers accessible for a write
+ * operation in HK ADC are 16-bit registers.
+ *
+ * @param reg[in]              Variable of enumeration type #hk_adc_register_t
+ *                             (defined in hk_adc.h) indicating which register
+ *                             is to be written.
+ * @param write_buffer[in]     pointer to an unsigned byte array containing data
+ *                             to be written.
+ * @return HK_ADC_ERR_WRITE_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ *
+ */
 int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
 {
     uint8_t send_buffer[3] = {0xff};
@@ -252,9 +320,27 @@ int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
 }
 
 
+
+
+/**
+ * @brief HK ADC register read function
+ *
+ * This function performs register read operation. Usually, the value to be
+ * read is a 16-bit value as all the registers accessible for a read
+ * operation in HK ADC are 16-bit registers.
+ *
+ * @param reg[in]              Variable of enumeration type #hk_adc_register_t
+ *                             (defined in hk_adc.h) indicating which register
+ *                             is to be read.
+ * @param read_buffer[in]      pointer to a uint16_t variable to store the result
+ *                             in.
+ * @return HK_ADC_ERR_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
+ *
+ */
 int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
 {
     uint8_t send_buffer = 0xff;
+    uint8_t err = HK_ADC_ERR_READ_FAILED;
 
     // assign register address pointer
     switch(reg)
@@ -297,15 +383,32 @@ int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
         {
             read_value = rx_buffer[0] << 8 | rx_buffer[1];
             *read_buffer = read_value;
-            return HK_ADC_NO_ERR;
+            err = HK_ADC_NO_ERR;
+            return err;
         }
     }
 
-    return HK_ADC_ERR_READ_FAILED;
+    err = HK_ADC_ERR_READ_FAILED;
+    return err;
 }
 
 
 
+
+/**
+ * @brief HK ADC set Full Scale Range function
+ *
+ * This local function assigns the desired ADC full scale voltage range to the
+ * global variable fsr_setting. And accordingly updates the voltage multiplier
+ * value as affects the ADC readings.
+ *
+ * @param fsr[in]              Unsigned byte value for ADC Full Scale Voltage
+ *                             Range; must be from one of the values defined in
+ *                             hk_adc.h file.
+ *
+ * @return None.
+ *
+ */
 void hk_adc_set_fsr(uint8_t fsr)
 {
     fsr_setting = fsr;
@@ -315,6 +418,19 @@ void hk_adc_set_fsr(uint8_t fsr)
 
 
 
+/**
+ * @brief HK ADC update voltage multiplier function
+ *
+ * This local function updates the voltage multiplier (mV) global value as per the
+ * configured ADC full scale voltage range as it affects the ADC readings. This
+ * value basically indicates the voltage value corresponding to LSB which varies
+ * with varying FSR configuration.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ */
 void hk_adc_update_multiplier_volt(void)
 {
     switch(fsr_setting)

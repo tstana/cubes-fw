@@ -61,6 +61,19 @@ int main(void)
 	    err = hk_adc_conv_read_volt(&result);
         err = hk_adc_conv_read_curr(&result);
         err = hk_adc_conv_read_citi_temp(&result);
+
+        result = hk_adc_get_avg_volt();
+        result = hk_adc_get_avg_curr();
+        result = hk_adc_get_avg_citi_temp();
+
+        result = hk_adc_get_avg_volt();
+        result = hk_adc_get_avg_curr();
+        result = hk_adc_get_avg_citi_temp();
+
+        result = hk_adc_get_avg_volt();
+        result = hk_adc_get_avg_curr();
+        result = hk_adc_get_avg_citi_temp();
+
         if (err == HK_ADC_NO_ERR)
         {
             // Values read successfully

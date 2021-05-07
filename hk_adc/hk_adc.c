@@ -10,12 +10,13 @@
 #include "hk_adc.h"
 
 
-#define TX_LENGTH           1u
-#define RX_LENGTH           2u
-#define DUMMY_SERIAL_ADDR   0xFF
-#define VBAT_TO_VOUT_RATIO  8u
-#define VOUT_TO_IBAT_RATIO  2.5
-#define VOLT_TO_MILLIVOLT_RATIO  1000u
+#define TX_LENGTH                       1u
+#define RX_LENGTH                       2u
+#define DUMMY_SERIAL_ADDR               0xFF
+#define VBAT_TO_VOUT_RATIO              8u
+#define VOUT_TO_IBAT_RATIO              2.5
+#define VOLT_TO_MILLIVOLT_RATIO         1000u
+#define NUM_SAMPLES_TO_AVG              10u
 
 
 /* Local Variables */
@@ -25,14 +26,22 @@ static uint8_t os_bit = 0;
 static uint8_t  rx_buffer[RX_LENGTH];
 static float multiplier_to_millivolts = 1.0F;
 static int fsr_setting = HK_ADC_CONFIG_FSR_2;
+static float volt_array[NUM_SAMPLES_TO_AVG];
+static float curr_array[NUM_SAMPLES_TO_AVG];
+static float citi_temp_array[NUM_SAMPLES_TO_AVG];
+static float hk_adc_avg_volt;
+static float hk_adc_avg_curr;
+static float hk_adc_avg_citi_temp;
 
 
 /* Local Function prototypes */
-static void hk_adc_update_multiplier_volt(void);
-static void hk_adc_set_fsr(uint8_t fsr);
-static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
 static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
-
+static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
+static void hk_adc_set_fsr(uint8_t fsr);
+static void hk_adc_update_multiplier_volt(void);
+static float hk_adc_calc_avg_voltage(void);
+static float hk_adc_calc_avg_current(void);
+static float hk_adc_calc_avg_citi_temp(void);
 
 
 /**
@@ -54,7 +63,7 @@ int hk_adc_init(void)
     fsr_setting = HK_ADC_CONFIG_FSR_2;
 
     // By default, ADC is configured to point towards CITI_TEMP as MUX input
-    uint16_t config = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 | HK_ADC_CONFIG_MODE_SINGLE_SHOT | HK_ADC_CONFIG_DR_128SPS | HK_ADC_CONFIG_CMODE_TRAD | HK_ADC_CONFIG_CPOL_ACTIVE_LOW | HK_ADC_CONFIG_CLAT_NON_LATCH | HK_ADC_CONFIG_CQUE_DISABLE;
+    uint16_t config = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 | HK_ADC_CONFIG_MODE_SINGLE_SHOT | HK_ADC_CONFIG_DR_1600SPS | HK_ADC_CONFIG_CMODE_TRAD | HK_ADC_CONFIG_CPOL_ACTIVE_LOW | HK_ADC_CONFIG_CLAT_NON_LATCH | HK_ADC_CONFIG_CQUE_DISABLE;
     uint8_t send_buffer[2] = {config>>8, config};
 
     // Set the clock for i2c0 instance
@@ -463,3 +472,80 @@ void hk_adc_update_multiplier_volt(void)
             multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 0.1mV
     }
 }
+
+
+
+
+float hk_adc_calc_avg_voltage(void)
+{
+    float sum = 0;
+    float average = 0;
+    for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
+    {
+        hk_adc_conv_read_volt(&volt_array[i]);
+        sum += volt_array[i];
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+    }
+
+    return average;
+}
+
+
+
+
+float hk_adc_calc_avg_current(void)
+{
+    float sum = 0;
+    float average = 0;
+    for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
+    {
+        hk_adc_conv_read_curr(&curr_array[i]);
+        sum += curr_array[i];
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+    }
+
+    return average;
+}
+
+
+
+
+float hk_adc_calc_avg_citi_temp(void)
+{
+    float sum = 0;
+    float average = 0;
+    for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
+    {
+        hk_adc_conv_read_citi_temp(&citi_temp_array[i]);
+        sum += citi_temp_array[i];
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+    }
+
+    return average;
+}
+
+
+
+
+float hk_adc_get_avg_volt(void)
+{
+    return hk_adc_avg_volt = hk_adc_calc_avg_voltage();
+}
+
+
+
+
+float hk_adc_get_avg_curr(void)
+{
+    return hk_adc_avg_curr = hk_adc_calc_avg_current();
+}
+
+
+
+
+float hk_adc_get_avg_citi_temp(void)
+{
+    return hk_adc_avg_citi_temp = hk_adc_calc_avg_citi_temp();
+}
+
+

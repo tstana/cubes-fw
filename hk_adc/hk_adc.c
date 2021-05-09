@@ -529,7 +529,8 @@ float hk_adc_calc_avg_citi_temp(void)
 
 float hk_adc_get_avg_volt(void)
 {
-    return hk_adc_avg_volt = hk_adc_calc_avg_voltage();
+    hk_adc_avg_volt = hk_adc_calc_avg_voltage();
+    return hk_adc_avg_volt;
 }
 
 
@@ -537,7 +538,8 @@ float hk_adc_get_avg_volt(void)
 
 float hk_adc_get_avg_curr(void)
 {
-    return hk_adc_avg_curr = hk_adc_calc_avg_current();
+    hk_adc_avg_curr = hk_adc_calc_avg_current();
+    return hk_adc_avg_curr;
 }
 
 
@@ -545,7 +547,8 @@ float hk_adc_get_avg_curr(void)
 
 float hk_adc_get_avg_citi_temp(void)
 {
-    return hk_adc_avg_citi_temp = hk_adc_calc_avg_citi_temp();
+    hk_adc_avg_citi_temp = hk_adc_calc_avg_citi_temp();
+    return hk_adc_avg_citi_temp;
 }
 
 

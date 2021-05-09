@@ -34,6 +34,8 @@
 #include "../firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 
+#include "../hk_adc/hk_adc.h"
+
 
 /*
  * Define the MSP send data buffer. The max number of bytes that can be sent is
@@ -405,8 +407,13 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
 		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
 
+        /* ADC HK - 6+6+6 bytes */
+        sprintf(((char*)send_data_hk)+38, "%f", hk_adc_get_avg_volt());
+        sprintf(((char*)send_data_hk)+44, "%f", hk_adc_get_avg_curr());
+        sprintf(((char*)send_data_hk)+50, "%f", hk_adc_get_avg_citi_temp());
+
 		send_data = (uint8_t *)send_data_hk;
-		*len = 38;
+		*len = 57;
 	}
 	else if(opcode == MSP_OP_REQ_CUBES_ID)
 	{

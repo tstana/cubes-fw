@@ -64,7 +64,7 @@ int main(void)
 	/* Init timer to write HK before DAQ end */
     MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
     MSS_TIM64_enable_irq();
-	NVIC_SetPriority(Timer1_IRQn, 1);
+    NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/* Infinite loop */
 	while(1) {

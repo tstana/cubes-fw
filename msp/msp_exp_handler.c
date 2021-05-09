@@ -710,8 +710,8 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			temp_value = temp_value >> 32;
 			load_value_u = temp_value;
 			load_value_l = (uint32_t)(timer_load_value & 0xFFFFFFFFULL);
-            MSS_TIM64_load_immediate(load_value_u, load_value_l);
-            MSS_TIM64_start();
+			MSS_TIM64_load_immediate(load_value_u, load_value_l);
+			MSS_TIM64_start();
 			citiroc_daq_start();
 			break;
 		case MSP_OP_CUBES_DAQ_STOP:
@@ -729,8 +729,5 @@ void Timer1_IRQHandler(void)
 	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
-    MSS_TIM64_clear_irq();
-
-	/* Indicate TIM duration completion - blink LED with 300ms delay*/
-	led_blink(LED_BLINK_DAQ, 300);
+	MSS_TIM64_clear_irq();
 }

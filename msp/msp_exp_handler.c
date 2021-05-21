@@ -35,6 +35,15 @@
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 
 #include "../hk_adc/hk_adc.h"
+#include <stdlib.h>
+
+
+
+
+extern float hk_adc_avg_volt;
+extern float hk_adc_avg_curr;
+extern float hk_adc_avg_citi_temp;
+int count_written = 0;
 
 
 /*
@@ -407,13 +416,20 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
 		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
 
-        /* ADC HK - 6+6+6 bytes */
-        sprintf(((char*)send_data_hk)+38, "%f", hk_adc_get_avg_volt());
-        sprintf(((char*)send_data_hk)+44, "%f", hk_adc_get_avg_curr());
-        sprintf(((char*)send_data_hk)+50, "%f", hk_adc_get_avg_citi_temp());
+        /* ADC HK - 4+4+4 = 12 char bytes */
+//		hk_adc_get_avg_volt();          //commented for now
+//		hk_adc_get_avg_curr();
+//		hk_adc_get_avg_citi_temp();
+
+		hk_adc_avg_volt = 11.02;
+        sprintf(((char*)send_data_hk)+38, "%.2f", hk_adc_avg_volt);
+        hk_adc_avg_curr = 0.0667;
+        sprintf(((char*)send_data_hk)+42, "%.4f", hk_adc_avg_curr);
+        hk_adc_avg_citi_temp = 1.277;
+        sprintf(((char*)send_data_hk)+46, "%.2f", hk_adc_avg_citi_temp);
 
 		send_data = (uint8_t *)send_data_hk;
-		*len = 57;
+		*len = 50;
 	}
 	else if(opcode == MSP_OP_REQ_CUBES_ID)
 	{
@@ -699,7 +715,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_hcr_reset();
 			citiroc_histo_reset();
 			citiroc_daq_set_hvps_temp(hvps_get_temp());
-			// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
+			citiroc_daq_set_citi_temp(hk_adc_get_avg_citi_temp());
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
 			MSS_TIM1_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
@@ -718,6 +734,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 void Timer1_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
+    citiroc_daq_set_citi_temp(hk_adc_get_avg_citi_temp());
 	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());

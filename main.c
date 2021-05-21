@@ -64,28 +64,28 @@ int main(void)
 	err = hk_adc_init();
 	if (err == HK_ADC_NO_ERR)
 	{
-	    msp_expsend_start(MSP_OP_REQ_HK, &length);
-	    err = hk_adc_conv_read_volt(&result);
-        err = hk_adc_conv_read_curr(&result);
-        err = hk_adc_conv_read_citi_temp(&result);
-
-        result = hk_adc_get_avg_volt();
-        result = hk_adc_get_avg_curr();
-        result = hk_adc_get_avg_citi_temp();
-
-        result = hk_adc_get_avg_volt();
-        result = hk_adc_get_avg_curr();
-        result = hk_adc_get_avg_citi_temp();
-
-        result = hk_adc_get_avg_volt();
-        result = hk_adc_get_avg_curr();
-        result = hk_adc_get_avg_citi_temp();
-
-        if (err == HK_ADC_NO_ERR)
-        {
-            // Values read successfully
-            err = HK_ADC_NO_ERR;
-        }
+//	    msp_expsend_start(MSP_OP_REQ_HK, &length);
+//	    err = hk_adc_conv_read_volt(&result);
+//        err = hk_adc_conv_read_curr(&result);
+//        err = hk_adc_conv_read_citi_temp(&result);
+//
+//        result = hk_adc_get_avg_volt();
+//        result = hk_adc_get_avg_curr();
+//        result = hk_adc_get_avg_citi_temp();
+//
+//        result = hk_adc_get_avg_volt();
+//        result = hk_adc_get_avg_curr();
+//        result = hk_adc_get_avg_citi_temp();
+//
+//        result = hk_adc_get_avg_volt();
+//        result = hk_adc_get_avg_curr();
+//        result = hk_adc_get_avg_citi_temp();
+//
+//        if (err == HK_ADC_NO_ERR)
+//        {
+//            // Values read successfully
+//            err = HK_ADC_NO_ERR;
+//        }
 	}
 
 //	/* Init timer to write HK before DAQ end */

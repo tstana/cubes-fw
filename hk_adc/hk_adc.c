@@ -29,9 +29,9 @@ static int fsr_setting = HK_ADC_CONFIG_FSR_2;
 static float volt_array[NUM_SAMPLES_TO_AVG];
 static float curr_array[NUM_SAMPLES_TO_AVG];
 static float citi_temp_array[NUM_SAMPLES_TO_AVG];
-static float hk_adc_avg_volt;
-static float hk_adc_avg_curr;
-static float hk_adc_avg_citi_temp;
+float hk_adc_avg_volt;
+float hk_adc_avg_curr;
+float hk_adc_avg_citi_temp;
 
 
 /* Local Function prototypes */

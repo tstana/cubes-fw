@@ -33,6 +33,9 @@
 #include "../firmware/drivers/citiroc/citiroc.h"
 #include "../firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
 #include "../firmware/drivers/mss_timer/mss_timer.h"
+#include "../utils/led.h"
+#include "../utils/timer_delay.h"
+#include "CMSIS/system_m2sxxx.h"
 
 
 /*
@@ -70,6 +73,11 @@ static uint8_t bin_cfg[6];
 
 
 static uint16_t *table;
+
+// local variables used for TIM64
+static uint64_t timer_load_value;
+static uint32_t load_value_u, load_value_l;
+uint64_t temp_value;
 
 /* define logscale tables */
 static uint16_t table1[1025] = {
@@ -695,8 +703,15 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
-			MSS_TIM1_load_immediate(((daq_dur-1)*100000000)&0xFFFFFFFF);
-			MSS_TIM1_start();
+
+			timer_load_value = (uint64_t)(daq_dur-1)*(uint64_t)SystemCoreClock;
+			// split the 64-bit timer_load_value into two 32-bit numbers because TIM64 needs its parameters that way
+			temp_value = timer_load_value & 0xFFFFFFFF00000000ULL;
+			temp_value = temp_value >> 32;
+			load_value_u = temp_value;
+			load_value_l = (uint32_t)(timer_load_value & 0xFFFFFFFFULL);
+			MSS_TIM64_load_immediate(load_value_u, load_value_l);
+			MSS_TIM64_start();
 			citiroc_daq_start();
 			break;
 		case MSP_OP_CUBES_DAQ_STOP:
@@ -714,5 +729,5 @@ void Timer1_IRQHandler(void)
 	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
-	MSS_TIM1_clear_irq();
+	MSS_TIM64_clear_irq();
 }

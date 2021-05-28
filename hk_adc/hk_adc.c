@@ -13,9 +13,9 @@
 #define TX_LENGTH                       1u
 #define RX_LENGTH                       2u
 #define DUMMY_SERIAL_ADDR               0xFF
-#define VBAT_TO_VOUT_RATIO              8u
-#define VOUT_TO_IBAT_RATIO              2.5
-#define VOLT_TO_MILLIVOLT_RATIO         1000u
+//#define VBAT_TO_VOUT_RATIO              8u
+//#define VOUT_TO_IBAT_RATIO              2.5
+//#define VOLT_TO_MILLIVOLT_RATIO         1000u
 #define NUM_SAMPLES_TO_AVG              10u
 
 
@@ -24,14 +24,21 @@ static mss_i2c_status_t status;
 static uint16_t read_value;
 static uint8_t os_bit = 0;
 static uint8_t  rx_buffer[RX_LENGTH];
-static float multiplier_to_millivolts = 1.0F;
+//static float multiplier_to_millivolts = 1.0F;
+static uint8_t send_multiplier_to_millivolts = 1;
 static int fsr_setting = HK_ADC_CONFIG_FSR_2;
-static float volt_array[NUM_SAMPLES_TO_AVG];
-static float curr_array[NUM_SAMPLES_TO_AVG];
-static float citi_temp_array[NUM_SAMPLES_TO_AVG];
-float hk_adc_avg_volt;
-float hk_adc_avg_curr;
-float hk_adc_avg_citi_temp;
+static uint16_t volt_array[NUM_SAMPLES_TO_AVG];
+static uint16_t curr_array[NUM_SAMPLES_TO_AVG];
+static uint16_t citi_temp_array[NUM_SAMPLES_TO_AVG];
+static uint16_t hk_adc_avg_volt;
+static uint16_t hk_adc_avg_curr;
+static uint16_t hk_adc_avg_citi_temp;
+
+
+//to check for now
+//float volt;
+//float curr;
+//float temp;
 
 
 /* Local Function prototypes */
@@ -39,16 +46,16 @@ static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
 static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
 static void hk_adc_set_fsr(uint8_t fsr);
 static void hk_adc_update_multiplier_volt(void);
-static float hk_adc_calc_avg_voltage(void);
-static float hk_adc_calc_avg_current(void);
-static float hk_adc_calc_avg_citi_temp(void);
+static uint16_t hk_adc_calc_avg_voltage(void);
+static uint16_t hk_adc_calc_avg_current(void);
+static uint16_t hk_adc_calc_avg_citi_temp(void);
 
 
 /**
  * @brief HK ADC Init function
  *
  * This function is called once to initialize ADC with a certain configuration
- * - FSR - +-4.096, Single-shot conversion, DR = 128SPS, MUX input CITI_TEMP and
+ * - FSR - +-4.096, Single-shot conversion, DR = 1600SPS, MUX input CITI_TEMP and
  * disabled comparator.
  *
  *
@@ -87,16 +94,17 @@ int hk_adc_init(void)
 /**
  * @brief HK ADC read Battery Voltage function
  *
- * This function returns the battery voltage value (in Volts) as read by the ADC.
- * ADC measures Vout value where Vout = V_Batt/8. V_Batt is found by performing
- * appropriate conversion and returned in the float type parameter passed to the
- * function as argument.
+ * This function returns the raw battery voltage value as read by the ADC. ADC
+ * measures raw Vout value where Vout = V_Batt/8. V_Batt is found by performing
+ * appropriate conversion on the ground software (CITIROC UI tool) side. Raw ADC
+ * value is returned in the unsigned 16-bit parameter passed to the function as
+ * argument.
  *
- * @param batt_volt[in]     pointer to variable of float type to store the result in.
+ * @param batt_volt[in]     pointer to unsigned 16-bit variable to store the result in.
  * @return HK_ADC_ERR_VOLT_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
  *
  */
-int hk_adc_conv_read_volt(float * batt_volt)
+int hk_adc_conv_read_volt(uint16_t * batt_volt)
 {
     uint8_t err = HK_ADC_ERR_VOLT_READ_FAILED;
 
@@ -106,7 +114,7 @@ int hk_adc_conv_read_volt(float * batt_volt)
 
     if (err == HK_ADC_NO_ERR)
     {
-        // let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
+        // Let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
         read_value = read_value & 0x8fff;
         read_value = read_value | HK_ADC_CONFIG_MUX_SINGLE_1;
 
@@ -130,9 +138,10 @@ int hk_adc_conv_read_volt(float * batt_volt)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // make sure we have the most recent multiplier settings based on the currently configured PGA
-                hk_adc_update_multiplier_volt();
-                *batt_volt = ((float)read_value * multiplier_to_millivolts) * VBAT_TO_VOUT_RATIO/VOLT_TO_MILLIVOLT_RATIO;
+                // Make sure we have the most recent multiplier settings based on the currently configured PGA
+//                hk_adc_update_multiplier_volt();
+//                volt = ((float)read_value * multiplier_to_millivolts) * VBAT_TO_VOUT_RATIO/VOLT_TO_MILLIVOLT_RATIO;
+                *batt_volt = read_value;
                 return err;
             }
         }
@@ -148,16 +157,17 @@ int hk_adc_conv_read_volt(float * batt_volt)
 /**
  * @brief HK ADC read Battery Current function
  *
- * This function returns the battery current value (in Amps) as read by the ADC.
- * ADC measures Vout where Vout = I_Batt[Amp] * 2.5. I_Batt is found by performing
- * appropriate conversion and returned in the float type parameter passed to the
- * function as argument.
+ * This function returns the raw battery current value as read by the ADC. ADC
+ * measures raw Vout value where Vout = I_Batt[Amp] * 2.5. I_Batt is found by performing
+ * appropriate conversion on the ground software (CITIROC UI tool) side. Raw ADC
+ * value is returned in the unsigned 16-bit parameter passed to the function as
+ * argument.
  *
- * @param batt_curr[in]     pointer to variable of float type to store the result in.
+ * @param batt_curr[in]     pointer to unsigned 16-bit variable to store the result in.
  * @return HK_ADC_ERR_CURR_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
  *
  */
-int hk_adc_conv_read_curr(float * batt_curr)
+int hk_adc_conv_read_curr(uint16_t * batt_curr)
 {
     uint8_t err = HK_ADC_ERR_CURR_READ_FAILED;
 
@@ -167,7 +177,7 @@ int hk_adc_conv_read_curr(float * batt_curr)
 
     if (err == HK_ADC_NO_ERR)
     {
-        // let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
+        // Let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
         read_value = read_value & 0x8fff;
         read_value = read_value | HK_ADC_CONFIG_MUX_SINGLE_0;
 
@@ -192,8 +202,9 @@ int hk_adc_conv_read_curr(float * batt_curr)
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
                 // make sure we have the most recent multiplier settings based on the currently configured PGA
-                hk_adc_update_multiplier_volt();
-                *batt_curr = (((float)read_value * multiplier_to_millivolts)/(VOUT_TO_IBAT_RATIO * VOLT_TO_MILLIVOLT_RATIO));     // Current in Amps;
+//                hk_adc_update_multiplier_volt();
+//                curr = (((float)read_value * multiplier_to_millivolts)/(VOUT_TO_IBAT_RATIO * VOLT_TO_MILLIVOLT_RATIO));     // Current in Amps;
+                *batt_curr = read_value;     // Current in Amps;
                 return err;
             }
         }
@@ -209,15 +220,15 @@ int hk_adc_conv_read_curr(float * batt_curr)
 /**
  * @brief HK ADC read CITIROC temperature (deg. C) function
  *
- * This function returns the voltage value (Vtemp in Volts) as read by the ADC,
+ * This function returns the raw voltage value (Vtemp) as read by the ADC,
  * equivalent to CITIROC ASIC temperature value. Conversion to actual temperature
- * value is performed by the CITIROC UI tool.
+ * value is performed by the ground software (CITIROC UI tool).
  *
- * @param citi_temp[in]     pointer to variable of float type to store the result in.
+ * @param citi_temp[in]     pointer to unsigned 16-bit variable to store the result in.
  * @return HK_ADC_ERR_TEMP_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
  *
  */
-int hk_adc_conv_read_citi_temp(float * citi_temp)
+int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
 {
     uint8_t err = HK_ADC_ERR_TEMP_READ_FAILED;
 
@@ -227,7 +238,7 @@ int hk_adc_conv_read_citi_temp(float * citi_temp)
 
     if (err == HK_ADC_NO_ERR)
     {
-        // let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
+        // Let the rest of the configurations remain intact, just change MUX input config and start single-shot conversion
         read_value = read_value & 0x8fff;
         read_value = read_value | HK_ADC_CONFIG_MUX_SINGLE_2;
 
@@ -251,9 +262,10 @@ int hk_adc_conv_read_citi_temp(float * citi_temp)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // make sure we have the most recent multiplier settings based on the currently configured PGA
-                hk_adc_update_multiplier_volt();
-                *citi_temp = ((float)read_value * multiplier_to_millivolts/VOLT_TO_MILLIVOLT_RATIO);    //result passed onto CITIROC UI should be in Volts (Vtemp)
+                // Make sure we have the most recent multiplier settings based on the currently configured PGA
+//                hk_adc_update_multiplier_volt();
+//                temp = ((float)read_value * multiplier_to_millivolts/VOLT_TO_MILLIVOLT_RATIO);    //result passed onto CITIROC UI should be in Volts (Vtemp)
+                *citi_temp = read_value;
                 return err;
             }
         }
@@ -409,10 +421,10 @@ int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
  *
  * This local function assigns the desired ADC full scale voltage range to the
  * global variable fsr_setting. And accordingly updates the voltage multiplier
- * value as affects the ADC readings.
+ * value as it affects the ADC readings.
  *
- * @param fsr[in]              Unsigned byte value for ADC Full Scale Voltage
- *                             Range; must be from one of the values defined in
+ * @param fsr[in]              Unsigned byte for ADC Full Scale Voltage Range;
+ *                             must be from one of the values defined in
  *                             hk_adc.h file.
  *
  * @return None.
@@ -445,46 +457,64 @@ void hk_adc_update_multiplier_volt(void)
     switch(fsr_setting)
     {
         case HK_ADC_CONFIG_FSR_1:
-            multiplier_to_millivolts = 3.0F;    // corresponds to LSB = 3.0mV
+//            multiplier_to_millivolts = 3.0F;    // corresponds to LSB = 3.0mV
+            send_multiplier_to_millivolts = 1;
             break;
 
         case HK_ADC_CONFIG_FSR_2:
-            multiplier_to_millivolts = 2.0F;    // corresponds to LSB = 2.0mV
+//            multiplier_to_millivolts = 2.0F;    // corresponds to LSB = 2.0mV
+            send_multiplier_to_millivolts = 2;
             break;
 
         case HK_ADC_CONFIG_FSR_3:
-            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 1.0mV
+//            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 1.0mV
+            send_multiplier_to_millivolts = 3;
             break;
 
         case HK_ADC_CONFIG_FSR_4:
-            multiplier_to_millivolts = 0.5F;    // corresponds to LSB = 0.5mV
+//            multiplier_to_millivolts = 0.5F;    // corresponds to LSB = 0.5mV
+            send_multiplier_to_millivolts = 4;
             break;
 
         case HK_ADC_CONFIG_FSR_5:
-            multiplier_to_millivolts = 0.25F;    // corresponds to LSB = 0.25mV
+//            multiplier_to_millivolts = 0.25F;    // corresponds to LSB = 0.25mV
+            send_multiplier_to_millivolts = 5;
             break;
 
         case HK_ADC_CONFIG_FSR_6:
-            multiplier_to_millivolts = 0.125F;    // corresponds to LSB = 0.125mV
+//            multiplier_to_millivolts = 0.125F;    // corresponds to LSB = 0.125mV
+            send_multiplier_to_millivolts = 6;
             break;
 
         default:
-            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 0.1mV
+//            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 0.1mV
+            send_multiplier_to_millivolts = 1;
     }
 }
 
 
 
 
-float hk_adc_calc_avg_voltage(void)
+/**
+ * @brief HK ADC average voltage calculation function
+ *
+ * This local function calculates the average battery voltage from raw ADC voltage
+ * values. Number of samples to be averaged is defined by NUM_SAMPLES_TO_AVG.
+ *
+ * @param None.
+ *
+ * @return Average battery voltage raw value.
+ *
+ */
+uint16_t hk_adc_calc_avg_voltage(void)
 {
-    float sum = 0;
-    float average = 0;
+    uint16_t sum = 0;
+    uint16_t average = 0;
     for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
     {
         hk_adc_conv_read_volt(&volt_array[i]);
         sum += volt_array[i];
-        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (uint16_t)NUM_SAMPLES_TO_AVG : 0;
     }
 
     return average;
@@ -493,15 +523,26 @@ float hk_adc_calc_avg_voltage(void)
 
 
 
-float hk_adc_calc_avg_current(void)
+/**
+ * @brief HK ADC average current calculation function
+ *
+ * This local function calculates the average battery current from raw ADC voltage
+ * values. Number of samples to be averaged is defined by NUM_SAMPLES_TO_AVG.
+ *
+ * @param None.
+ *
+ * @return Average battery current raw value.
+ *
+ */
+uint16_t hk_adc_calc_avg_current(void)
 {
-    float sum = 0;
-    float average = 0;
+    uint16_t sum = 0;
+    uint16_t average = 0;
     for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
     {
         hk_adc_conv_read_curr(&curr_array[i]);
         sum += curr_array[i];
-        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (uint16_t)NUM_SAMPLES_TO_AVG : 0;
     }
 
     return average;
@@ -510,15 +551,26 @@ float hk_adc_calc_avg_current(void)
 
 
 
-float hk_adc_calc_avg_citi_temp(void)
+/**
+ * @brief HK ADC average CITIROC temperature calculation function
+ *
+ * This local function calculates the average CITIROC temperature from raw ADC voltage
+ * values. Number of samples to be averaged is defined by NUM_SAMPLES_TO_AVG.
+ *
+ * @param None.
+ *
+ * @return Average CITIROC temperature raw value.
+ *
+ */
+uint16_t hk_adc_calc_avg_citi_temp(void)
 {
-    float sum = 0;
-    float average = 0;
+    uint16_t sum = 0;
+    uint16_t average = 0;
     for (int i = 0; i < NUM_SAMPLES_TO_AVG; i ++)
     {
         hk_adc_conv_read_citi_temp(&citi_temp_array[i]);
         sum += citi_temp_array[i];
-        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (float)NUM_SAMPLES_TO_AVG : 0;
+        average = (i == NUM_SAMPLES_TO_AVG - 1) ? sum / (uint16_t)NUM_SAMPLES_TO_AVG : 0;
     }
 
     return average;
@@ -527,7 +579,17 @@ float hk_adc_calc_avg_citi_temp(void)
 
 
 
-float hk_adc_get_avg_volt(void)
+/**
+ * @brief HK ADC get average battery voltage function
+ *
+ * This local function returns the calculated average raw ADC battery voltage value.
+ *
+ * @param None.
+ *
+ * @return Average battery voltage raw value.
+ *
+ */
+uint16_t hk_adc_get_avg_volt(void)
 {
     hk_adc_avg_volt = hk_adc_calc_avg_voltage();
     return hk_adc_avg_volt;
@@ -536,7 +598,17 @@ float hk_adc_get_avg_volt(void)
 
 
 
-float hk_adc_get_avg_curr(void)
+/**
+ * @brief HK ADC get average battery current function
+ *
+ * This local function returns the calculated average raw ADC battery current value.
+ *
+ * @param None.
+ *
+ * @return Average battery current raw value.
+ *
+ */
+uint16_t hk_adc_get_avg_curr(void)
 {
     hk_adc_avg_curr = hk_adc_calc_avg_current();
     return hk_adc_avg_curr;
@@ -545,10 +617,28 @@ float hk_adc_get_avg_curr(void)
 
 
 
-float hk_adc_get_avg_citi_temp(void)
+/**
+ * @brief HK ADC get average CITIROC temperature function
+ *
+ * This local function returns the calculated average raw ADC CITIROC temperature value.
+ *
+ * @param None.
+ *
+ * @return Average CITIROC temperature raw value.
+ *
+ */
+uint16_t hk_adc_get_avg_citi_temp(void)
 {
     hk_adc_avg_citi_temp = hk_adc_calc_avg_citi_temp();
     return hk_adc_avg_citi_temp;
 }
+
+
+
+
+//uint8_t hk_adc_get_volt_multiplier(void)
+//{
+//    return send_multiplier_to_millivolts;
+//}
 
 

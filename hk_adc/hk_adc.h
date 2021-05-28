@@ -122,12 +122,13 @@ typedef enum {
 
 /* Exported Function prototypes */
 int hk_adc_init(void);
-int hk_adc_conv_read_volt(float * batt_volt);               //instantaneous value
-int hk_adc_conv_read_curr(float * batt_curr);               //instantaneous value
-int hk_adc_conv_read_citi_temp(float * citi_temp);          //instantaneous value
-float hk_adc_get_avg_volt(void);                            //average value
-float hk_adc_get_avg_curr(void);                            //average value
-float hk_adc_get_avg_citi_temp(void);                       //average value
+int hk_adc_conv_read_volt(uint16_t * batt_volt);               //instantaneous value
+int hk_adc_conv_read_curr(uint16_t * batt_curr);               //instantaneous value
+int hk_adc_conv_read_citi_temp(uint16_t * citi_temp);          //instantaneous value
+uint16_t hk_adc_get_avg_volt(void);                            //average value
+uint16_t hk_adc_get_avg_curr(void);                            //average value
+uint16_t hk_adc_get_avg_citi_temp(void);                       //average value
+uint8_t hk_adc_get_volt_multiplier(void);
 
 
 

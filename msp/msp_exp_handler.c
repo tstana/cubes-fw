@@ -417,16 +417,10 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
 
         /* ADC HK - 4+4+4 = 12 char bytes */
-//		hk_adc_get_avg_volt();          //commented for now
-//		hk_adc_get_avg_curr();
-//		hk_adc_get_avg_citi_temp();
-
-		hk_adc_avg_volt = 11.02;
-        sprintf(((char*)send_data_hk)+38, "%.2f", hk_adc_avg_volt);
-        hk_adc_avg_curr = 0.0667;
-        sprintf(((char*)send_data_hk)+42, "%.4f", hk_adc_avg_curr);
-        hk_adc_avg_citi_temp = 1.277;
-        sprintf(((char*)send_data_hk)+46, "%.2f", hk_adc_avg_citi_temp);
+        sprintf(((char*)send_data_hk)+38, "%04u", hk_adc_get_avg_volt());
+        sprintf(((char*)send_data_hk)+42, "%04u", hk_adc_get_avg_curr());
+        sprintf(((char*)send_data_hk)+46, "%04u", hk_adc_get_avg_citi_temp());
+//        sprintf(((char*)send_data_hk)+50, "%0u", hk_adc_get_volt_multiplier());
 
 		send_data = (uint8_t *)send_data_hk;
 		*len = 50;
@@ -735,7 +729,6 @@ void Timer1_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
     citiroc_daq_set_citi_temp(hk_adc_get_avg_citi_temp());
-	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
 	MSS_TIM1_clear_irq();

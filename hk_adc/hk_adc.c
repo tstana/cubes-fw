@@ -13,9 +13,6 @@
 #define TX_LENGTH                       1u
 #define RX_LENGTH                       2u
 #define DUMMY_SERIAL_ADDR               0xFF
-//#define VBAT_TO_VOUT_RATIO              8u
-//#define VOUT_TO_IBAT_RATIO              2.5
-//#define VOLT_TO_MILLIVOLT_RATIO         1000u
 #define NUM_SAMPLES_TO_AVG              10u
 
 
@@ -24,9 +21,6 @@ static mss_i2c_status_t status;
 static uint16_t read_value;
 static uint8_t os_bit = 0;
 static uint8_t  rx_buffer[RX_LENGTH];
-//static float multiplier_to_millivolts = 1.0F;
-static uint8_t send_multiplier_to_millivolts = 1;
-static int fsr_setting = HK_ADC_CONFIG_FSR_2;
 static uint16_t volt_array[NUM_SAMPLES_TO_AVG];
 static uint16_t curr_array[NUM_SAMPLES_TO_AVG];
 static uint16_t citi_temp_array[NUM_SAMPLES_TO_AVG];
@@ -35,16 +29,9 @@ static uint16_t hk_adc_avg_curr;
 static uint16_t hk_adc_avg_citi_temp;
 
 
-//to check for now
-//float volt;
-//float curr;
-//float temp;
-
-
 /* Local Function prototypes */
 static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
 static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
-static void hk_adc_set_fsr(uint8_t fsr);
 static void hk_adc_update_multiplier_volt(void);
 static uint16_t hk_adc_calc_avg_voltage(void);
 static uint16_t hk_adc_calc_avg_current(void);
@@ -65,9 +52,6 @@ static uint16_t hk_adc_calc_avg_citi_temp(void);
 int hk_adc_init(void)
 {
     uint8_t err = HK_ADC_ERR_INIT_FAILED;
-
-    // set the full scale voltage range to -4.096 <= V <= +4.096 to support measurement of all ADC inputs
-    fsr_setting = HK_ADC_CONFIG_FSR_2;
 
     // By default, ADC is configured to point towards CITI_TEMP as MUX input
     uint16_t config = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 | HK_ADC_CONFIG_MODE_SINGLE_SHOT | HK_ADC_CONFIG_DR_1600SPS | HK_ADC_CONFIG_CMODE_TRAD | HK_ADC_CONFIG_CPOL_ACTIVE_LOW | HK_ADC_CONFIG_CLAT_NON_LATCH | HK_ADC_CONFIG_CQUE_DISABLE;
@@ -138,9 +122,6 @@ int hk_adc_conv_read_volt(uint16_t * batt_volt)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // Make sure we have the most recent multiplier settings based on the currently configured PGA
-//                hk_adc_update_multiplier_volt();
-//                volt = ((float)read_value * multiplier_to_millivolts) * VBAT_TO_VOUT_RATIO/VOLT_TO_MILLIVOLT_RATIO;
                 *batt_volt = read_value;
                 return err;
             }
@@ -201,10 +182,7 @@ int hk_adc_conv_read_curr(uint16_t * batt_curr)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // make sure we have the most recent multiplier settings based on the currently configured PGA
-//                hk_adc_update_multiplier_volt();
-//                curr = (((float)read_value * multiplier_to_millivolts)/(VOUT_TO_IBAT_RATIO * VOLT_TO_MILLIVOLT_RATIO));     // Current in Amps;
-                *batt_curr = read_value;     // Current in Amps;
+                *batt_curr = read_value;
                 return err;
             }
         }
@@ -262,9 +240,6 @@ int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
             {
                 // Right shift the received result by 4 bits. Conversion value are 12 most significant bits
                 read_value = read_value >> 4;
-                // Make sure we have the most recent multiplier settings based on the currently configured PGA
-//                hk_adc_update_multiplier_volt();
-//                temp = ((float)read_value * multiplier_to_millivolts/VOLT_TO_MILLIVOLT_RATIO);    //result passed onto CITIROC UI should be in Volts (Vtemp)
                 *citi_temp = read_value;
                 return err;
             }
@@ -417,85 +392,6 @@ int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
 
 
 /**
- * @brief HK ADC set Full Scale Range function
- *
- * This local function assigns the desired ADC full scale voltage range to the
- * global variable fsr_setting. And accordingly updates the voltage multiplier
- * value as it affects the ADC readings.
- *
- * @param fsr[in]              Unsigned byte for ADC Full Scale Voltage Range;
- *                             must be from one of the values defined in
- *                             hk_adc.h file.
- *
- * @return None.
- *
- */
-void hk_adc_set_fsr(uint8_t fsr)
-{
-    fsr_setting = fsr;
-    hk_adc_update_multiplier_volt();
-}
-
-
-
-
-/**
- * @brief HK ADC update voltage multiplier function
- *
- * This local function updates the voltage multiplier (mV) global value as per the
- * configured ADC full scale voltage range as it affects the ADC readings. This
- * value basically indicates the voltage value corresponding to LSB which varies
- * with varying FSR configuration.
- *
- * @param None.
- *
- * @return None.
- *
- */
-void hk_adc_update_multiplier_volt(void)
-{
-    switch(fsr_setting)
-    {
-        case HK_ADC_CONFIG_FSR_1:
-//            multiplier_to_millivolts = 3.0F;    // corresponds to LSB = 3.0mV
-            send_multiplier_to_millivolts = 1;
-            break;
-
-        case HK_ADC_CONFIG_FSR_2:
-//            multiplier_to_millivolts = 2.0F;    // corresponds to LSB = 2.0mV
-            send_multiplier_to_millivolts = 2;
-            break;
-
-        case HK_ADC_CONFIG_FSR_3:
-//            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 1.0mV
-            send_multiplier_to_millivolts = 3;
-            break;
-
-        case HK_ADC_CONFIG_FSR_4:
-//            multiplier_to_millivolts = 0.5F;    // corresponds to LSB = 0.5mV
-            send_multiplier_to_millivolts = 4;
-            break;
-
-        case HK_ADC_CONFIG_FSR_5:
-//            multiplier_to_millivolts = 0.25F;    // corresponds to LSB = 0.25mV
-            send_multiplier_to_millivolts = 5;
-            break;
-
-        case HK_ADC_CONFIG_FSR_6:
-//            multiplier_to_millivolts = 0.125F;    // corresponds to LSB = 0.125mV
-            send_multiplier_to_millivolts = 6;
-            break;
-
-        default:
-//            multiplier_to_millivolts = 1.0F;    // corresponds to LSB = 0.1mV
-            send_multiplier_to_millivolts = 1;
-    }
-}
-
-
-
-
-/**
  * @brief HK ADC average voltage calculation function
  *
  * This local function calculates the average battery voltage from raw ADC voltage
@@ -632,13 +528,3 @@ uint16_t hk_adc_get_avg_citi_temp(void)
     hk_adc_avg_citi_temp = hk_adc_calc_avg_citi_temp();
     return hk_adc_avg_citi_temp;
 }
-
-
-
-
-//uint8_t hk_adc_get_volt_multiplier(void)
-//{
-//    return send_multiplier_to_millivolts;
-//}
-
-

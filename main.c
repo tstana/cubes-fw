@@ -32,16 +32,9 @@
 #include "mem_mgmt/mem_mgmt.h"
 #include "hk_adc/hk_adc.h"
 
-//for trial
-#include "msp/msp_exp_handler.h"
-
 extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
-
-//for trial
-float result = 0;
-unsigned long length= 0;
 
 
 
@@ -59,34 +52,7 @@ int main(void)
 
 	hvps_init();
 
-	//testing
-	hk_adc_return_t err = 0;
-	err = hk_adc_init();
-	if (err == HK_ADC_NO_ERR)
-	{
-//	    msp_expsend_start(MSP_OP_REQ_HK, &length);
-//	    err = hk_adc_conv_read_volt(&result);
-//        err = hk_adc_conv_read_curr(&result);
-//        err = hk_adc_conv_read_citi_temp(&result);
-//
-//        result = hk_adc_get_avg_volt();
-//        result = hk_adc_get_avg_curr();
-//        result = hk_adc_get_avg_citi_temp();
-//
-//        result = hk_adc_get_avg_volt();
-//        result = hk_adc_get_avg_curr();
-//        result = hk_adc_get_avg_citi_temp();
-//
-//        result = hk_adc_get_avg_volt();
-//        result = hk_adc_get_avg_curr();
-//        result = hk_adc_get_avg_citi_temp();
-//
-//        if (err == HK_ADC_NO_ERR)
-//        {
-//            // Values read successfully
-//            err = HK_ADC_NO_ERR;
-//        }
-	}
+	hk_adc_init();
 
 //	/* Init timer to write HK before DAQ end */
 	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);

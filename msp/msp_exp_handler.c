@@ -39,13 +39,6 @@
 
 
 
-
-extern float hk_adc_avg_volt;
-extern float hk_adc_avg_curr;
-extern float hk_adc_avg_citi_temp;
-int count_written = 0;
-
-
 /*
  * Define the MSP send data buffer. The max number of bytes that can be sent is
  * for the histogram.
@@ -416,11 +409,10 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
 		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
 
-        /* ADC HK - 4+4+4 = 12 char bytes */
+        /* ADC HK */
         sprintf(((char*)send_data_hk)+38, "%04u", hk_adc_get_avg_volt());
         sprintf(((char*)send_data_hk)+42, "%04u", hk_adc_get_avg_curr());
         sprintf(((char*)send_data_hk)+46, "%04u", hk_adc_get_avg_citi_temp());
-//        sprintf(((char*)send_data_hk)+50, "%0u", hk_adc_get_volt_multiplier());
 
 		send_data = (uint8_t *)send_data_hk;
 		*len = 50;

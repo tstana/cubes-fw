@@ -48,6 +48,8 @@ static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
 static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
 
 
+
+
 /**
  * @brief HK ADC Init function
  *
@@ -62,6 +64,7 @@ static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
 int hk_adc_init(void)
 {
     uint8_t err = HK_ADC_ERR_INIT_FAILED;
+//    hk_adc_return_t err = HK_ADC_ERR_INIT_FAILED;
 
     // By default, ADC is configured to point towards CITI_TEMP as MUX input
     const uint16_t CONFIG = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 |

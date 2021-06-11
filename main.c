@@ -39,6 +39,9 @@ extern unsigned int has_send;
 extern unsigned int has_syscommand;
 
 
+// for testing
+//unsigned long length = 0;
+
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -57,7 +60,7 @@ int main(void)
 	timer_delay_init();
 
     /* Let GPIO0 LED flash to indicate power-on status */
-	led_blink(LED_BLINK_RESET, 500);
+	led_blink(LED_BLINK_RESET, 100);
 
 	msp_i2c_init(MSP_EXP_ADDR);
 
@@ -66,10 +69,26 @@ int main(void)
 	hk_adc_init();
 
 //	/* Init timer to write HK before DAQ end */
-	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);
-	MSS_TIM1_load_immediate(0xffffffff);
-	MSS_TIM1_enable_irq();
-	NVIC_SetPriority(Timer1_IRQn, 1);
+//	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);
+//	MSS_TIM1_load_immediate(0xffffffff);
+//	MSS_TIM1_enable_irq();
+//	NVIC_SetPriority(Timer1_IRQn, 1);
+    MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
+    MSS_TIM64_enable_irq();
+
+	// Enable -> Set -> Clear IRQ
+    // Order: I2C -> UART -> Timer
+//    NVIC_SetPriority(UART0_IRQn, 1);
+    NVIC_SetPriority(Timer1_IRQn, 1);
+//    NVIC_SetPriority(I2C0_IRQn, 2);
+
+//    NVIC_ClearPendingIRQ(UART0_IRQn);
+//    NVIC_ClearPendingIRQ(Timer1_IRQn);
+//    NVIC_ClearPendingIRQ(I2C0_IRQn);
+
+//    msp_expsend_start(MSP_OP_REQ_HK, &length);
+
+//    msp_exprecv_syscommand(MSP_OP_CUBES_DAQ_START);
 
 	/* Infinite loop */
 	while(1) {

@@ -713,7 +713,6 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
 
-//			daq_dur = 10;
 			timer_load_value = (uint64_t)(daq_dur-1)*(uint64_t)SystemCoreClock;
 			// split the 64-bit timer_load_value into two 32-bit numbers because
 			// TIM64 needs its parameters that way

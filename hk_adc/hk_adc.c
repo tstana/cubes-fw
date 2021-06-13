@@ -34,10 +34,6 @@
 
 
 /* Local Variables */
-static mss_i2c_status_t status;
-static uint16_t read_value;
-static uint8_t os_bit = 0;
-static uint8_t  rx_buffer[RX_LENGTH];
 static uint16_t hk_adc_avg_volt;
 static uint16_t hk_adc_avg_curr;
 static uint16_t hk_adc_avg_citi_temp;
@@ -107,6 +103,8 @@ int hk_adc_init(void)
  */
 int hk_adc_conv_read_volt(uint16_t * batt_volt)
 {
+    uint8_t os_bit = 0;
+    uint16_t read_value;
     uint8_t err = HK_ADC_ERR_VOLT_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
@@ -169,6 +167,8 @@ int hk_adc_conv_read_volt(uint16_t * batt_volt)
  */
 int hk_adc_conv_read_curr(uint16_t * batt_curr)
 {
+    uint8_t os_bit = 0;
+    uint16_t read_value;
     uint8_t err = HK_ADC_ERR_CURR_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
@@ -232,6 +232,8 @@ int hk_adc_conv_read_curr(uint16_t * batt_curr)
 
 int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
 {
+    uint8_t os_bit = 0;
+    uint16_t read_value;
     uint8_t err = HK_ADC_ERR_TEMP_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
@@ -294,8 +296,9 @@ int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
  * @return HK_ADC_ERR_WRITE_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
  *
  */
-int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
+static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
 {
+    mss_i2c_status_t status;
     uint8_t send_buffer[3] = {0xff};
     uint8_t err = HK_ADC_ERR_WRITE_FAILED;
 
@@ -360,8 +363,11 @@ int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
  * @return HK_ADC_ERR_READ_FAILED if any error occurs otherwise HK_ADC_NO_ERR.
  *
  */
-int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
+static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
 {
+    mss_i2c_status_t status;
+    uint8_t  rx_buffer[RX_LENGTH];
+    uint16_t read_value;
     uint8_t send_buffer = 0xff;
     uint8_t err = HK_ADC_ERR_READ_FAILED;
 

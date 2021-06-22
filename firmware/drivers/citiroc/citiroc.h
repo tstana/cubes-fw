@@ -120,6 +120,7 @@ void		citiroc_daq_start();
 void		citiroc_daq_stop();
 uint32_t	citiroc_daq_is_rdy();
 void		citiroc_daq_set_hvps_temp(uint16_t temp);
+void		citiroc_daq_set_citi_temp(uint16_t temp);
 void		citiroc_daq_set_hvps_volt(uint16_t volt);
 void		citiroc_daq_set_hvps_curr(uint16_t curr);
 

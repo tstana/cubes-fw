@@ -56,11 +56,11 @@ MEMORY
     *          debugging of your application will use the flash memory correctly.
     */ 
     /* SmartFusion2 internal eSRAM */
-    ram (rwx) : ORIGIN = 0x20000000, LENGTH = 64k
+    ram (rwx) : ORIGIN = 0x20000000, LENGTH = 80k
 }
 
 RAM_START_ADDRESS   = 0x20000000;       /* Must be the same value MEMORY region ram ORIGIN above. */
-RAM_SIZE            = 64k;              /* Must be the same value MEMORY region ram LENGTH above. */
+RAM_SIZE            = 80k;              /* Must be the same value MEMORY region ram LENGTH above. */
 MAIN_STACK_SIZE     = 4k;               /* Cortex main stack size. */
 MIN_SIZE_HEAP       = 4k;               /* needs to be calculated for your application */
 

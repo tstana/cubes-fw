@@ -69,6 +69,12 @@ void citiroc_daq_set_hvps_temp(uint16_t temp)
 	CITIROC->TEMPR |= (temp & 0xffff);
 }
 
+void citiroc_daq_set_citi_temp(uint16_t citi_temp)
+{
+	CITIROC->TEMPR &= ~(0xffff0000);
+	CITIROC->TEMPR |= ((citi_temp << 16) & 0xffff0000);
+}
+
 void citiroc_daq_set_hvps_volt(uint16_t volt)
 {
 	CITIROC->HVPSR &= ~(0xffff);

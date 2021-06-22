@@ -27,10 +27,12 @@
 #include <stdlib.h>
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
+#include "utils/led.h"
+#include "utils/timer_delay.h"
 #include "msp/msp_i2c.h"
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
-
+#include "hk_adc/hk_adc.h"
 
 extern unsigned int has_recv;
 extern unsigned int has_send;
@@ -47,18 +49,28 @@ int main(void)
 
 //	nvm_restore_msp_seqflags();
 
+    /* Led Init to configure GPIO0 */
+	led_init();
+
+	/* Timer Delay Init */
+	timer_delay_init();
+
+    /* Let GPIO0 LED flash to indicate power-on status */
+	led_blink(LED_BLINK_RESET, 100);
+
 	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
 
-//	/* Init timer to write HK before DAQ end */
-	MSS_TIM1_init(MSS_TIMER_ONE_SHOT_MODE);
-	MSS_TIM1_load_immediate(0xffffffff);
-	MSS_TIM1_enable_irq();
-	NVIC_SetPriority(Timer1_IRQn, 1);
+	hk_adc_init();
+
+	/* Init timer to write HK before DAQ end */
+    MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
+    MSS_TIM64_enable_irq();
+    NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/* Infinite loop */
-	while(1){
+	while(1) {
 		/*
 		 * The "switch" statement below shows which REQ commands CUBES replies
 		 * to over MSP.
@@ -66,7 +78,7 @@ int main(void)
 		 * Code that handles preparing the send data can be found in the
 		 * function "msp_expsend_start()", in the file "msp_exp_handler.c"
 		 */
-		if(has_send != 0){
+		if(has_send != 0) {
 			switch(has_send) {
 				case MSP_OP_REQ_PAYLOAD:
 					break;
@@ -83,7 +95,7 @@ int main(void)
 		 * Code that handles using the receive data can be found in the function
 		 * "msp_exprecv_complete()", in the file "msp_exp_handler.c"
 		 */
-		else if(has_recv != 0){
+		else if(has_recv != 0) {
 			switch(has_recv) {
 				case MSP_OP_SEND_TIME:
 					break;
@@ -97,7 +109,7 @@ int main(void)
 					break;
 				case MSP_OP_SEND_READ_REG_DEBUG:
 					break;
-				case MSP_OP_SEND_CUBES_DAQ_DUR:
+				case MSP_OP_SEND_CUBES_DAQ_CONF:
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 					break;
@@ -112,8 +124,8 @@ int main(void)
 		 * Code that handles using the receive data can be found in the function
 		 * "msp_exprecv_syscommand()", in the file "msp_exp_handler.c"
 		 */
-		else if(has_syscommand != 0){
-			switch(has_syscommand){
+		else if(has_syscommand != 0) {
+			switch(has_syscommand) {
 				case MSP_OP_ACTIVE:
 					break;
 				case MSP_OP_SLEEP:

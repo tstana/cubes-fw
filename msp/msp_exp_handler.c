@@ -37,6 +37,10 @@
 #include "../utils/timer_delay.h"
 #include "CMSIS/system_m2sxxx.h"
 
+#include "../hk_adc/hk_adc.h"
+#include <stdlib.h>
+
+
 
 /*
  * Define the MSP send data buffer. The max number of bytes that can be sent is
@@ -413,8 +417,13 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
 		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
 
+		/* ADC HK */
+		sprintf(((char*)send_data_hk)+38, "%04u", hk_adc_calc_avg_voltage());
+		sprintf(((char*)send_data_hk)+42, "%04u", hk_adc_calc_avg_current());
+		sprintf(((char*)send_data_hk)+46, "%04u", hk_adc_calc_avg_citi_temp());
+
 		send_data = (uint8_t *)send_data_hk;
-		*len = 38;
+		*len = 50;
 	}
 	else if(opcode == MSP_OP_REQ_CUBES_ID)
 	{
@@ -700,12 +709,13 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_hcr_reset();
 			citiroc_histo_reset();
 			citiroc_daq_set_hvps_temp(hvps_get_temp());
-			// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
+			citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
 			citiroc_daq_set_hvps_volt(hvps_get_voltage());
 			citiroc_daq_set_hvps_curr(hvps_get_current());
 
 			timer_load_value = (uint64_t)(daq_dur-1)*(uint64_t)SystemCoreClock;
-			// split the 64-bit timer_load_value into two 32-bit numbers because TIM64 needs its parameters that way
+			// split the 64-bit timer_load_value into two 32-bit numbers because
+			// TIM64 needs its parameters that way
 			temp_value = timer_load_value & 0xFFFFFFFF00000000ULL;
 			temp_value = temp_value >> 32;
 			load_value_u = temp_value;
@@ -726,7 +736,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 void Timer1_IRQHandler(void)
 {
 	citiroc_daq_set_hvps_temp(hvps_get_temp());
-	// citiroc_daq_set_citi_temp(hkadc_read(CITI_TEMP_CHAN));
+	citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
 	MSS_TIM64_clear_irq();

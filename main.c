@@ -32,6 +32,7 @@
 #include "msp/msp_i2c.h"
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
+#include "hk_adc/hk_adc.h"
 
 extern unsigned int has_recv;
 extern unsigned int has_send;
@@ -55,11 +56,13 @@ int main(void)
 	timer_delay_init();
 
     /* Let GPIO0 LED flash to indicate power-on status */
-	led_blink(LED_BLINK_RESET, 500);
+	led_blink(LED_BLINK_RESET, 100);
 
 	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
+
+	hk_adc_init();
 
 	/* Init timer to write HK before DAQ end */
     MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);

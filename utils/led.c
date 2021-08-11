@@ -88,9 +88,9 @@ void led_blink(led_blink_t blinks, uint32_t milliseconds)
     for(int i = num_of_blinks; i > 0; i--)
     {
         // since LED is already in ON state
-        led_turn_off();
-        timer_delay(milliseconds);
         led_turn_on();
+        timer_delay(milliseconds);
+        led_turn_off();
         timer_delay(milliseconds);
     }
 }

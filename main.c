@@ -49,11 +49,11 @@ int main(void)
 
 //	nvm_restore_msp_seqflags();
 
-    /* Led Init to configure GPIO0 */
-	led_init();
-
 	/* Timer Delay Init */
 	timer_delay_init();
+
+    /* Led Init to configure GPIO0 */
+	led_init();
 
     /* Let GPIO0 LED flash to indicate power-on status */
 	led_blink(LED_BLINK_RESET, 100);

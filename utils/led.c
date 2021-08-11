@@ -32,7 +32,6 @@
 
 
 static uint32_t g_gpio_pattern;
-static uint8_t num_of_blinks;
 
 /* Local function prototypes */
 static void led_turn_on(void);
@@ -81,11 +80,9 @@ void led_init(void)
  * @param milliseconds[in]      Blink delay in milliseconds
  *
  */
-void led_blink(led_blink_t blinks, uint32_t milliseconds)
+void led_blink(led_blink_t num_blinks, uint32_t milliseconds)
 {
-    num_of_blinks = blinks;
-
-    for(int i = num_of_blinks; i > 0; i--)
+    for(int i = num_blinks; i > 0; i--)
     {
         // since LED is already in ON state
         led_turn_on();

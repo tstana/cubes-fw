@@ -35,15 +35,13 @@
 #define NVM_SEQFLAG     (0x03u)
 #define NVM_RESET       (0x04u)
 #define RAM_CITI_CONF   (0x11u)
-#define RAM_HVPS        (0x12u)
-#define RAM_HISTO       (0x13u)
 #define RAM_CITI_PROBE  (0x14u)
 
 #define HVPS_OFS        (0x00)
 #define HVPS_LEN        (12u)
-#define CITIROC_OFS     (0x10)
+#define CITIROC_OFS     (0x00)
 #define CITIROC_LEN     (144u)
-#define PROBE_OFS       (0xA0)
+#define PROBE_OFS       (0x90)
 #define PROBE_LEN       (32u)
 
 #define SEQFLAG_LEN     sizeof(msp_seqflags_t)

@@ -46,7 +46,7 @@
 
 #define RAM_ADDR        (0x20000000u)
 #define NVM_ADDR        (0x60000000u)
-#define CITIROC_OFFSET  (0xF010u)
+#define CITIROC_OFFSET  (0x40000u)
 #define SEQFLAG_OFFSET  (0xF100)
 
 /*

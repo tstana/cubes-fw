@@ -64,10 +64,6 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 	uint32_t length=0;
 	uint32_t *addr = (uint32_t *)0x00000000;
 	switch(modul){
-	case NVM_HVPS:
-		length=HVPS_LEN;
-		addr=(uint32_t *)(NVM_ADDR+HVPS_OFFSET);
-		break;
 	case NVM_CITIROC:
 		length=CITIROC_LEN;
 		addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
@@ -102,10 +98,6 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 
 	/* Set length and address pointer to correct module through switch */
 	switch(modul){
-		case NVM_HVPS:
-			length=HVPS_LEN;
-			addr=(uint32_t *)(NVM_ADDR+HVPS_OFFSET);
-			break;
 		case NVM_CITIROC:
 			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);

@@ -37,8 +37,6 @@
 #define RAM_CITI_CONF   (0x11u)
 #define RAM_CITI_PROBE  (0x14u)
 
-#define HVPS_OFS        (0x00)
-#define HVPS_LEN        (12u)
 #define CITIROC_OFS     (0x00)
 #define CITIROC_LEN     (144u)
 #define PROBE_OFS       (0x90)
@@ -48,7 +46,6 @@
 
 #define RAM_ADDR        (0x20000000u)
 #define NVM_ADDR        (0x60000000u)
-#define HVPS_OFFSET     (0xF000u)
 #define CITIROC_OFFSET  (0xF010u)
 #define SEQFLAG_OFFSET  (0xF100)
 

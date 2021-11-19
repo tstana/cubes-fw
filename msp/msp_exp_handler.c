@@ -631,9 +631,9 @@ void msp_exprecv_complete(unsigned char opcode)
 			citiroc_send_slow_control();
 			break;
 
-		case MSP_OP_SEND_CUBES_CITI_CONF:
-            mem_ram_write(RAM_CITI_CONF, recv_data);
-            citiroc_send_slow_control();
+		case MSP_OP_SEND_CUBES_PROB_CONF:
+            mem_ram_write(RAM_CITI_PROBE, recv_data);
+            citiroc_send_probes();
             break;
 		
 		case MSP_OP_SEND_READ_REG_DEBUG:

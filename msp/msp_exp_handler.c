@@ -617,6 +617,11 @@ void msp_exprecv_complete(unsigned char opcode)
 		}
 
 		case MSP_OP_SEND_CUBES_CITI_CONF:
+			mem_ram_write(RAM_CITI_CONF, recv_data);
+			citiroc_send_slow_control();
+			break;
+
+		case MSP_OP_SEND_NVM_CITI_CONF:
 			mem_nvm_write(NVM_CITIROC, recv_data);
 			break;
 

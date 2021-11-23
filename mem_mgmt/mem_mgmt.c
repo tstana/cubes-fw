@@ -179,7 +179,7 @@ nvm_status_t nvm_save_msp_seqflags(void)
 	status = NVM_unlock(NVM_SEQFLAG_ADDR, sizeof(msp_seqflags_t));
 	if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
 		status = NVM_write(NVM_SEQFLAG_ADDR,
-		                   (uint8_t*)&seqflags,
+		                   (uint32_t*)&seqflags,
 		                   sizeof(msp_seqflags_t),
 		                   NVM_LOCK_PAGE);
 	}

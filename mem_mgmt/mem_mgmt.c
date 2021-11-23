@@ -38,10 +38,6 @@ void mem_ram_write(uint32_t modul, uint8_t *data){
 	uint32_t *addr = (uint32_t *) 0x00000000;
 
 	switch(modul){
-	case RAM_HVPS:
-		length=HVPS_LEN;
-		addr=(uint32_t *)(CFG_RAM);
-		break;
 	case RAM_CITI_CONF:
 		length=CITIROC_LEN;
 		addr=(uint32_t *)(CFG_RAM + CITIROC_OFS);
@@ -68,10 +64,6 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 	uint32_t length=0;
 	uint32_t *addr = (uint32_t *)0x00000000;
 	switch(modul){
-	case NVM_HVPS:
-		length=HVPS_LEN;
-		addr=(uint32_t *)(NVM_ADDR+HVPS_OFFSET);
-		break;
 	case NVM_CITIROC:
 		length=CITIROC_LEN;
 		addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
@@ -106,30 +98,17 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 
 	/* Set length and address pointer to correct module through switch */
 	switch(modul){
-		case NVM_HVPS:
-			length=HVPS_LEN;
-			addr=(uint32_t *)(NVM_ADDR+HVPS_OFFSET);
-			break;
 		case NVM_CITIROC:
 			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
-		// TODO: Gateware currently does not allow reading the CFG_RAM. Remove?
 		case NVM_RESET:
 			length = 4;
 			addr= (uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address */
 			break;
-		case RAM_HVPS:
-			length = HVPS_LEN;
-			addr=(uint32_t *)(RAM_ADDR+HVPS_OFFSET);
-			break;
 		case NVM_SEQFLAG:
 			length = SEQFLAG_LEN;
 			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
-			break;
-		case RAM_HISTO:
-			length = HISTO_LEN;
-			addr=(uint32_t *)(HISTO_ADDR);
 			break;
 		default:
 			return -1; /* If the statement isn't found, return without reading */

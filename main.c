@@ -47,7 +47,7 @@ int main(void)
 {
 	nvm_reset_counter_increment();
 
-//	nvm_restore_msp_seqflags();
+	nvm_restore_msp_seqflags();
 
 	/* Timer Delay Init */
 	timer_delay_init();
@@ -61,6 +61,13 @@ int main(void)
 	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
+
+	if (hvps_get_voltage() == 0xffff) {
+		//uint16_t vb = ?
+		//hvps_set_temporary_voltage(vb);
+	}
+
+
 
 	hk_adc_init();
 
@@ -112,6 +119,8 @@ int main(void)
 				case MSP_OP_SEND_CUBES_DAQ_CONF:
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
+					break;
+				case MSP_OP_SEND_CUBES_ASIC_ID:
 					break;
 			}
 			has_recv=0;

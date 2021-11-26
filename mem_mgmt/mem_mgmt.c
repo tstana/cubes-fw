@@ -76,6 +76,10 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		length = 4;
 		addr=(uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address*/
 		break;
+	case NVM_ASIC_ID:
+		length = ASIC_ID_LEN;
+		addr=(uint32_t *)(NVM_ADDR+ASIC_ID_OFFSET);
+		break;
 	default:
 		return -1;
 	}
@@ -109,6 +113,10 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 		case NVM_SEQFLAG:
 			length = SEQFLAG_LEN;
 			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
+			break;
+		case NVM_ASIC_ID:
+			length = ASIC_ID_LEN;
+			addr=(uint32_t *)(NVM_ADDR+ASIC_ID_OFFSET);
 			break;
 		default:
 			return -1; /* If the statement isn't found, return without reading */
@@ -168,7 +176,7 @@ nvm_status_t nvm_save_msp_seqflags(void)
 void nvm_restore_msp_seqflags(void)
 {
 	msp_seqflags_t seqflags;
-	NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
+	//NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
 	mem_read(NVM_SEQFLAG, (uint32_t *)&seqflags);
 	msp_exp_state_initialize(seqflags);
 }

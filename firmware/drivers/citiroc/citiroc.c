@@ -87,6 +87,27 @@ void citiroc_daq_set_hvps_curr(uint16_t curr)
 	CITIROC->HVPSR |= ((curr & 0xffff)<<16);
 }
 
+void citiroc_calib_set_calibration(uint32_t calibration)
+{
+	uint32_t temp;
+	temp = calibration & 0x7fffffff;
+
+	if (temp != 0)
+	{
+		temp = 50000000 / temp;
+		temp &= ~(0x80000000);
+		temp |= (calibration & 0x80000000);
+
+		CITIROC->CALIB &= ~(0xffffffff);
+		CITIROC->CALIB |= (temp & 0xffffffff);
+	}
+	else
+	{
+		CITIROC->CALIB &= ~(0xffffffff);
+		CITIROC->CALIB |= (0x00000000);
+	}
+}
+
 uint32_t citiroc_hcr_get(uint32_t channel_num)
 {
 	/* each channel is at "channel_num" offset from CH0HCR in memory...*/

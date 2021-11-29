@@ -113,6 +113,8 @@ int main(void)
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 					break;
+				case MSP_OP_SEND_CUBES_CITI_CALIB_CONF:
+					break;
 			}
 			has_recv=0;
 		}

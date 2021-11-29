@@ -75,6 +75,7 @@ struct citiroc_csr {
 	uint32_t	CH30HCR;
 	uint32_t	CH31HCR;
 	uint32_t	OR32HCR;
+	uint32_t	CALIB;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;
@@ -123,6 +124,7 @@ void		citiroc_daq_set_hvps_temp(uint16_t temp);
 void		citiroc_daq_set_citi_temp(uint16_t temp);
 void		citiroc_daq_set_hvps_volt(uint16_t volt);
 void		citiroc_daq_set_hvps_curr(uint16_t curr);
+void		citiroc_calib_set_calibration(uint32_t calibration);
 
 uint32_t	citiroc_hcr_get(uint32_t channel_num);
 void		citiroc_hcr_reset(void);

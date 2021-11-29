@@ -663,6 +663,14 @@ void msp_exprecv_complete(unsigned char opcode)
 				citiroc_read_reg_reset();
 			break;
 		}
+
+		case MSP_OP_SEND_CUBES_CITI_CALIB_CONF:
+		{
+			citiroc_calib_set_calibration((recv_data[0] << 24) |
+				(recv_data[1] << 16) |
+				(recv_data[2] << 8) |
+				(recv_data[3]));
+		}
 	}
 
 	has_recv=opcode;

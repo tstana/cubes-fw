@@ -84,7 +84,7 @@ static uint32_t load_value_u, load_value_l;
 uint64_t temp_value;
 
 /* define logscale tables */
-static uint16_t table1[1025] = {
+static uint16_t table1[1025] = {//table 1 with compression 1, 1, 2, 4
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
@@ -154,7 +154,7 @@ static uint16_t table1[1025] = {
 	2028,2032,2036,2040,2044,2048
 };
 
-static uint16_t table2[129] = {
+static uint16_t table2[129] = {////table 1 with compression  1, 1,2,4,8,16,32,64
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,
@@ -228,13 +228,122 @@ static uint16_t table3[956] = {
 	1791,1823,1856,1919,1983,2048
 };
 
+unsigned long no_binning(unsigned long len, unsigned long i, uint32_t *histo_data){
+	/*Sends full resolution data to send_data_payload, returns the next position in send_data_payload called len*/
+	for (unsigned long j=0; j<HISTO_NUM_BINS_GW/2; j++) {//Fills send_data_payload with histogram data
+		send_data_payload[j*4 + 1 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFF;
+		send_data_payload[j*4 + 0 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>8 & 0xFF;
+		send_data_payload[j*4 + 3 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFF;
+		send_data_payload[j*4 + 2 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>24 & 0xFF;
+	}
+	return len + HISTO_NUM_BINS_GW*2; //2 bytes per bin, HISTO_NUM_BINS_GW = num_bins
+}
 
-static unsigned long prep_payload_data(uint8_t *bin_config)
-{
-    unsigned long i, j, k, len;
+
+unsigned long equal_binning(unsigned long len, unsigned long i, uint16_t num_bins, uint8_t *bin_config,  uint32_t *histo_data){
+	/* Handling the bin compression for bins with equal size. Puts the compressed bins in send_data_payload
+		 * and calculates next position in send_data_payload called len. len is the return variable. */
+	uint8_t bin_size;
+    bin_size = 1<<bin_config[i];
+	for (unsigned long j=0; j<num_bins; j++) {
+		uint32_t bin = 0;
+		for (unsigned long k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {// Compresses histogram data into one bin
+			bin += (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
+			        +(histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+		}
+		bin >>= bin_config[i];
+		send_data_payload[j*2 + 1 + len] = bin & 0xFF;// Compressed bin put into send_data_payload
+		send_data_payload[j*2 + len] = (bin>>8) & 0xFF;
+	}
+	return len + num_bins*2; //2 bytes per bin
+}
+
+
+unsigned long logaritmic_binning(unsigned long len, unsigned long i, uint8_t *bin_config, uint32_t *histo_data){
+	/* Handling the bin compression for the logaritmic tables 1,2,3. Puts the compressed bins in send_data_payload
+	 * and calculates next position in send_data_payload called len. len is the return variable. */
+	unsigned char carry_over;
+	unsigned long k;
+	uint16_t num_bins;
+	uint8_t bin_size;
+	uint32_t bin;
+	carry_over = 0;
+	if (bin_config[i] == 11) {// Checks bin_cofig and picks the corresponding table
+		num_bins = (sizeof(table1)/sizeof(table1[0])) - 1;
+		table = table1;
+	}
+	else if (bin_config[i] == 12) {
+		num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
+		table = table2;
+	}
+	else if (bin_config[i] == 13) {
+		num_bins = (sizeof(table3)/sizeof(table3[0]))-1;
+		table = table3;
+	}
+	for (unsigned long j=0; j<num_bins; j++) {
+		bin_size = *(table+j+1) - *(table+j);//bin size = NextIndex - lastIndex
+		if (carry_over == 0 && bin_size%2 == 0) {
+			carry_over = 0;
+			for (k=*(table+j)/2; k<*(table+j+1)/2; k++) {// Compresses bin according to table
+				bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
+	                    	        + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+			}
+			bin = bin/bin_size;// final size of the bin is the bin average
+		}
+		else if (carry_over == 0 && bin_size%2 == 1) {// To many bytes if bin_size is uneven a carry_over is noted with 1
+			carry_over = 1;
+			if (bin_size != 1) {
+				for (k=*(table+j)/2; k<(*(table+j+1)-1)/2; k++) {
+					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
+	                    	    + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+
+	 		     }
+					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+
+					bin = bin/bin_size;
+			}
+			else if (bin_size == 1) {//full resolution bin
+				k = *(table+j)/2;
+				bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF;
+			}
+		}
+		else if (carry_over == 1 && bin_size%2 == 0) {// carry over with even bin size
+			carry_over = 1;
+			k = (*(table+j)-1)/2;
+			bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
+			for (k=(*(table+j)+1)/2; k<(*(table+j+1)-1)/2; k++) {
+				bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
+	                        + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+	 		}
+			bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+				bin = bin/bin_size;
+		}
+		else if (carry_over == 1 && bin_size%2 == 1) {// carry over with uneven bin size
+			carry_over = 1;
+			carry_over = 0;
+			k = (*(table+j)-1)/2;
+			bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
+			if (bin_size != 1) {
+				for (k=(*(table+j)+1)/2; k<*(table+j+1)/2; k++) {
+					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
+	                    	  + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
+	 		    }
+				bin = bin/bin_size;
+			}
+		}
+			send_data_payload[j*2 + 1 + len] = bin & 0xFF; //store bin
+			send_data_payload[j*2 + len] = bin>>8 & 0xFF;
+			bin = 0;
+	}
+	return len + num_bins*2;//2 bytes per bin
+
+}
+
+static unsigned long prep_payload_data(uint8_t *bin_config){
+	/*Used to compress histogram data into bins of chosen size, puts the compressed bins into
+	 * send_data_payload. returns the variable len = byte length of send_data_payload*/
+    unsigned long i, len;
     uint16_t num_bins;
-    uint8_t bin_size;
-    uint32_t bin;
 
 	uint32_t *histo_data = (uint32_t *)HISTO_ADDR;
 	/* histogram header into send_data_payload */
@@ -245,117 +354,26 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 		send_data_payload[i*4 + 2] = histo_data[i]>>24 & 0xFF;
 	}
 	len = HISTO_HDR_NUM_BYTES;
-
 	for (i=0; i<6; i++) {
 		/* No re-binning */
 		if (bin_config[i] == 0) {
-		    num_bins = HISTO_NUM_BINS_GW;
-			for (j=0; j<HISTO_NUM_BINS_GW/2; j++) {
-				send_data_payload[j*4 + 1 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFF;
-				send_data_payload[j*4 + 0 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>8 & 0xFF;
-				send_data_payload[j*4 + 3 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFF;
-				send_data_payload[j*4 + 2 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>24 & 0xFF;
-			}
-			len = len + HISTO_NUM_BINS_GW*2;
+			len = no_binning(len, i, histo_data);
     	}
-
 		/* Re-binning with equal interval bins */
 		else if (bin_config[i] < 7) {
 			/*  */
-		    num_bins = HISTO_NUM_BINS_GW>>bin_config[i];
-		    bin_size = 1<<bin_config[i];
-			for (j=0; j<num_bins; j++) {
-				bin = 0;
-				for (k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {
-					bin += (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-					        +(histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-				}
-				bin >>= bin_config[i];
-				send_data_payload[j*2 + 1 + len] = bin & 0xFF;
-				send_data_payload[j*2 + len] = (bin>>8) & 0xFF;
-			}
-			len = len + num_bins*2;
+		    num_bins = HISTO_NUM_BINS_GW>>bin_config[i];// HISTO_NUM_BINS_GW
+		    len = equal_binning(len, i, num_bins, bin_config, histo_data);
     	}
-
 	    /* Log-scale binning */
 		else if ((10 < bin_config[i]) && (bin_config[i] < 14)) {
-		    unsigned char carry_over;
-		    carry_over = 0;
-			if (bin_config[i] == 11) {
-				num_bins = (sizeof(table1)/sizeof(table1[0])) - 1;
-				table = table1;
-			}
-			else if (bin_config[i] == 12) {
-				num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
-				table = table2;
-			}
-			else if (bin_config[i] == 13) {
-			    num_bins = (sizeof(table3)/sizeof(table3[0]))-1;
-			    table = table3;
-			}
-			for (j=0; j<num_bins; j++) {
-			    bin_size = *(table+j+1) - *(table+j);
-				if (carry_over == 0 && bin_size%2 == 0) {
-					carry_over = 0;
-					for (k=*(table+j)/2; k<*(table+j+1)/2; k++) {
-					    bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-                    	        + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
- 		        	}
-					bin = bin/bin_size;
-				}
-				else if (carry_over == 0 && bin_size%2 == 1) {
-					carry_over = 1;
-					if (bin_size != 1) {
-						for (k=*(table+j)/2; k<(*(table+j+1)-1)/2; k++) {
-						    bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-                    	            + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-
- 		        		}
-						bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-
-						bin = bin/bin_size;
-					}
-					else if (bin_size == 1) {
-						k = *(table+j)/2;
-						bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF;
-					}
-				}
-				else if (carry_over == 1 && bin_size%2 == 0) {
-					carry_over = 1;
-					k = (*(table+j)-1)/2;
-					bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
-					for (k=(*(table+j)+1)/2; k<(*(table+j+1)-1)/2; k++) {
-					    bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-                                + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
- 		        		}
-					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-					bin = bin/bin_size;
-				}
-				else if (carry_over == 1 && bin_size%2 == 1) {
-					carry_over = 0;
-					k = (*(table+j)-1)/2;
-					bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
-					if (bin_size != 1) {
-						for (k=(*(table+j)+1)/2; k<*(table+j+1)/2; k++) {
-						    bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-                    	            + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
- 		        			}
-						bin = bin/bin_size;
-					}
-				}
-				send_data_payload[j*2 + 1 + len] = bin & 0xFF;
-				send_data_payload[j*2 + len] = bin>>8 & 0xFF;
-				bin = 0;
-			}
-			len = len + num_bins*2;
+		    len = logaritmic_binning(len, i, bin_config, histo_data);
 		}
+		/* Set the `bin_cfg` fields in the Histo-RAM header */
 	}
-
-	/* Set the `bin_cfg` fields in the Histo-RAM header */
 	for (i = 0; i < 6; i++) {
 		send_data_payload[HISTO_HDR_NUM_BYTES-6+i] = bin_cfg[i];
 	}
-
 	return len;
 }
 

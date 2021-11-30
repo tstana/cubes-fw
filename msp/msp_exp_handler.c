@@ -625,12 +625,18 @@ void msp_exprecv_complete(unsigned char opcode)
 			mem_nvm_write(NVM_CITIROC, recv_data);
 			break;
 
-		case MSP_OP_APPLY_CUBES_CITI_CONF:
-			uint8_t *nvm_cfg_addr=(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(recv_data[0]*CITIROC_LEN));
-			mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
-			citiroc_send_slow_control();
+		case MSP_OP_SELECT_NVM_CITI_CONF:
+		{
+			uint8_t cfg_id = (uint8_t)recv_data[0];
+			uint8_t *nvm_cfg_addr = 
+				(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
+			if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
+				mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
+				citiroc_send_slow_control();
+			}
 			break;
-
+		}
+		
 		case MSP_OP_SEND_CUBES_PROB_CONF:
             mem_ram_write(RAM_CITI_PROBE, recv_data);
             citiroc_send_probes();

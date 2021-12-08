@@ -84,7 +84,7 @@ static uint32_t load_value_u, load_value_l;
 uint64_t temp_value;
 
 /* define logscale tables */
-static uint16_t table1[1025] = {//table 1 with compression 1, 1, 2, 4
+static uint16_t table1[1025] = {
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
@@ -154,7 +154,7 @@ static uint16_t table1[1025] = {//table 1 with compression 1, 1, 2, 4
 	2028,2032,2036,2040,2044,2048
 };
 
-static uint16_t table2[129] = {////table 1 with compression  1, 1,2,4,8,16,32,64
+static uint16_t table2[129] = {
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 	17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
 	34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,
@@ -167,213 +167,149 @@ static uint16_t table2[129] = {////table 1 with compression  1, 1,2,4,8,16,32,64
 	1600,1664,1728,1792,1856,1920,1984,2048
 };
 
-static uint16_t table3[956] = {
-	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
-	19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,
-	42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,
-	65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,
-	88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,
-	108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,
-	125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,
-	142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,
-	159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
-	176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,
-	193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,
-	210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,
-	227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,
-	244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,
-	261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,
-	278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,
-	295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,
-	312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,
-	329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,
-	346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,
-	363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,
-	380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,
-	397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,
-	414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,
-	431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,
-	448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,
-	465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,
-	482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,
-	499,500,501,502,503,504,505,506,507,508,509,510,511,512,514,516,518,
-	520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,
-	554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,
-	588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,
-	622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,
-	656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,
-	690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,
-	724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,
-	758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,
-	792,794,796,798,800,802,804,806,808,810,812,814,816,818,820,822,824,
-	826,828,830,832,834,836,838,840,842,844,846,848,850,852,854,856,858,
-	860,862,864,866,868,870,872,874,876,878,880,882,884,886,888,890,892,
-	894,896,898,900,902,904,906,908,910,912,914,916,918,920,922,924,926,
-	928,930,932,934,936,938,940,942,944,946,948,950,952,954,956,958,960,
-	962,964,966,968,970,972,974,976,978,980,982,984,986,988,990,992,994,
-	996,998,1000,1002,1004,1006,1008,1010,1012,1014,1016,1018,1020,1022,
-	1024,1028,1032,1036,1040,1044,1048,1052,1056,1060,1064,1068,1072,1076,
-	1080,1084,1088,1092,1096,1100,1104,1108,1112,1116,1120,1124,1128,1132,
-	1136,1140,1144,1148,1152,1156,1160,1164,1168,1172,1176,1180,1184,1188,
-	1192,1196,1200,1204,1208,1212,1216,1220,1224,1228,1232,1236,1240,1244,
-	1248,1252,1256,1260,1264,1268,1272,1276,1280,1284,1288,1292,1296,1300,
-	1304,1308,1312,1316,1320,1324,1328,1332,1336,1340,1344,1348,1352,1356,
-	1360,1364,1368,1372,1376,1380,1384,1388,1392,1396,1400,1404,1408,1412,
-	1416,1420,1424,1428,1432,1436,1440,1444,1448,1452,1456,1460,1464,1468,
-	1472,1476,1480,1484,1488,1492,1496,1500,1504,1508,1512,1516,1520,1524,
-	1528,1532,1536,1540,1544,1548,1552,1556,1560,1564,1568,1572,1576,1580,
-	1584,1588,1592,1596,1600,1604,1608,1612,1616,1620,1624,1628,1632,1636,
-	1640,1644,1648,1652,1656,1660,1664,1668,1672,1676,1680,1684,1688,1692,
-	1696,1700,1704,1708,1712,1716,1720,1724,1728,1732,1736,1743,1751,1760,
-	1791,1823,1856,1919,1983,2048
-};
-
-unsigned long no_binning(unsigned long len, unsigned long i, uint32_t *histo_data){
-	/*Sends full resolution data to send_data_payload, returns the next position in send_data_payload called len*/
-	for (unsigned long j=0; j<HISTO_NUM_BINS_GW/2; j++) {//Fills send_data_payload with histogram data
-		send_data_payload[j*4 + 1 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFF;
-		send_data_payload[j*4 + 0 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>8 & 0xFF;
-		send_data_payload[j*4 + 3 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFF;
-		send_data_payload[j*4 + 2 + len] = histo_data[j + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>24 & 0xFF;
-	}
-	return len + HISTO_NUM_BINS_GW*2; //2 bytes per bin, HISTO_NUM_BINS_GW = num_bins
-}
-
-
-unsigned long equal_binning(unsigned long len, unsigned long i, uint16_t num_bins, uint8_t *bin_config,  uint32_t *histo_data){
-	/* Handling the bin compression for bins with equal size. Puts the compressed bins in send_data_payload
-		 * and calculates next position in send_data_payload called len. len is the return variable. */
-	uint8_t bin_size;
-    bin_size = 1<<bin_config[i];
-	for (unsigned long j=0; j<num_bins; j++) {
-		uint32_t bin = 0;
-		for (unsigned long k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {// Compresses histogram data into one bin
-			bin += (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-			        +(histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-		}
-		bin >>= bin_config[i];
-		send_data_payload[j*2 + 1 + len] = bin & 0xFF;// Compressed bin put into send_data_payload
-		send_data_payload[j*2 + len] = (bin>>8) & 0xFF;
-	}
-	return len + num_bins*2; //2 bytes per bin
-}
-
-
-unsigned long logaritmic_binning(unsigned long len, unsigned long i, uint8_t *bin_config, uint32_t *histo_data){
-	/* Handling the bin compression for the logaritmic tables 1,2,3. Puts the compressed bins in send_data_payload
-	 * and calculates next position in send_data_payload called len. len is the return variable. */
-	unsigned char carry_over;
-	unsigned long k;
-	uint16_t num_bins;
-	uint8_t bin_size;
-	uint32_t bin;
-	carry_over = 0;
-	if (bin_config[i] == 11) {// Checks bin_cofig and picks the corresponding table
-		num_bins = (sizeof(table1)/sizeof(table1[0])) - 1;
-		table = table1;
-	}
-	else if (bin_config[i] == 12) {
-		num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
-		table = table2;
-	}
-	else if (bin_config[i] == 13) {
-		num_bins = (sizeof(table3)/sizeof(table3[0]))-1;
-		table = table3;
-	}
-	for (unsigned long j=0; j<num_bins; j++) {
-		bin_size = *(table+j+1) - *(table+j);//bin size = NextIndex - lastIndex
-		if (carry_over == 0 && bin_size%2 == 0) {
-			carry_over = 0;
-			for (k=*(table+j)/2; k<*(table+j+1)/2; k++) {// Compresses bin according to table
-				bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-	                    	        + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-			}
-			bin = bin/bin_size;// final size of the bin is the bin average
-		}
-		else if (carry_over == 0 && bin_size%2 == 1) {// To many bytes if bin_size is uneven a carry_over is noted with 1
-			carry_over = 1;
-			if (bin_size != 1) {
-				for (k=*(table+j)/2; k<(*(table+j+1)-1)/2; k++) {
-					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-	                    	    + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-
-	 		     }
-					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-
-					bin = bin/bin_size;
-			}
-			else if (bin_size == 1) {//full resolution bin
-				k = *(table+j)/2;
-				bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF;
-			}
-		}
-		else if (carry_over == 1 && bin_size%2 == 0) {// carry over with even bin size
-			carry_over = 1;
-			k = (*(table+j)-1)/2;
-			bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
-			for (k=(*(table+j)+1)/2; k<(*(table+j+1)-1)/2; k++) {
-				bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-	                        + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-	 		}
-			bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-				bin = bin/bin_size;
-		}
-		else if (carry_over == 1 && bin_size%2 == 1) {// carry over with uneven bin size
-			carry_over = 1;
-			carry_over = 0;
-			k = (*(table+j)-1)/2;
-			bin = histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF;
-			if (bin_size != 1) {
-				for (k=(*(table+j)+1)/2; k<*(table+j+1)/2; k++) {
-					bin = bin + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4]>>16 & 0xFFFF)
-	                    	  + (histo_data[k + i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4] & 0xFFFF);
-	 		    }
-				bin = bin/bin_size;
-			}
-		}
-			send_data_payload[j*2 + 1 + len] = bin & 0xFF; //store bin
-			send_data_payload[j*2 + len] = bin>>8 & 0xFF;
-			bin = 0;
-	}
-	return len + num_bins*2;//2 bytes per bin
-
-}
-
-static unsigned long prep_payload_data(uint8_t *bin_config){
-	/*Used to compress histogram data into bins of chosen size, puts the compressed bins into
-	 * send_data_payload. returns the variable len = byte length of send_data_payload*/
-    unsigned long i, len;
+static unsigned long prep_payload_data(uint8_t *bin_config)
+{
+    unsigned long i, j, k, len;
     uint16_t num_bins;
+    uint8_t bin_size;
+    uint32_t bin;
+
+    uint16_t send_index; // start index used for send data payload
+    uint16_t data_index; // Index used to access data form histo_data
+    uint16_t start_index; // first index in histo_data
 
 	uint32_t *histo_data = (uint32_t *)HISTO_ADDR;
 	/* histogram header into send_data_payload */
 	for (i=0; i<HISTO_HDR_NUM_BYTES/4; i++) {
-		send_data_payload[i*4 + 1] = histo_data[i] & 0xFF;
-		send_data_payload[i*4 + 0] = histo_data[i]>>8 & 0xFF;
-		send_data_payload[i*4 + 3] = histo_data[i]>>16 & 0xFF;
-		send_data_payload[i*4 + 2] = histo_data[i]>>24 & 0xFF;
+		send_index = i*4;
+		send_data_payload[send_index + 1] = histo_data[i] & 0xFF;
+		send_data_payload[send_index + 0] = histo_data[i]>>8 & 0xFF;
+		send_data_payload[send_index + 3] = histo_data[i]>>16 & 0xFF;
+		send_data_payload[send_index + 2] = histo_data[i]>>24 & 0xFF;
 	}
 	len = HISTO_HDR_NUM_BYTES;
+
 	for (i=0; i<6; i++) {
 		/* No re-binning */
+		start_index = i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4;
+
 		if (bin_config[i] == 0) {
-			len = no_binning(len, i, histo_data);
+			for (j=0; j<HISTO_NUM_BINS_GW/2; j++) {
+				send_index = j*4 + len;
+				data_index = j + start_index;
+				send_data_payload[send_index + 1] = histo_data[data_index] & 0xFF;
+				send_data_payload[send_index] = histo_data[data_index]>>8 & 0xFF;
+				send_data_payload[send_index + 3] = histo_data[data_index]>>16 & 0xFF;
+				send_data_payload[send_index + 2] = histo_data[data_index]>>24 & 0xFF;
+			}
+			len = len + HISTO_NUM_BINS_GW*2;
     	}
+
 		/* Re-binning with equal interval bins */
 		else if (bin_config[i] < 7) {
 			/*  */
-		    num_bins = HISTO_NUM_BINS_GW>>bin_config[i];// HISTO_NUM_BINS_GW
-		    len = equal_binning(len, i, num_bins, bin_config, histo_data);
+		    num_bins = HISTO_NUM_BINS_GW>>bin_config[i];
+		    bin_size = 1<<bin_config[i];
+			for (j=0; j<num_bins; j++) {
+				bin = 0;
+				for (k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {
+					data_index = k + start_index;
+
+					bin += (histo_data[data_index]>>16 & 0xFFFF)
+					        +(histo_data[data_index] & 0xFFFF);
+				}
+				bin >>= bin_config[i];
+				send_index = j*2 + len;
+				send_data_payload[send_index + 1 + len] = bin & 0xFF;
+				send_data_payload[send_index] = (bin>>8) & 0xFF;
+			}
+			len = len + num_bins*2;
     	}
+
 	    /* Log-scale binning */
 		else if ((10 < bin_config[i]) && (bin_config[i] < 14)) {
-		    len = logaritmic_binning(len, i, bin_config, histo_data);
+		    unsigned char carry_over;
+		    carry_over = 0;
+			if (bin_config[i] == 11) {
+				num_bins = (sizeof(table1)/sizeof(table1[0])) - 1;
+				table = table1;
+			}
+			else if (bin_config[i] == 12) {
+				num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
+				table = table2;
+			}
+
+			for (j=0; j<num_bins; j++) {
+			    bin_size = *(table+j+1) - *(table+j);
+				if (carry_over == 0 && bin_size%2 == 0) {
+					carry_over = 0;
+					for (k=*(table+j)/2; k<*(table+j+1)/2; k++) {
+						data_index = k + start_index;
+
+					    bin = bin + (histo_data[data_index]>>16 & 0xFFFF)
+                    	        + (histo_data[data_index] & 0xFFFF);
+ 		        	}
+					bin = bin/bin_size;
+				}
+				else if (carry_over == 0 && bin_size%2 == 1) {
+					carry_over = 1;
+					if (bin_size != 1) {
+						for (k=*(table+j)/2; k<(*(table+j+1)-1)/2; k++) {
+							data_index = k + start_index;
+						    bin = bin + (histo_data[data_index]>>16 & 0xFFFF)
+                    	            + (histo_data[data_index] & 0xFFFF);
+
+ 		        		}
+						bin = bin + (histo_data[k + start_index] & 0xFFFF);
+
+						bin = bin/bin_size;
+					}
+					else if (bin_size == 1) {
+						k = *(table+j)/2;
+						bin = histo_data[k + start_index] & 0xFFFF;
+					}
+				}
+				else if (carry_over == 1 && bin_size%2 == 0) {
+					carry_over = 1;
+					k = (*(table+j)-1)/2;
+					bin = histo_data[k + start_index]>>16 & 0xFFFF;
+					for (k=(*(table+j)+1)/2; k<(*(table+j+1)-1)/2; k++) {
+
+						data_index = k + start_index;
+					    bin = bin + (histo_data[data_index]>>16 & 0xFFFF)
+                                + (histo_data[data_index] & 0xFFFF);
+ 		        		}
+					bin = bin + (histo_data[k + start_index] & 0xFFFF);
+					bin = bin/bin_size;
+				}
+				else if (carry_over == 1 && bin_size%2 == 1) {
+					carry_over = 0;
+					k = (*(table+j)-1)/2;
+					bin = histo_data[k + start_index]>>16 & 0xFFFF;
+					if (bin_size != 1) {
+						for (k=(*(table+j)+1)/2; k<*(table+j+1)/2; k++) {
+							data_index = k + start_index;
+
+						    bin = bin + (histo_data[data_index]>>16 & 0xFFFF)
+                    	            + (histo_data[data_index] & 0xFFFF);
+ 		        			}
+						bin = bin/bin_size;
+					}
+				}
+				send_index = j*2 + len;
+				send_data_payload[send_index + 1] = bin & 0xFF;
+				send_data_payload[send_index] = bin>>8 & 0xFF;
+				bin = 0;
+			}
+			len = len + num_bins*2;
 		}
-		/* Set the `bin_cfg` fields in the Histo-RAM header */
 	}
+
+	/* Set the `bin_cfg` fields in the Histo-RAM header */
 	for (i = 0; i < 6; i++) {
 		send_data_payload[HISTO_HDR_NUM_BYTES-6+i] = bin_cfg[i];
 	}
+
 	return len;
 }
 

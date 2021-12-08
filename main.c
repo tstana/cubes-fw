@@ -58,7 +58,7 @@ int main(void)
     /* Let GPIO0 LED flash to indicate power-on status */
 	led_blink(LED_BLINK_RESET, 100);
 
-	msp_i2c_init(MSP_EXP_ADDR);
+	msp_i2c_init(I2CADDR_CUBES1);
 
 	hvps_init();
 

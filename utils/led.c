@@ -33,11 +33,6 @@
 
 static uint32_t g_gpio_pattern;
 
-/* Local function prototypes */
-static void led_turn_on(void);
-static void led_turn_off(void);
-
-
 
 /**
  * @brief Initialization function for LED at GPIO0 called upon MSS power on reset
@@ -76,19 +71,19 @@ void led_init(void)
  * - Should be called after led_init() function since it configures
  * GPIO0 in OUTPUT_MODE upon MSS power on reset.
  *
- * @param blinks[in]            Number of blinks for LED
- * @param milliseconds[in]      Blink delay in milliseconds
+ * @param blinks[in]     Number of blinks for LED
+ * @param ms_delay[in]   Blink delay in ms_delay
  *
  */
-void led_blink(led_blink_t num_blinks, uint32_t milliseconds)
+void led_blink(led_blink_t num_blinks, uint32_t ms_delay)
 {
     for(int i = num_blinks; i > 0; i--)
     {
         // since LED is already in ON state
         led_turn_on();
-        timer_delay(milliseconds);
+        timer_delay(ms_delay);
         led_turn_off();
-        timer_delay(milliseconds);
+        timer_delay(ms_delay);
     }
 }
 

@@ -36,7 +36,9 @@ typedef enum {
 
 
 void led_init(void);
-void led_blink(led_blink_t blinks, uint32_t milliseconds);
+void led_blink(led_blink_t blinks, uint32_t ms_delay);
+void led_turn_on(void);
+void led_turn_off(void);
 
 
 #endif /* UTILS_LED_H_ */

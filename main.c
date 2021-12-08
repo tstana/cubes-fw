@@ -56,8 +56,9 @@ int main(void)
     /* Led Init to configure GPIO0 */
 	led_init();
 
-    /* Let GPIO0 LED flash to indicate power-on status */
+    /* Flash on-board LED to indicate power-on; leave LED on after. */
 	led_blink(LED_BLINK_RESET, 100);
+	led_turn_on();
 
 	msp_i2c_init(I2CADDR_CUBES1);
 

@@ -12,6 +12,7 @@
 #include "../mem_mgmt/mem_mgmt.h"
 
 #include "msp_i2c.h"
+#include "msp_exp.h"
 
 
 /*

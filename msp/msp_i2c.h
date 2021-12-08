@@ -22,14 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef I2C_COMM_INT_H_
-#define I2C_COMM_INT_H_
+#ifndef MSP_I2C_H
+#define MSP_I2C_H
 
-#include <string.h>
-#include <stdio.h>
-
-#include "msp_exp.h"
-
+#include <stdint.h>
 
 #define I2CADDR_CUBES1    (0x35)
 #define I2CADDR_CUBES2    (0x36)
@@ -38,4 +34,4 @@
 void msp_i2c_init(uint8_t slave_adress);
 
 
-#endif /* I2C_COMM_INT_H_ */
+#endif /* MSP_I2C_H */

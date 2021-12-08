@@ -26,6 +26,10 @@
 #include "msp_i2c.h"
 #include "msp_exp.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "../mem_mgmt/mem_mgmt.h"
 
 #include "../hvps/hvps_c11204-02.h"
@@ -38,7 +42,6 @@
 #include "CMSIS/system_m2sxxx.h"
 
 #include "../hk_adc/hk_adc.h"
-#include <stdlib.h>
 
 
 

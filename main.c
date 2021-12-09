@@ -60,7 +60,7 @@ int main(void)
 	led_blink(LED_POWER_ON);
 	led_turn_on();
 
-	msp_i2c_init(I2CADDR_CUBES1);
+	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
 

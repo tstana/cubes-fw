@@ -27,10 +27,6 @@
 
 #include <stdint.h>
 
-#define I2CADDR_CUBES1    (0x35)
-#define I2CADDR_CUBES2    (0x36)
-
-
 void msp_i2c_init(uint8_t slave_adress);
 
 

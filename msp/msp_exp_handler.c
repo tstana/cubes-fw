@@ -625,7 +625,7 @@ void msp_exprecv_complete(unsigned char opcode)
 			mem_nvm_write(NVM_CITIROC, recv_data);
 			break;
 
-		case MSP_OP_APPLY_CUBES_CITI_CONF:
+		case MSP_OP_SELECT_NVM_CITI_CONF:
 		{
 			uint8_t cfg_id = (uint8_t)recv_data[0];
 			uint8_t *nvm_cfg_addr = 

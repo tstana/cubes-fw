@@ -47,7 +47,7 @@
 #define RAM_ADDR        (0x20000000u)
 #define NVM_ADDR        (0x60000000u)
 #define SEQFLAG_OFFSET  (0xF100)
-#define CITIROC_OFFSET  (0xFE10)
+#define CITIROC_OFFSET  (0x10000)
 
 /*
  * Histogram Organization

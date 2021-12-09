@@ -34,6 +34,15 @@
 static uint32_t g_gpio_pattern;
 
 
+static inline void blink(uint32_t ms_delay)
+{
+	timer_delay(ms_delay);
+	led_turn_on();
+	timer_delay(ms_delay);
+	led_turn_off();
+}
+
+
 /**
  * @brief Initialization function for LED at GPIO0 called upon MSS power on reset
  *
@@ -58,7 +67,6 @@ void led_init(void)
 }
 
 
-
 /**
  * @brief Blink function for LED at GPIO0
  *
@@ -71,20 +79,36 @@ void led_init(void)
  * - Should be called after led_init() function since it configures
  * GPIO0 in OUTPUT_MODE upon MSS power on reset.
  *
- * @param blinks[in]     Number of blinks for LED
+ * @param blink_type[in] Type of blink requested, \sa led_blink_t
  * @param ms_delay[in]   Blink delay in ms_delay
  *
  */
-void led_blink(led_blink_t num_blinks, uint32_t ms_delay)
+void led_blink(led_blink_t blink_type)
 {
-    for(int i = num_blinks; i > 0; i--)
-    {
-        // since LED is already in ON state
-        led_turn_on();
-        timer_delay(ms_delay);
-        led_turn_off();
-        timer_delay(ms_delay);
-    }
+	int i;
+
+	led_turn_off();
+
+	switch (blink_type) {
+	case LED_BLINK_POWER_ON:
+		for (i = 0; i < 4; ++i) {
+			blink(500);
+		}
+		break;
+	case LED_BLINK_DAQ:
+		for (i = 0; i < 1; ++i) {
+			blink(1);
+		}
+		break;
+	case LED_BLINK_POWER_OFF:
+		for (i = 0; i < 8; ++i) {
+			blink(250);
+		}
+		break;
+	default:
+		for (;;)
+			blink(100);
+	}
 }
 
 

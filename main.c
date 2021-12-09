@@ -57,7 +57,7 @@ int main(void)
 	led_init();
 
     /* Flash on-board LED to indicate power-on; leave LED on after. */
-	led_blink(LED_BLINK_RESET, 100);
+	led_blink(LED_BLINK_POWER_ON);
 	led_turn_on();
 
 	msp_i2c_init(I2CADDR_CUBES1);

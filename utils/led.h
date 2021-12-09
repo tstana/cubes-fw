@@ -27,16 +27,25 @@
 #define UTILS_LED_H_
 
 
-/* LED Blink Type Definitions - based on number of times LED blinks, we can identify type of error occurred in MSS*/
+/*
+ * LED Blink Type Definitions - based on number of times LED blinks, we can
+ * identify the type of error that occurred in MSS.
+ */
 typedef enum {
-    LED_BLINK_DAQ = 1,         /* Blink 1 time inside TIM IRQ Handler to indicate completion of DAQ duration */
-    LED_BLINK_RESET = 4,       /* Blink 4 times to indicate MSS power-on reset */
-    LED_BLINK_OTHER_ERROR      /* Blink 5 times for another type of error */
+	/* Blink 4 times with 500 ms on/off period to indicate MSS power-on reset */
+    LED_BLINK_POWER_ON      = 1,
+	/*
+	 * Blink once for 1 s inside TIM IRQ Handler to indicate completion of DAQ
+	 * duration
+	 */
+    LED_BLINK_DAQ           = 2,
+	/* Blink 8 times with 250 ms on/off period to indicate POWER_OFF MSP cmd. */
+    LED_BLINK_POWER_OFF     = 3
 } led_blink_t;
 
 
 void led_init(void);
-void led_blink(led_blink_t blinks, uint32_t ms_delay);
+void led_blink(led_blink_t blink_type);
 void led_turn_on(void);
 void led_turn_off(void);
 

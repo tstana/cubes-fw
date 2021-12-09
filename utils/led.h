@@ -32,15 +32,10 @@
  * identify the type of error that occurred in MSS.
  */
 typedef enum {
-	/* Blink 4 times with 500 ms on/off period to indicate MSS power-on reset */
-    LED_BLINK_POWER_ON      = 1,
-	/*
-	 * Blink once for 1 s inside TIM IRQ Handler to indicate completion of DAQ
-	 * duration
-	 */
-    LED_BLINK_DAQ           = 2,
-	/* Blink 8 times with 250 ms on/off period to indicate POWER_OFF MSP cmd. */
-    LED_BLINK_POWER_OFF     = 3
+	/* Blink 4 times with 250 ms on/off period to indicate MSS power-on reset */
+    LED_POWER_ON     = 1,
+	/* Blink 16 times with 100 ms on/off period to indicate POWER_OFF MSP cmd. */
+    LED_POWER_OFF    = 2
 } led_blink_t;
 
 

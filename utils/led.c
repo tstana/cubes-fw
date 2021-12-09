@@ -90,19 +90,14 @@ void led_blink(led_blink_t blink_type)
 	led_turn_off();
 
 	switch (blink_type) {
-	case LED_BLINK_POWER_ON:
+	case LED_POWER_ON:
 		for (i = 0; i < 4; ++i) {
-			blink(500);
-		}
-		break;
-	case LED_BLINK_DAQ:
-		for (i = 0; i < 1; ++i) {
-			blink(1);
-		}
-		break;
-	case LED_BLINK_POWER_OFF:
-		for (i = 0; i < 8; ++i) {
 			blink(250);
+		}
+		break;
+	case LED_POWER_OFF:
+		for (i = 0; i < 16; ++i) {
+			blink(100);
 		}
 		break;
 	default:

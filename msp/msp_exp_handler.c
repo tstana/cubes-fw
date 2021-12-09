@@ -707,7 +707,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			hvps_turn_off();
 			citiroc_daq_stop();
 			nvm_save_msp_seqflags();
-			led_blink(LED_BLINK_POWER_OFF);
+			led_blink(LED_POWER_OFF);
 			break;
 		case MSP_OP_CUBES_DAQ_START:
 			citiroc_hcr_reset();

@@ -174,10 +174,9 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
     uint8_t bin_size;
     uint32_t bin;
 
-    uint16_t send_index; // start index used for send data payload
-    uint16_t data_index; // Index used to access data form histo_data
-    uint16_t start_index; // first index in histo_data
-
+    unsigned long send_index; // start index used for send data payload
+    unsigned long data_index; // Index used to access data form histo_data
+    unsigned long start_index; // first index in histo_data
 	uint32_t *histo_data = (uint32_t *)HISTO_ADDR;
 	/* histogram header into send_data_payload */
 	for (i=0; i<HISTO_HDR_NUM_BYTES/4; i++) {

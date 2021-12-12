@@ -87,24 +87,19 @@ void citiroc_daq_set_hvps_curr(uint16_t curr)
 	CITIROC->HVPSR |= ((curr & 0xffff)<<16);
 }
 
-void citiroc_calib_set_calibration(uint32_t calibration)
+void citiroc_calib_set(uint32_t calibration)
 {
 	uint32_t temp;
-	temp = calibration & 0x7fffffff;
+	temp = calibration & CALIBPER;
 
-	if (temp != 0)  //For frequencies greater than zero, calculate clock divider value
+	if (temp != 0)  //For period greater than zero, apply the register
 	{
-		temp = 50000000 / temp;
-		temp &= ~(0x80000000); //Resetting MSB enable bit
-		temp |= (calibration & 0x80000000); //Check MSB for enable bit in input value
-
 		CITIROC->CALIB &= ~(0xffffffff);
-		CITIROC->CALIB |= (temp & 0xffffffff);
+		CITIROC->CALIB |= (calibration & 0xffffffff);
 	}
-	else  //If calibration frequency is zero, disable pulse module to avoid division with zero
+	else  //If calibration period is zero, disable pulse module
 	{
 		CITIROC->CALIB &= ~(0xffffffff);
-		CITIROC->CALIB |= (0x00000000);
 	}
 }
 

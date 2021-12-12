@@ -664,9 +664,9 @@ void msp_exprecv_complete(unsigned char opcode)
 			break;
 		}
 
-		case MSP_OP_SEND_CUBES_CITI_CALIB_CONF:
+		case MSP_OP_SEND_CUBES_CALIB_PULSE_CONF:
 		{
-			citiroc_calib_set_calibration((recv_data[0] << 24) |
+			citiroc_calib_set((recv_data[0] << 24) |
 				(recv_data[1] << 16) |
 				(recv_data[2] << 8) |
 				(recv_data[3]));

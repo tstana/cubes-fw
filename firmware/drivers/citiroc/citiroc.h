@@ -75,7 +75,7 @@ struct citiroc_csr {
 	uint32_t	CH30HCR;
 	uint32_t	CH31HCR;
 	uint32_t	OR32HCR;
-	uint32_t	CALIBPULSE;
+	uint32_t	ASICCALR;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;

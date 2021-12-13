@@ -106,6 +106,10 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
+		case NVM_CITIROC_CONF_NO:
+            length=CITIROC_NO_LEN;
+            addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_OFFSET);
+            break;
 		case NVM_RESET:
 			length = 4;
 			addr= (uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address */

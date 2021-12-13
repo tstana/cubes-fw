@@ -40,7 +40,7 @@
 
 #define CITIROC_OFS     (0x00)
 #define CITIROC_LEN     (144u)
-#define CITIROC_NO_LEN	(1u)
+#define CITIROC_NO_LEN	(4u)
 #define PROBE_OFS       (0x90)
 #define PROBE_LEN       (32u)
 

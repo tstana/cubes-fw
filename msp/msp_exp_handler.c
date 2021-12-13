@@ -631,6 +631,7 @@ void msp_exprecv_complete(unsigned char opcode)
 			uint8_t *nvm_cfg_addr = 
 				(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
 			if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
+				mem_nvm_write(NVM_CITIROC_CONF_NO, &cfg_id);
 				mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
 				citiroc_send_slow_control();
 			}

@@ -34,8 +34,6 @@
 #define NVM_HVPS        (0x02u)
 #define NVM_SEQFLAG     (0x03u)
 #define NVM_RESET       (0x04u)
-#define NVM_ASIC_ID		(0x05u)
-#define NVM_ASIC_CONF	(0x06u)
 #define RAM_CITI_CONF   (0x11u)
 #define RAM_CITI_PROBE  (0x14u)
 
@@ -45,12 +43,9 @@
 #define PROBE_LEN       (32u)
 
 #define SEQFLAG_LEN     sizeof(msp_seqflags_t)
-#define ASIC_ID_LEN		(0x01)
 
 #define RAM_ADDR        	(0x20000000u)
 #define NVM_ADDR        	(0x60000000u)
-#define ASIC_ID_OFFSET		(0x00000)
-#define ASIC_CONF_OFFSET 	(0x00001)
 #define CITIROC_OFFSET  	(0xF010u)
 #define SEQFLAG_OFFSET  	(0xF100)
 

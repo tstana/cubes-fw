@@ -76,10 +76,6 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		length = 4;
 		addr=(uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address*/
 		break;
-	case NVM_ASIC_ID:
-		length = ASIC_ID_LEN;
-		addr=(uint32_t *)(NVM_ADDR+ASIC_ID_OFFSET);
-		break;
 	default:
 		return -1;
 	}
@@ -113,10 +109,6 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 		case NVM_SEQFLAG:
 			length = SEQFLAG_LEN;
 			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
-			break;
-		case NVM_ASIC_ID:
-			length = ASIC_ID_LEN;
-			addr=(uint32_t *)(NVM_ADDR+ASIC_ID_OFFSET);
 			break;
 		default:
 			return -1; /* If the statement isn't found, return without reading */

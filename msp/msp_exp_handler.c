@@ -664,10 +664,6 @@ void msp_exprecv_complete(unsigned char opcode)
 				citiroc_read_reg_reset();
 			break;
 		}
-		case MSP_OP_SEND_CUBES_ASIC_ID:
-		{
-
-		}
 	}
 	if (++msg_acc >= SEQ_FLAG_SAVE_INTERVAL) {
 		msg_acc = 0;

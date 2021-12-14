@@ -113,8 +113,6 @@ int main(void)
 					break;
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 					break;
-				case MSP_OP_SEND_CUBES_ASIC_ID:
-					break;
 			}
 			has_recv=0;
 		}

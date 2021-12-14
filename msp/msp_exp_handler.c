@@ -551,6 +551,7 @@ void msp_exprecv_data(unsigned char opcode,
  */
 void msp_exprecv_complete(unsigned char opcode)
 {
+	static uint8_t msg_acc = 0;
 	switch (opcode) {
 		case MSP_OP_SEND_TIME:
 			cubes_set_time((recv_data[0] << 24) |
@@ -667,6 +668,10 @@ void msp_exprecv_complete(unsigned char opcode)
 		{
 
 		}
+	}
+	if (++msg_acc >= SEQ_FLAG_SAVE_INTERVAL) {
+		msg_acc = 0;
+		nvm_save_msp_seqflags();
 	}
 
 	has_recv=opcode;

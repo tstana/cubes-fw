@@ -54,6 +54,8 @@
 #define CITIROC_OFFSET  	(0xF010u)
 #define SEQFLAG_OFFSET  	(0xF100)
 
+#define SEQ_FLAG_SAVE_INTERVAL (16u)
+
 /*
  * Histogram Organization
  *

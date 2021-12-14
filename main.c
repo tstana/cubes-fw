@@ -62,13 +62,6 @@ int main(void)
 
 	hvps_init();
 
-	if (hvps_get_voltage() == 0xffff) {
-		//uint16_t vb = ?
-		//hvps_set_temporary_voltage(vb);
-	}
-
-
-
 	hk_adc_init();
 
 	/* Init timer to write HK before DAQ end */

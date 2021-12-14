@@ -117,6 +117,13 @@ void hvps_init(void)
 //		wait = 1;
 //		cmds_sent++;
 //	}
+
+
+	/* Set temporary voltage if not set */
+	//if (hvps_get_voltage() == 0xffff) {
+		//uint16_t vb = ?
+		//hvps_set_temporary_voltage(vb);
+	//}
 }
 
 

@@ -92,15 +92,12 @@ void citiroc_calib_set(uint32_t calibration)
 	uint32_t temp;
 	temp = calibration & CALIBPER;
 
-	/*For period greater than zero, apply the register, else, disable pulse*/
+	CITIROC->ASICCALR &= ~(0xffffffff);
+
+	/*For period greater than zero, apply the register*/
 	if (temp != 0)
 	{
-		CITIROC->ASICCALR &= ~(0xffffffff);
-		CITIROC->ASICCALR |= (calibration & 0xffffffff);
-	}
-	else
-	{
-		CITIROC->ASICCALR &= ~(0xffffffff);
+		CITIROC->ASICCALR = calibration;
 	}
 }
 

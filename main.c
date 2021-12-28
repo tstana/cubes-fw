@@ -27,13 +27,13 @@
 #include <stdlib.h>
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
+#include "firmware/drivers/citiroc/citiroc.h"
 #include "utils/led.h"
 #include "utils/timer_delay.h"
 #include "msp/msp_i2c.h"
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
 #include "hk_adc/hk_adc.h"
-#include "citiroc.h"
 
 extern unsigned int has_recv;
 extern unsigned int has_send;

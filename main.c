@@ -48,7 +48,7 @@ int main(void)
 {
 	nvm_reset_counter_increment();
 
-//	nvm_restore_msp_seqflags();
+	nvm_restore_msp_seqflags();
 
 	/* Timer Delay Init */
 	timer_delay_init();

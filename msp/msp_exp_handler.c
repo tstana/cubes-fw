@@ -306,6 +306,19 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 	return len;
 }
 
+/**
+ * @brief Should be called at completion of a MSP command.
+ * Accumulates a counter and saves sequence flags to NVM at an interval defined
+ * by SEQ_FLAG_SAVE_INTERVAL
+ */
+static void accumulate_msp_seq_flag_save(void)
+{
+	static uint8_t msg_acc = 0;
+	if (++msg_acc >= SEQ_FLAG_SAVE_INTERVAL) {
+		msg_acc = 0;
+		nvm_save_msp_seqflags();
+	}
+}
 
 /*
  *------------------------------------------------------------------------------
@@ -421,6 +434,7 @@ void msp_expsend_complete(unsigned char opcode)
 	has_send = opcode;
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
+	accumulate_msp_seq_flag_save();
 }
 
 /**
@@ -619,8 +633,8 @@ void msp_exprecv_complete(unsigned char opcode)
 				(recv_data[3]));
 		}
 	}
-
 	has_recv=opcode;
+	accumulate_msp_seq_flag_save();
 }
 
 /**
@@ -686,8 +700,8 @@ void msp_exprecv_syscommand(unsigned char opcode)
 	}
 
 	has_syscommand = opcode;
+	accumulate_msp_seq_flag_save();
 }
-
 
 void Timer1_IRQHandler(void)
 {

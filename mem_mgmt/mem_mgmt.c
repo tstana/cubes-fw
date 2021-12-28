@@ -70,7 +70,7 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		break;
 	case NVM_CITIROC_CONF_NO:
 		length=CITIROC_NO_LEN;
-		addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_OFFSET);
+		addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NO_OFFSET);
 		break;
 	case NVM_SEQFLAG:
 		length=SEQFLAG_LEN;

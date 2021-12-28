@@ -33,6 +33,7 @@
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
 #include "hk_adc/hk_adc.h"
+#include "citiroc.h"
 
 extern unsigned int has_recv;
 extern unsigned int has_send;

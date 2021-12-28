@@ -70,21 +70,18 @@ int main(void)
     MSS_TIM64_enable_irq();
     NVIC_SetPriority(Timer1_IRQn, 1);
 
-    /* load citi conf on startup */
+    /* Load Citiroc configuration on startup */
     uint32_t cfg_id_32 = 0;
     mem_read(NVM_CITIROC_CONF_NO, &cfg_id_32);
     cfg_id = (uint8_t)(cfg_id_32);
     uint8_t *nvm_cfg_addr =
-    (uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
+    		(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
 
+	/* TODO: Check that config exist and do something otherwise*/
     if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
         mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
         citiroc_send_slow_control();
     }
-
-
-    //mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
-    //citiroc_send_slow_control();
 
 	/* Infinite loop */
 	while(1) {

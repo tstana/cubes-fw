@@ -87,6 +87,20 @@ void citiroc_daq_set_hvps_curr(uint16_t curr)
 	CITIROC->HVPSR |= ((curr & 0xffff)<<16);
 }
 
+void citiroc_calib_set(uint32_t calibration)
+{
+	uint32_t temp;
+	temp = calibration & CALIBPER;
+
+	CITIROC->ASICCALR &= ~(0xffffffff);
+
+	/*For period greater than zero, apply the register*/
+	if (temp != 0)
+	{
+		CITIROC->ASICCALR = calibration;
+	}
+}
+
 uint32_t citiroc_hcr_get(uint32_t channel_num)
 {
 	/* each channel is at "channel_num" offset from CH0HCR in memory...*/

@@ -75,6 +75,7 @@ struct citiroc_csr {
 	uint32_t	CH30HCR;
 	uint32_t	CH31HCR;
 	uint32_t	OR32HCR;
+	uint32_t	ASICCALR;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;
@@ -107,6 +108,10 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define DAQRDY			(1)
 #define HISTRSTONGO		(2)
 
+/** Citiroc CALIB bit fields definitions */
+#define CALIBPER		(0x7fffffff)
+#define CALIBEN			(31)
+
 /** Function definitions */
 /* TODO: return something?
  * TODO: citiroc_init params (cfg_ram_base, histo_ram_base, etc.)
@@ -123,6 +128,7 @@ void		citiroc_daq_set_hvps_temp(uint16_t temp);
 void		citiroc_daq_set_citi_temp(uint16_t temp);
 void		citiroc_daq_set_hvps_volt(uint16_t volt);
 void		citiroc_daq_set_hvps_curr(uint16_t curr);
+void		citiroc_calib_set(uint32_t calibration);
 
 uint32_t	citiroc_hcr_get(uint32_t channel_num);
 void		citiroc_hcr_reset(void);

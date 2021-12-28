@@ -43,6 +43,7 @@
 #define MSP_OP_SEND_CUBES_HVPS_TMP_VOLT			0x75
 #define MSP_OP_SEND_READ_REG_DEBUG				0x76
 #define MSP_OP_SEND_CUBES_GATEWARE_CONF			0x77
+#define MSP_OP_SEND_CUBES_CALIB_PULSE_CONF		0x78
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

@@ -38,6 +38,7 @@ extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
 
+uint8_t cfg_id = 0;
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -72,7 +73,7 @@ int main(void)
     /* load citi conf on startup */
     uint32_t cfg_id_32 = 0;
     mem_read(NVM_CITIROC_CONF_NO, &cfg_id_32);
-    uint8_t cfg_id = (uint8_t)(cfg_id_32);
+    cfg_id = (uint8_t)(cfg_id_32);
     uint8_t *nvm_cfg_addr =
     (uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
 

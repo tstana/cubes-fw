@@ -30,17 +30,17 @@
 #ifndef _MEM_MGMT_H_
 #define _MEM_MGMT_H_
 
-#define NVM_CITIROC     	(0x01u)
-#define NVM_HVPS        	(0x02u)
-#define NVM_SEQFLAG     	(0x03u)
-#define NVM_RESET       	(0x04u)
-#define NVM_CITIROC_CONF_NO	(0x05u)
-#define RAM_CITI_CONF   	(0x11u)
-#define RAM_CITI_PROBE  	(0x14u)
+#define NVM_CITIROC     		(0x01u)
+#define NVM_HVPS        		(0x02u)
+#define NVM_SEQFLAG     		(0x03u)
+#define NVM_RESET       		(0x04u)
+#define NVM_CITIROC_CONF_NUM	(0x05u)
+#define RAM_CITI_CONF   		(0x11u)
+#define RAM_CITI_PROBE  		(0x14u)
 
 #define CITIROC_OFS     (0x00)
 #define CITIROC_LEN     (144u)
-#define CITIROC_NO_LEN	(4u)
+#define CITIROC_NUM_LEN	(4u)
 #define PROBE_OFS       (0x90)
 #define PROBE_LEN       (32u)
 
@@ -49,7 +49,7 @@
 #define RAM_ADDR        		(0x20000000u)
 #define NVM_ADDR        		(0x60000000u)
 #define SEQFLAG_OFFSET  		(0xF100)
-#define CITIROC_CONF_NO_OFFSET	(0xFFF0)
+#define CITIROC_CONF_NUM_OFFSET	(0xFFF0)
 #define CITIROC_OFFSET  		(0x10000)
 
 /*

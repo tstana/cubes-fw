@@ -68,9 +68,9 @@ int mem_nvm_write(uint32_t modul, uint8_t *data){
 		length=CITIROC_LEN;
 		addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET+(data[length-1]*length));
 		break;
-	case NVM_CITIROC_CONF_NO:
-		length=CITIROC_NO_LEN;
-		addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NO_OFFSET);
+	case NVM_CITIROC_CONF_NUM:
+		length=CITIROC_NUM_LEN;
+		addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NUM_OFFSET);
 		break;
 	case NVM_SEQFLAG:
 		length=SEQFLAG_LEN;
@@ -106,9 +106,9 @@ uint32_t mem_read(uint32_t modul, uint32_t *data)
 			length = CITIROC_LEN;
 			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
 			break;
-		case NVM_CITIROC_CONF_NO:
-            length=CITIROC_NO_LEN;
-            addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_OFFSET);
+		case NVM_CITIROC_CONF_NUM:
+            length=CITIROC_NUM_LEN;
+            addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NUM_OFFSET);
             break;
 		case NVM_RESET:
 			length = 4;

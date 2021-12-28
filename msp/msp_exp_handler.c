@@ -78,6 +78,9 @@ static uint8_t bin_cfg[6];
 
 static uint16_t *table;
 
+/* Global configuration id variable */
+extern uint8_t cfg_id;
+
 // local variables used for TIM64
 static uint64_t timer_load_value;
 static uint32_t load_value_u, load_value_l;
@@ -356,6 +359,9 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 		send_data_payload[HISTO_HDR_NUM_BYTES-6+i] = bin_cfg[i];
 	}
 
+	/* Add configuration id */
+	send_data_payload[249] = cfg_id;
+
 	return len;
 }
 
@@ -627,11 +633,11 @@ void msp_exprecv_complete(unsigned char opcode)
 
 		case MSP_OP_SELECT_NVM_CITI_CONF:
 		{
-			uint8_t cfg_id = (uint8_t)recv_data[0];
+			cfg_id = (uint8_t)recv_data[0];
 			uint8_t *nvm_cfg_addr = 
 				(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
 			if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
-				mem_nvm_write(NVM_CITIROC_CONF_NO, &cfg_id);
+				mem_nvm_write(NVM_CITIROC_CONF_NUM, &cfg_id);
 				mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
 				citiroc_send_slow_control();
 			}

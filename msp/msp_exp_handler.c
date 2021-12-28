@@ -474,6 +474,7 @@ void msp_expsend_complete(unsigned char opcode)
 	has_send = opcode;
 	if(opcode == MSP_OP_REQ_PAYLOAD)
 		memset(send_data_payload, '\0', sizeof(send_data_payload));
+	accumulate_msp_seq_flag_save();
 }
 
 /**
@@ -551,7 +552,6 @@ void msp_exprecv_data(unsigned char opcode,
  */
 void msp_exprecv_complete(unsigned char opcode)
 {
-	static uint8_t msg_acc = 0;
 	switch (opcode) {
 		case MSP_OP_SEND_TIME:
 			cubes_set_time((recv_data[0] << 24) |
@@ -665,12 +665,8 @@ void msp_exprecv_complete(unsigned char opcode)
 			break;
 		}
 	}
-	if (++msg_acc >= SEQ_FLAG_SAVE_INTERVAL) {
-		msg_acc = 0;
-		nvm_save_msp_seqflags();
-	}
-
 	has_recv=opcode;
+	accumulate_msp_seq_flag_save();
 }
 
 /**
@@ -735,6 +731,22 @@ void msp_exprecv_syscommand(unsigned char opcode)
 	}
 
 	has_syscommand = opcode;
+}
+
+
+
+/**
+ * @brief Should be called at completion of a MSP command.
+ * Accumulates a counter and saves sequence flags to NVM at an interval defined
+ * by SEQ_FLAG_SAVE_INTERVAL
+ */
+void accumulate_msp_seq_flag_save(void)
+{
+	static uint8_t msg_acc = 0;
+	if (++msg_acc >= SEQ_FLAG_SAVE_INTERVAL) {
+		msg_acc = 0;
+		nvm_save_msp_seqflags();
+	}
 }
 
 

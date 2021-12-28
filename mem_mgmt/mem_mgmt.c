@@ -158,7 +158,7 @@ nvm_status_t nvm_save_msp_seqflags(void)
 	status = NVM_unlock(NVM_SEQFLAG_ADDR, sizeof(msp_seqflags_t));
 	if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
 		status = NVM_write(NVM_SEQFLAG_ADDR,
-		                   (uint32_t*)&seqflags,
+		                   (uint8_t*)&seqflags,
 		                   sizeof(msp_seqflags_t),
 		                   NVM_LOCK_PAGE);
 	}
@@ -168,7 +168,6 @@ nvm_status_t nvm_save_msp_seqflags(void)
 void nvm_restore_msp_seqflags(void)
 {
 	msp_seqflags_t seqflags;
-	//NVM_write(0xF000, 0, sizeof(msp_seqflags_t), NVM_DO_NOT_LOCK_PAGE);
 	mem_read(NVM_SEQFLAG, (uint32_t *)&seqflags);
 	msp_exp_state_initialize(seqflags);
 }

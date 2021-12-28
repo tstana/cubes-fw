@@ -44,10 +44,10 @@
 
 #define SEQFLAG_LEN     sizeof(msp_seqflags_t)
 
-#define RAM_ADDR        	(0x20000000u)
-#define NVM_ADDR        	(0x60000000u)
-#define CITIROC_OFFSET  	(0xF010u)
-#define SEQFLAG_OFFSET  	(0xF100)
+#define RAM_ADDR        (0x20000000u)
+#define NVM_ADDR        (0x60000000u)
+#define CITIROC_OFFSET  (0xF010u)
+#define SEQFLAG_OFFSET  (0xF100)
 
 #define SEQ_FLAG_SAVE_INTERVAL (16u)
 

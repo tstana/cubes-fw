@@ -72,7 +72,7 @@ int main(void)
 
     /* Load Citiroc configuration on startup */
     uint32_t cfg_id_32 = 0;
-    mem_read(NVM_CITIROC_CONF_NO, &cfg_id_32);
+    mem_read(NVM_CITIROC_CONF_NUM, &cfg_id_32);
     cfg_id = (uint8_t)(cfg_id_32);
     uint8_t *nvm_cfg_addr =
     		(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));

@@ -79,51 +79,6 @@ void hvps_init(void)
 			MSS_UART_EVEN_PARITY | MSS_UART_ONE_STOP_BIT);
 	MSS_UART_set_rx_handler(&g_mss_uart0, UART0_RXHandler,
 			MSS_UART_FIFO_FOUR_BYTES);
-
-	/*
-	 * -------------------------------------
-	 * Write default HVPS setting from NVM
-	 * -------------------------------------
-	 */
-//	/* Compose command string, converting int16's into ASCII */
-//	// TODO: Figure out what default string stands for...
-//	char HST[28] = "HST0000000004090409757DB7D7";
-//
-//	/* Start by reading HVPS settings from NVM */
-//	uint32_t hvps_settings[3];
-//	mem_read(NVM_HVPS, hvps_settings);
-//
-//	/* Convert these into ASCII; see memory layout diagram for details */
-//	uint16_t dtp1, dtp2;
-//	uint16_t dt1, dt2;
-//	uint16_t v, t;
-//	dtp1 = hvps_settings[0] & 0xFFFF;
-//	dtp2 = (hvps_settings[0] & 0xFFFF0000) >> 16;
-//	dt1 = hvps_settings[1] & 0xFFFF;
-//	dt2 = (hvps_settings[1] & 0xFFFF0000) >> 16;
-//	v = hvps_settings[2] & 0xFFFF;
-//	t = (hvps_settings[2] & 0xFFFF0000) >> 16;
-//
-//	/* Compose command string, converting int16's into ASCII*/
-//	sprintf(&HST[3], "%04X%04X%04X%04X%04X%04X", dtp1, dtp2, dt1, dt2, v, t);
-//
-//	/* Send command to HVPS if voltage check on NVM readout is successful */
-//	if(voltage_less_than(HST) == 0)
-//	{
-//		prep_hvps_cmd_array(HST);
-//		while(wait)
-//			;
-//		MSS_UART_polled_tx(&g_mss_uart0, hvps_cmd, strlen((char *)hvps_cmd));
-//		wait = 1;
-//		cmds_sent++;
-//	}
-
-
-	/* Set temporary voltage if not set */
-	//if (hvps_get_voltage() == 0xffff) {
-		//uint16_t vb = ?
-		//hvps_set_temporary_voltage(vb);
-	//}
 }
 
 

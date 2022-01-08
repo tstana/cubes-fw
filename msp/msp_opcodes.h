@@ -44,6 +44,8 @@
 #define MSP_OP_SEND_READ_REG_DEBUG				0x76
 #define MSP_OP_SEND_CUBES_GATEWARE_CONF			0x77
 #define MSP_OP_SEND_CUBES_CALIB_PULSE_CONF		0x78
+#define MSP_OP_SEND_NVM_CITI_CONF               0x79
+#define MSP_OP_SELECT_NVM_CITI_CONF             0x7A
 
 /* Values for determining opcode type */
 #define MSP_OP_TYPE_CTRL 0x00

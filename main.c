@@ -27,6 +27,9 @@
 #include <stdlib.h>
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
+#include "firmware/drivers/citiroc/citiroc.h"
+#include "utils/led.h"
+#include "utils/timer_delay.h"
 #include "hk_adc/hk_adc.h"
 #include "hvps/hvps_c11204-02.h"
 #include "mem_mgmt/mem_mgmt.h"
@@ -39,6 +42,7 @@ extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
 
+uint8_t cfg_id;
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -67,9 +71,21 @@ int main(void)
 	hk_adc_init();
 
 	/* Init timer to write HK before DAQ end */
-    MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
-    MSS_TIM64_enable_irq();
-    NVIC_SetPriority(Timer1_IRQn, 1);
+	MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
+	MSS_TIM64_enable_irq();
+	NVIC_SetPriority(Timer1_IRQn, 1);
+
+	/* Load Citiroc configuration on startup */
+	mem_read(NVM_CITIROC_CONF_NUM, (uint32_t *)&cfg_id);
+	uint8_t *nvm_cfg_addr =
+			(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
+
+	if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
+		mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
+		citiroc_send_slow_control();
+	} else {
+		/* TODO: Handle what happens if no config found... */
+	}
 
 	/* Infinite loop */
 	while(1) {

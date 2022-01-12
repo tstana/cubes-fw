@@ -57,7 +57,9 @@ int       hvps_is_on(void);
 uint16_t  hvps_get_temp(void);
 uint16_t  hvps_get_voltage(void);
 uint16_t  hvps_get_current(void);
+uint16_t  hvps_get_status(void);
 uint16_t  hvps_get_cmd_counter(enum hvps_cmd_counter);
+uint16_t  hvps_get_last_cmd_err(void);
 
 
 #endif /* _HVPS_C11204_02_H_ */

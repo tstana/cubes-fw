@@ -33,12 +33,6 @@
 #define NUM_SAMPLES_TO_AVG              (10u)
 
 
-/* Local Variables */
-static uint16_t hk_adc_avg_volt;
-static uint16_t hk_adc_avg_curr;
-static uint16_t hk_adc_avg_citi_temp;
-
-
 /* Local Function prototypes */
 static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer);
 static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
@@ -448,8 +442,7 @@ uint16_t hk_adc_calc_avg_voltage(void)
         sum += volt_array[i];
     }
 
-    hk_adc_avg_volt = (sum >> 3);
-    return hk_adc_avg_volt;
+    return (sum >> 3);
 }
 
 
@@ -477,8 +470,7 @@ uint16_t hk_adc_calc_avg_current(void)
         sum += curr_array[i];
     }
 
-    hk_adc_avg_curr = (sum >> 3);
-    return hk_adc_avg_curr;
+    return (sum >> 3);
 }
 
 
@@ -506,8 +498,7 @@ uint16_t hk_adc_calc_avg_citi_temp(void)
         sum += citi_temp_array[i];
     }
 
-    hk_adc_avg_citi_temp = (sum >> 3);
-    return hk_adc_avg_citi_temp;
+    return (sum >> 3);
 }
 
 

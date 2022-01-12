@@ -53,8 +53,7 @@ static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer);
  */
 int hk_adc_init(void)
 {
-    uint8_t err = HK_ADC_ERR_INIT_FAILED;
-//    hk_adc_return_t err = HK_ADC_ERR_INIT_FAILED;
+    int err = HK_ADC_ERR_INIT_FAILED;
 
     // By default, ADC is configured to point towards CITI_TEMP as MUX input
     const uint16_t CONFIG = HK_ADC_CONFIG_MUX_SINGLE_2 | HK_ADC_CONFIG_FSR_2 |
@@ -97,9 +96,10 @@ int hk_adc_init(void)
  */
 int hk_adc_conv_read_volt(uint16_t * batt_volt)
 {
+    int err = HK_ADC_ERR_VOLT_READ_FAILED;
+
     uint8_t os_bit = 0;
     uint16_t read_value;
-    uint8_t err = HK_ADC_ERR_VOLT_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
 
@@ -226,9 +226,10 @@ int hk_adc_conv_read_curr(uint16_t * batt_curr)
 
 int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
 {
+    int err = HK_ADC_ERR_TEMP_READ_FAILED;
+
     uint8_t os_bit = 0;
     uint16_t read_value;
-    uint8_t err = HK_ADC_ERR_TEMP_READ_FAILED;
 
     uint8_t send_buffer[2] = {0};
 
@@ -292,9 +293,10 @@ int hk_adc_conv_read_citi_temp(uint16_t * citi_temp)
  */
 static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
 {
+    int err = HK_ADC_ERR_WRITE_FAILED;
+
     mss_i2c_status_t status;
     uint8_t send_buffer[3] = {0xff};
-    uint8_t err = HK_ADC_ERR_WRITE_FAILED;
 
     // assign register address pointer
     switch(reg)
@@ -359,11 +361,12 @@ static int hk_adc_reg_write(hk_adc_register_t reg, uint8_t *write_buffer)
  */
 static int hk_adc_reg_read(hk_adc_register_t reg, uint16_t *read_buffer)
 {
+    int err = HK_ADC_ERR_READ_FAILED;
+
     mss_i2c_status_t status;
     uint8_t  rx_buffer[RX_LENGTH];
     uint16_t read_value;
     uint8_t send_buffer = 0xff;
-    uint8_t err = HK_ADC_ERR_READ_FAILED;
 
     // assign register address pointer
     switch(reg)

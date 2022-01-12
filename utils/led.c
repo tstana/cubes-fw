@@ -53,17 +53,17 @@ static inline void blink(uint32_t ms_delay)
  */
 void led_init(void)
 {
-    /* Initialize MSS GPIOs */
-    MSS_GPIO_init();
+	/* Initialize MSS GPIOs */
+	MSS_GPIO_init();
 
-    /* Configure MSS GPIO0 in OUTPUT_MODE */
-    MSS_GPIO_config( MSS_GPIO_0 , MSS_GPIO_OUTPUT_MODE);
+	/* Configure MSS GPIO0 in OUTPUT_MODE */
+	MSS_GPIO_config( MSS_GPIO_0 , MSS_GPIO_OUTPUT_MODE);
 
-    g_gpio_pattern = MSS_GPIO_get_outputs();
+	g_gpio_pattern = MSS_GPIO_get_outputs();
 
-    g_gpio_pattern &= ~(MSS_GPIO_0_MASK);
+	g_gpio_pattern &= ~(MSS_GPIO_0_MASK);
 
-    MSS_GPIO_set_outputs(g_gpio_pattern);
+	MSS_GPIO_set_outputs(g_gpio_pattern);
 }
 
 
@@ -119,11 +119,9 @@ void led_blink(led_blink_t blink_type)
  */
 void led_turn_on(void)
 {
-    g_gpio_pattern = MSS_GPIO_get_outputs();
-
-    /* Turn on GPIO0 output pattern by doing an exclusive OR */
-    g_gpio_pattern |= MSS_GPIO_0_MASK;
-    MSS_GPIO_set_outputs(g_gpio_pattern);
+	g_gpio_pattern = MSS_GPIO_get_outputs();
+	g_gpio_pattern |= MSS_GPIO_0_MASK;
+	MSS_GPIO_set_outputs(g_gpio_pattern);
 }
 
 
@@ -139,9 +137,7 @@ void led_turn_on(void)
  */
 void led_turn_off(void)
 {
-    g_gpio_pattern = MSS_GPIO_get_outputs();
-
-    /* Turn off GPIO0 output pattern by doing an exclusive OR */
-    g_gpio_pattern &= ~(MSS_GPIO_0_MASK);
-    MSS_GPIO_set_outputs(g_gpio_pattern);
+	g_gpio_pattern = MSS_GPIO_get_outputs();
+	g_gpio_pattern &= ~(MSS_GPIO_0_MASK);
+	MSS_GPIO_set_outputs(g_gpio_pattern);
 }

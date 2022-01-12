@@ -2,7 +2,7 @@
  * I2C_comm_int.c
  *
  *  Created on: 26 okt. 2018
- *      Author: Marcus Persson
+ *      Author: Marcus Persson, Theodor Stana
  */
 
 #include <stdint.h>
@@ -44,7 +44,8 @@ mss_i2c_slave_handler_ret_t I2C1_SlaveWriteHandler(mss_i2c_instance_t * this_i2c
                                                    uint16_t rx_size)
 {
 	msp_recv_callback(p_rx_data, rx_size);
-	msp_send_callback((unsigned char *)i2c_tx_buffer, (unsigned long *)&slave_buffer_size);
+	msp_send_callback((unsigned char *)i2c_tx_buffer,
+	                  (unsigned long *) &slave_buffer_size);
 	return MSS_I2C_REENABLE_SLAVE_RX;
 }
 
@@ -67,6 +68,7 @@ void msp_i2c_init(uint8_t slave_ser_addr)
 	/* Register local write handler function and enable slave */
 	MSS_I2C_register_write_handler(&g_mss_i2c1, I2C1_SlaveWriteHandler);
 	MSS_I2C_enable_slave(&g_mss_i2c1);
+
 	/* Set interrupt priority lower than UART's */
 	NVIC_SetPriority(g_mss_i2c1.irqn, 1);
 }

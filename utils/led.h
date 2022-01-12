@@ -33,9 +33,9 @@
  */
 typedef enum {
 	/* Blink 4 times with 250 ms on/off period to indicate MSS power-on reset */
-    LED_POWER_ON     = 1,
+	LED_POWER_ON  = 1,
 	/* Blink 16 times with 100 ms on/off period to indicate POWER_OFF MSP cmd. */
-    LED_POWER_OFF    = 2
+	LED_POWER_OFF = 2
 } led_blink_t;
 
 

@@ -30,13 +30,13 @@
 #ifndef _MEM_MGMT_H_
 #define _MEM_MGMT_H_
 
-#define NVM_CITIROC     		(0x01u)
-#define NVM_HVPS        		(0x02u)
-#define NVM_SEQFLAG     		(0x03u)
-#define NVM_RESET       		(0x04u)
-#define NVM_CITIROC_CONF_NUM	(0x05u)
-#define RAM_CITI_CONF   		(0x11u)
-#define RAM_CITI_PROBE  		(0x14u)
+#define NVM_CITIROC             (0x01u)
+#define NVM_HVPS                (0x02u)
+#define NVM_SEQFLAG             (0x03u)
+#define NVM_RESET               (0x04u)
+#define NVM_CITIROC_CONF_NUM    (0x05u)
+#define RAM_CITI_CONF           (0x11u)
+#define RAM_CITI_PROBE          (0x14u)
 
 #define CITIROC_OFS     (0x00)
 #define CITIROC_LEN     (144u)
@@ -46,13 +46,13 @@
 
 #define SEQFLAG_LEN     sizeof(msp_seqflags_t)
 
-#define RAM_ADDR        		(0x20000000u)
-#define NVM_ADDR        		(0x60000000u)
-#define SEQFLAG_OFFSET  		(0xF100)
-#define CITIROC_CONF_NUM_OFFSET	(0xFFF0)
-#define CITIROC_OFFSET  		(0x10000)
+#define RAM_ADDR                (0x20000000u)
+#define NVM_ADDR                (0x60000000u)
+#define SEQFLAG_OFFSET          (0xF100)
+#define CITIROC_CONF_NUM_OFFSET (0xFFF0)
+#define CITIROC_OFFSET          (0x10000)
 
-#define SEQ_FLAG_SAVE_INTERVAL (16u)
+#define SEQ_FLAG_SAVE_INTERVAL  (16u)
 
 /*
  * Histogram Organization
@@ -87,16 +87,16 @@ void mem_ram_write(uint32_t modul, uint8_t *data);
 
 /** mem_read
  * Function for reading data from NVM.
- * @param 	Reference to submodule (see defines at top of this file)
- * @param	uint8_t pointer to where data is to be transferred
+ * @param   Reference to submodule (see defines at top of this file)
+ * @param   uint8_t pointer to where data is to be transferred
  * Return: None
  */
 uint32_t mem_read(uint32_t modul, uint32_t *data);
 
 /** mem_nvm_write
  * Function for writing data to NVM.
- * @param 	uint32_t Reference to submodule to be written for.
- * @param	uint8_t pointer to where data is to be transferred from
+ * @param   uint32_t Reference to submodule to be written for.
+ * @param   uint8_t pointer to where data is to be transferred from
  * @return  int with value 0 if passed, -1 if any failure.
  */
 
@@ -104,9 +104,8 @@ int mem_nvm_write(uint32_t modul, uint8_t* data);
 
 
 /**
- *  nvm_reset_counter_increment
- * @brief nvm reset counter which increments by 1 every time it's called
- * 		then saves to nvm location.
+ * nvm_reset_counter_increment
+ * @brief Read, increment, then write reset counter at appropriate NVM address
  */
 void nvm_reset_counter_increment(void);
 

@@ -177,19 +177,19 @@ static uint16_t table2[129] = {
 
 static unsigned long prep_payload_data(uint8_t *bin_config)
 {
-    unsigned long i, j, k, len;
-    uint16_t num_bins;
-    uint8_t bin_size;
-    uint32_t bin;
+	unsigned long i, j, k, len;
+	uint16_t num_bins;
+	uint8_t bin_size;
+	uint32_t bin;
 
-    unsigned long send_idx; // start index used for send data payload
-    unsigned long data_idx; // Index used to access data form histo_data
-    unsigned long start_idx; // first index in histo_data
+	unsigned long send_idx; // start index used for send data payload
+	unsigned long data_idx; // Index used to access data form histo_data
+	unsigned long start_idx; // first index in histo_data
 
 	uint32_t *histo_data = (uint32_t *)HISTO_ADDR;
 
 	/* histogram header into send_data_payload */
-    len = 0;
+	len = 0;
 	for (i=0; i<HISTO_HDR_NUM_BYTES/4; i++) {
 		send_idx = i*4;
 		send_data_payload[send_idx + 1] = histo_data[i] & 0xFF;
@@ -252,7 +252,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 						data_idx = k + start_idx;
 						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 						      (histo_data[data_idx] & 0xFFFF);
- 		        	}
+					}
 					bin = bin/bin_size;
 				} else if (carry_over == 0 && bin_size%2 == 1) {
 					carry_over = 1;
@@ -276,7 +276,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 						data_idx = k + start_idx;
 						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 						      (histo_data[data_idx] & 0xFFFF);
- 		        	}
+					}
 					bin = bin + (histo_data[k + start_idx] & 0xFFFF);
 					bin = bin/bin_size;
 				} else if (carry_over == 1 && bin_size%2 == 1) {
@@ -288,7 +288,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 							data_idx = k + start_idx;
 							bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 							      (histo_data[data_idx] & 0xFFFF);
- 		        		}
+						}
 						bin = bin/bin_size;
 					}
 				}

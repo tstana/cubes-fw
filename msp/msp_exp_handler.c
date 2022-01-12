@@ -353,43 +353,75 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 	}
 	else if(opcode == MSP_OP_REQ_HK)
 	{
-		/* HCRs */
-		uint32_t count = 0;
-		count = citiroc_hcr_get(0);
-		to_bigendian32(send_data_hk, count);
-		count = citiroc_hcr_get(16);
-		to_bigendian32(send_data_hk+4, count);
-		count = citiroc_hcr_get(31);
-		to_bigendian32(send_data_hk+8, count);
-		/* OR32 is "channel 32" */
-		count = citiroc_hcr_get(32);
-		to_bigendian32(send_data_hk+12, count);
+		/* Reset counter and hit counter register readouts */
+		uint32_t u32val = 0;
+
+		u32val = cubes_get_time();
+		to_bigendian32(send_data_hk, u32val);
+
+		u32val = nvm_reset_counter_read();
+		to_bigendian32(send_data_hk+4, u32val);
+
+		u32val = citiroc_hcr_get(0);
+		to_bigendian32(send_data_hk+8, u32val);
+		u32val = citiroc_hcr_get(16);
+		to_bigendian32(send_data_hk+12, u32val);
+		u32val = citiroc_hcr_get(31);
+		to_bigendian32(send_data_hk+16, u32val);
+		u32val = citiroc_hcr_get(32);  // OR32
+		to_bigendian32(send_data_hk+20, u32val);
 
 		/* HVPS HK */
-		sprintf(((char*)send_data_hk)+16, "%04X", hvps_get_voltage());
-		sprintf(((char*)send_data_hk)+20, "%04X", hvps_get_current());
-		sprintf(((char*)send_data_hk)+24, "%04X", hvps_get_temp());
+		uint16_t u16val = 0;
 
-		/* Re-use `count` variable for reading reset counters */
-		count = nvm_reset_counter_read();
-		to_bigendian32(send_data_hk+28, count);
-		count = hvps_get_cmd_counter(HVPS_CMDS_SENT);
-		send_data_hk[32] = (unsigned char) (count >> 8)  & 0xff;
-		send_data_hk[33] = (unsigned char) (count >> 0)  & 0xff;
-		count = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
-		send_data_hk[34] = (unsigned char) (count >> 8)  & 0xff;
-		send_data_hk[35] = (unsigned char) (count >> 0)  & 0xff;
-		count = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
-		send_data_hk[36] = (unsigned char) (count >> 8)  & 0xff;
-		send_data_hk[37] = (unsigned char) (count >> 0)  & 0xff;
+		u16val = hvps_get_voltage();
+		send_data_hk[24] = (u16val >> 8) & 0xff;
+		send_data_hk[25] = u16val & 0xff;
 
-		/* ADC HK */
-		sprintf(((char*)send_data_hk)+38, "%04u", hk_adc_calc_avg_voltage());
-		sprintf(((char*)send_data_hk)+42, "%04u", hk_adc_calc_avg_current());
-		sprintf(((char*)send_data_hk)+46, "%04u", hk_adc_calc_avg_citi_temp());
+		u16val = hvps_get_current();
+		send_data_hk[26] = (u16val >> 8) & 0xff;
+		send_data_hk[27] = u16val & 0xff;
 
+		u16val = hvps_get_temp();
+		send_data_hk[28] = (u16val >> 8) & 0xff;
+		send_data_hk[29] = u16val & 0xff;
+
+		u16val = hvps_get_status();
+		send_data_hk[30] = (u16val >> 8) & 0xff;
+		send_data_hk[31] = u16val & 0xff;
+
+		u16val = hvps_get_cmd_counter(HVPS_CMDS_SENT);
+		send_data_hk[32] = (u16val >> 8)  & 0xff;
+		send_data_hk[33] = u16val  & 0xff;
+
+		u16val = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
+		send_data_hk[34] = (u16val >> 8)  & 0xff;
+		send_data_hk[35] = u16val  & 0xff;
+
+		u16val = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
+		send_data_hk[36] = (u16val >> 8)  & 0xff;
+		send_data_hk[37] = u16val  & 0xff;
+
+		u16val = hvps_get_last_cmd_err();
+		send_data_hk[38] = (u16val >> 8) & 0xff;
+		send_data_hk[39] = u16val & 0xff;
+
+		/* On-board ADC HK */
+		u16val = hk_adc_calc_avg_voltage();
+		send_data_hk[40] = (u16val >> 8) & 0xff;
+		send_data_hk[41] = u16val & 0xff;
+
+		u16val = hk_adc_calc_avg_current();
+		send_data_hk[42] = (u16val >> 8) & 0xff;
+		send_data_hk[43] = u16val & 0xff;
+
+		u16val = hk_adc_calc_avg_citi_temp();
+		send_data_hk[44] = (u16val >> 8) & 0xff;
+		send_data_hk[45] = u16val & 0xff;
+
+		/* Finally, prep the data to be sent */
 		send_data = (uint8_t *)send_data_hk;
-		*len = 50;
+		*len = 46;
 	}
 	else if(opcode == MSP_OP_REQ_CUBES_ID)
 	{
@@ -400,7 +432,9 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		*len = 25;
 	}
 	else
+	{
 		*len = 0;
+	}
 }
 
 /**

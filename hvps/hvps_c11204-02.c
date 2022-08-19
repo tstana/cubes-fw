@@ -58,6 +58,8 @@ static char hvps_cmd[36];
 static uint16_t cmds_sent = 0;
 static uint16_t cmds_acked = 0;
 static uint16_t cmds_failed = 0;
+static uint16_t last_cmd = 0xf;
+static uint16_t last_cmd_err = 0x0000;
 
 static char hvps_reply[51];
 static volatile uint8_t hvps_reply_ready = 0;
@@ -303,10 +305,27 @@ uint16_t hvps_get_status(void)
     return s;
 }
 
+
+/**
+ * @brief Get the last command that caused an error and the error itself
+ *
+ * In the event of an error in the UART communication, the HVPS replies with a
+ * four-byte error code in ASCII format. Of this format, only the least
+ * significant byte is used. Hence, the UART0_RXhandler() function below simply
+ * strips away the last byte in the four-byte ASCII code within the "hxx" and
+ * applies a binary representation of the ASCII character to the least
+ * significant byte.
+ *
+ * For details on the possible errors, see the C11204-02 Command
+ * Reference Manual.
+ *
+ * @return The last command that caused an error in the most significant byte
+ *         and the cause of the error in the least significant byte.
+ */
+
 uint16_t hvps_get_last_cmd_err(void)
 {
-#warning TODO: This function needs implementing!
-	return 0;
+    return last_cmd_err;
 }
 
 
@@ -390,13 +409,49 @@ static int send_cmd_and_check_reply(char *cmd)
 	memmove(hvps_cmd, &STX, 1);
 	memmove(hvps_cmd+1, cmd, cmdlen);
 	memmove(hvps_cmd+1+cmdlen, &ETX, 1);
-	for(i = 0; hvps_cmd[i-1] != ETX; i++){
+	for (i = 0; hvps_cmd[i-1] != ETX; i++) {
 		chksum += hvps_cmd[i];
 	}
 	chksum &= 0xFF; // Mask so only lower 2 bytes get sent
 	sprintf(chkstr, "%02X", chksum);
 	memmove(hvps_cmd+1+cmdlen+1, chkstr, 2);
 	memmove(hvps_cmd+1+cmdlen+3, &CR, 1);
+
+	/* Set last command index, for storage in case of "hxx" reply from HVPS */
+	if (strncmp(cmd, "HST", 3) == 0)
+		last_cmd = 0;
+	else if (strncmp(cmd, "HRT", 3) == 0)
+		last_cmd = 1;
+	else if (strncmp(cmd, "HPO", 3) == 0)
+		last_cmd = 2;
+	else if (strncmp(cmd, "HGS", 3) == 0)
+		last_cmd = 3;
+	else if (strncmp(cmd, "HGV", 3) == 0)
+		last_cmd = 4;
+	else if (strncmp(cmd, "HGC", 3) == 0)
+		last_cmd = 5;
+	else if (strncmp(cmd, "HGT", 3) == 0)
+		last_cmd = 6;
+	else if (strncmp(cmd, "HFI", 3) == 0)
+		last_cmd = 7;
+	else if (strncmp(cmd, "HGN", 3) == 0)
+		last_cmd = 8;
+	else if (strncmp(cmd, "HOF", 3) == 0)
+		last_cmd = 9;
+	else if (strncmp(cmd, "HON", 3) == 0)
+		last_cmd = 10;
+	else if (strncmp(cmd, "HRE", 3) == 0)
+		last_cmd = 11;
+	else if (strncmp(cmd, "HCM", 3) == 0)
+		last_cmd = 12;
+	else if (strncmp(cmd, "HSC", 3) == 0)
+		last_cmd = 13;
+	else if (strncmp(cmd, "HRC", 3) == 0)
+		last_cmd = 14;
+	else if (strncmp(cmd, "HBV", 3) == 0)
+		last_cmd = 15;
+	else
+		last_cmd = 0xf;
 
 
 	/* ----------------- Step 2: Send command over UART --------------------- */
@@ -474,8 +529,12 @@ static void UART0_RXHandler(mss_uart_instance_t* this_uart)
 				(hvps_reply[3] == hvps_cmd[3] + 0x20)) {
 			cmds_acked++;
 		}
-		else if(hvps_reply[1] == 'h' && hvps_reply[2] == 'x' && hvps_reply[3] == 'x')
+		else if(hvps_reply[1] == 'h' && hvps_reply[2] == 'x' &&
+		        hvps_reply[3] == 'x') {
+		    /* See the comments before hvps_get_last_cmd_err() for details. */
+			last_cmd_err = (last_cmd << 8) | (hvps_reply[7] - 0x30);
 			cmds_failed++;
+		}
 
 		/* Inform sending command function that reply is available */
 		hvps_reply_ready = 1;

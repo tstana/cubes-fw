@@ -295,8 +295,12 @@ uint16_t hvps_get_current(void)
 
 uint16_t hvps_get_status(void)
 {
-#warning TODO: This function needs implementing!
-	return 0;
+    uint16_t s = 0xffff; // default should not be valid reading
+
+    if (send_cmd_and_check_reply("HGS") == 0)
+        s = strtol((char*)hvps_reply+4, NULL, 16);
+
+    return s;
 }
 
 uint16_t hvps_get_last_cmd_err(void)

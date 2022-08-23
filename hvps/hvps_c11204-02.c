@@ -294,10 +294,24 @@ uint16_t hvps_get_current(void)
 	return c;
 }
 
-
+/**
+ * @brief Get the status of the HVPS module
+ *
+ * This function will send an `HGS` command to the HVPS to retrieve the status
+ * of the module.
+ *
+ * @return The status readout from the HVPS, in the format specified by the
+ *         C11204-02 Command Reference Manual.
+ *
+ *         If the readout was not successful (the reply was not `hgs`), the
+ *         value `0xffff` is returned. Considering a few of the bits in the
+ *         status readout are unused and those read as '0' when the status is
+ *         correctly retrieved, the `0xffff` reply should not occur on a
+ *         correct status readout.
+ */
 uint16_t hvps_get_status(void)
 {
-    uint16_t s = 0xffff; // default should not be valid reading
+    uint16_t s = 0xffff; // default should not be a valid reading
 
     if (send_cmd_and_check_reply("HGS") == 0)
         s = strtol((char*)hvps_reply+4, NULL, 16);
@@ -319,10 +333,10 @@ uint16_t hvps_get_status(void)
  * For details on the possible errors, see the C11204-02 Command
  * Reference Manual.
  *
- * @return The last command that caused an error in the most significant byte
- *         and the cause of the error in the least significant byte.
+ * @return The last command that caused an error in the most significant byte,
+ *         see send_cmd_and_check_reply() for details; and the cause of the
+ *         error in the least significant byte, see C11204-02 Command Ref. Man.
  */
-
 uint16_t hvps_get_last_cmd_err(void)
 {
     return last_cmd_err;

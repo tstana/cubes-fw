@@ -58,7 +58,7 @@ static char hvps_cmd[36];
 static uint16_t cmds_sent = 0;
 static uint16_t cmds_acked = 0;
 static uint16_t cmds_failed = 0;
-static uint16_t last_cmd = 0xf;
+static uint8_t last_cmd = 0x00;
 static uint16_t last_cmd_err = 0x0000;
 
 static char hvps_reply[51];
@@ -465,7 +465,7 @@ static int send_cmd_and_check_reply(char *cmd)
 	else if (strncmp(cmd, "HBV", 3) == 0)
 		last_cmd = 15;
 	else
-		last_cmd = 0xf;
+		last_cmd = 0xff;
 
 
 	/* ----------------- Step 2: Send command over UART --------------------- */

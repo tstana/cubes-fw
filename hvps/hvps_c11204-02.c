@@ -433,37 +433,37 @@ static int send_cmd_and_check_reply(char *cmd)
 
 	/* Set last command index, for storage in case of "hxx" reply from HVPS */
 	if (strncmp(cmd, "HST", 3) == 0)
-		last_cmd = 0;
-	else if (strncmp(cmd, "HRT", 3) == 0)
 		last_cmd = 1;
-	else if (strncmp(cmd, "HPO", 3) == 0)
+	else if (strncmp(cmd, "HRT", 3) == 0)
 		last_cmd = 2;
-	else if (strncmp(cmd, "HGS", 3) == 0)
+	else if (strncmp(cmd, "HPO", 3) == 0)
 		last_cmd = 3;
-	else if (strncmp(cmd, "HGV", 3) == 0)
+	else if (strncmp(cmd, "HGS", 3) == 0)
 		last_cmd = 4;
-	else if (strncmp(cmd, "HGC", 3) == 0)
+	else if (strncmp(cmd, "HGV", 3) == 0)
 		last_cmd = 5;
-	else if (strncmp(cmd, "HGT", 3) == 0)
+	else if (strncmp(cmd, "HGC", 3) == 0)
 		last_cmd = 6;
-	else if (strncmp(cmd, "HFI", 3) == 0)
+	else if (strncmp(cmd, "HGT", 3) == 0)
 		last_cmd = 7;
-	else if (strncmp(cmd, "HGN", 3) == 0)
+	else if (strncmp(cmd, "HFI", 3) == 0)
 		last_cmd = 8;
-	else if (strncmp(cmd, "HOF", 3) == 0)
+	else if (strncmp(cmd, "HGN", 3) == 0)
 		last_cmd = 9;
-	else if (strncmp(cmd, "HON", 3) == 0)
+	else if (strncmp(cmd, "HOF", 3) == 0)
 		last_cmd = 10;
-	else if (strncmp(cmd, "HRE", 3) == 0)
+	else if (strncmp(cmd, "HON", 3) == 0)
 		last_cmd = 11;
-	else if (strncmp(cmd, "HCM", 3) == 0)
+	else if (strncmp(cmd, "HRE", 3) == 0)
 		last_cmd = 12;
-	else if (strncmp(cmd, "HSC", 3) == 0)
+	else if (strncmp(cmd, "HCM", 3) == 0)
 		last_cmd = 13;
-	else if (strncmp(cmd, "HRC", 3) == 0)
+	else if (strncmp(cmd, "HSC", 3) == 0)
 		last_cmd = 14;
-	else if (strncmp(cmd, "HBV", 3) == 0)
+	else if (strncmp(cmd, "HRC", 3) == 0)
 		last_cmd = 15;
+	else if (strncmp(cmd, "HBV", 3) == 0)
+		last_cmd = 16;
 	else
 		last_cmd = 0xff;
 

@@ -737,7 +737,12 @@ void msp_exprecv_syscommand(unsigned char opcode)
 			citiroc_daq_start();
 			break;
 		case MSP_OP_CUBES_DAQ_STOP:
+			citiroc_daq_set_hvps_temp(hvps_get_temp());
+			citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
+			citiroc_daq_set_hvps_volt(hvps_get_voltage());
+			citiroc_daq_set_hvps_curr(hvps_get_current());
 			citiroc_daq_stop();
+			MSS_TIM64_stop();
 			break;
 	}
 

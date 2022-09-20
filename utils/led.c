@@ -34,15 +34,6 @@
 static uint32_t g_gpio_pattern;
 
 
-static inline void blink(uint32_t ms_delay)
-{
-	timer_delay(ms_delay);
-	led_turn_on();
-	timer_delay(ms_delay);
-	led_turn_off();
-}
-
-
 /**
  * @brief Initialization function for LED at GPIO0 called upon MSS power on reset
  *
@@ -68,44 +59,49 @@ void led_init(void)
 
 
 /**
- * @brief Blink function for LED at GPIO0
+ * @brief Blink LED at GPIO0 for a certain number of milliseconds
  *
  * This function is called to make LED at GPIO0 (configured as output) blink
- * a certain number of times defined by the enumeration #led_blink_t present in
- * led.h file.
+ * once for a limited amount of milliseconds, specified by parameter.
  *
  * @b NOTE:
  *
  * - Should be called after led_init() function since it configures
  * GPIO0 in OUTPUT_MODE upon MSS power on reset.
  *
- * @param blink_type[in] Type of blink requested, \sa led_blink_t
  * @param ms_delay[in]   Blink delay in ms_delay
  *
  */
-void led_blink(led_blink_t blink_type)
+void led_blink_for(uint32_t ms_delay)
 {
-	int i;
-
+	led_turn_on();
+	timer_delay(ms_delay);
 	led_turn_off();
-
-	switch (blink_type) {
-	case LED_POWER_ON:
-		for (i = 0; i < 4; ++i) {
-			blink(250);
-		}
-		break;
-	case LED_POWER_OFF:
-		for (i = 0; i < 16; ++i) {
-			blink(100);
-		}
-		break;
-	default:
-		for (;;)
-			blink(100);
-	}
 }
 
+
+/**
+ * @brief Blink LED at GPIO0 a number of times with delay in between
+ *
+ * This function is called to make LED at GPIO0 (configured as output) blink
+ * a number of times.
+ *
+ * @b NOTE:
+ *
+ * - Should be called after led_init() function since it configures
+ * GPIO0 in OUTPUT_MODE upon MSS power on reset.
+ *
+ * @param num[in]
+ * @param ms_delay[in]   Blink delay in ms_delay
+ *
+ */void led_blink_repeat(uint32_t num, uint32_t ms_delay)
+{
+	int i;
+	for (i = 0; i < num; ++i) {
+		led_blink_for(ms_delay);
+		timer_delay(ms_delay);
+	}
+}
 
 
 /**

@@ -27,20 +27,9 @@
 #define UTILS_LED_H_
 
 
-/*
- * LED Blink Type Definitions - based on number of times LED blinks, we can
- * identify the type of error that occurred in MSS.
- */
-typedef enum {
-	/* Blink 4 times with 250 ms on/off period to indicate MSS power-on reset */
-	LED_POWER_ON  = 1,
-	/* Blink 16 times with 100 ms on/off period to indicate POWER_OFF MSP cmd. */
-	LED_POWER_OFF = 2
-} led_blink_t;
-
-
 void led_init(void);
-void led_blink(led_blink_t blink_type);
+void led_blink_for(uint32_t ms_delay);
+void led_blink_repeat(uint32_t num, uint32_t ms_delay);
 void led_turn_on(void);
 void led_turn_off(void);
 

@@ -83,8 +83,10 @@ int main(void)
 
 	/* Apply configuration if there is an existing one */
 	if (citiroc_conf_id == nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
+		// TODO: Check for return value here!
 		mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
 				&citiroc_conf_id);
+		// TODO: Check for return value here!
 		mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 		          (uint8_t*)nvm_conf_addr);
 		citiroc_send_slow_control();

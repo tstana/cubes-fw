@@ -627,8 +627,10 @@ void msp_exprecv_complete(unsigned char opcode)
 
 			/* Apply configuration if there is an existing one */
 			if (citiroc_conf_id == nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
+				// TODO: Check for return value here!
 				mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
 						&citiroc_conf_id);
+				// TODO: Check for return value here!
 				mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 				          (uint8_t*)nvm_conf_addr);
 				citiroc_send_slow_control();
@@ -638,7 +640,8 @@ void msp_exprecv_complete(unsigned char opcode)
 		}
 		
 		case MSP_OP_SEND_CUBES_PROB_CONF:
-            mem_write(MEM_CITIROC_PROBE_ADDR, MEM_CITIROC_PROBE_LEN, recv_data);
+			// TODO: Check for return value here!
+			mem_write(MEM_CITIROC_PROBE_ADDR, MEM_CITIROC_PROBE_LEN, recv_data);
             citiroc_send_probes();
             break;
 		

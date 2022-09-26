@@ -9,7 +9,7 @@
 
 #include "../firmware/drivers/mss_i2c/mss_i2c.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
-#include "../mem_mgmt/mem_mgmt.h"
+#include "../mem/mem.h"
 
 #include "msp_i2c.h"
 #include "msp_exp.h"

@@ -32,7 +32,7 @@
 #include "utils/timer_delay.h"
 #include "hk_adc/hk_adc.h"
 #include "hvps/hvps_c11204-02.h"
-#include "mem_mgmt/mem_mgmt.h"
+#include "mem/mem.h"
 #include "msp/msp_exp.h"
 #include "msp/msp_i2c.h"
 #include "utils/led.h"
@@ -42,7 +42,7 @@ extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
 
-uint8_t cfg_id;
+uint8_t citiroc_conf_id;
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -50,19 +50,13 @@ uint8_t cfg_id;
  */
 int main(void)
 {
-	nvm_reset_counter_increment();
+	mem_reset_counter_increment();
 
-	nvm_restore_msp_seqflags();
+	mem_restore_msp_seqflags();
 
-	/* Timer Delay Init */
 	timer_delay_init();
 
-    /* Led Init to configure GPIO0 */
 	led_init();
-
-    /* Flash on-board LED to indicate power-on; leave LED on after. */
-	led_blink_repeat(2, 500);
-	led_turn_on();
 
 	msp_i2c_init(MSP_EXP_ADDR);
 
@@ -75,13 +69,24 @@ int main(void)
 	MSS_TIM64_enable_irq();
 	NVIC_SetPriority(Timer1_IRQn, 1);
 
-	/* Load Citiroc configuration on startup */
-	mem_read(NVM_CITIROC_CONF_NUM, (uint32_t *)&cfg_id);
-	uint8_t *nvm_cfg_addr =
-			(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
+    /* Flash on-board LED to indicate init. done; leave LED on after. */
+	led_blink_repeat(2, 500);
+	led_turn_on();
 
-	if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
-		mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
+	/*
+	 * Load Citiroc configuration on startup
+	 */
+	mem_read(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
+			(uint32_t *)&citiroc_conf_id);
+	uint32_t *nvm_conf_addr = (uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
+			(citiroc_conf_id * MEM_CITIROC_CONF_LEN));
+
+	/* Apply configuration if there is an existing one */
+	if (citiroc_conf_id == nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
+		mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
+				&citiroc_conf_id);
+		mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
+		          (uint8_t*)nvm_conf_addr);
 		citiroc_send_slow_control();
 	} else {
 		/* TODO: Handle what happens if no config found... */
@@ -161,5 +166,6 @@ int main(void)
 		}
 	}
 
+	// This point should not be reached
 	return -1;
 }

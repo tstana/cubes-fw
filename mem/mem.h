@@ -1,8 +1,8 @@
 /**
- * @file mem_mgmt.h
+ * @file mem.h
  *
  *  Created on: 15 jan. 2019
- *  Copyright © 2020 Theodor Stana and Marcus Persson
+ *  Copyright © 2022 Theodor Stana (based on previous code by Marcus Persson)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
@@ -23,38 +23,26 @@
  * SOFTWARE.
  */
 
-#include "../firmware/drivers/mss_nvm/mss_nvm.h"
+#ifndef _MEM_H_
+#define _MEM_H_
+
 #include "../firmware/cubes_hw_platform.h"
+#include "../firmware/drivers/mss_nvm/mss_nvm.h"
 
 
-#ifndef _MEM_MGMT_H_
-#define _MEM_MGMT_H_
+/* Define eSRAM base and top addresses (seemingly missing in CMSIS...?) */
+#define MEM_ESRAM_BASE    (0x20000000)
+#define MEM_ESRAM_TOP     (0x3fffffff)
 
-#define NVM_CITIROC             (0x01u)
-#define NVM_HVPS                (0x02u)
-#define NVM_SEQFLAG             (0x03u)
-#define NVM_RESET               (0x04u)
-#define NVM_CITIROC_CONF_NUM    (0x05u)
-#define RAM_CITI_CONF           (0x11u)
-#define RAM_CITI_PROBE          (0x14u)
+/* Configuration RAM contents */
+#define MEM_CITIROC_CONF_ADDR   (CFG_RAM + 0x00)
+#define MEM_CITIROC_CONF_LEN    (144u)
+#define MEM_CITIROC_PROBE_ADDR  (CFG_RAM + 0x90)
+#define MEM_CITIROC_PROBE_LEN   ( 32u)
 
-#define CITIROC_OFS     (0x00)
-#define CITIROC_LEN     (144u)
-#define CITIROC_NUM_LEN	(4u)
-#define PROBE_OFS       (0x90)
-#define PROBE_LEN       (32u)
-
-#define SEQFLAG_LEN     sizeof(msp_seqflags_t)
-
-#define RAM_ADDR                (0x20000000u)
-#define NVM_ADDR                (0x60000000u)
-#define SEQFLAG_OFFSET          (0xF100)
-#define CITIROC_CONF_NUM_OFFSET (0xFFF0)
-#define CITIROC_OFFSET          (0x10000)
 
 /*
- * Histogram Organization
- *
+ * Histo-RAM contents in gateware:
  *  Histo-RAM Header     :   256
  *  Histo-RAM HG, Ch.  0 :  4096 (2048 x 2-byte bins)
  *  Histo-RAM LG, Ch.  0 :  4096
@@ -65,70 +53,114 @@
  *                 ------------
  *                 Total : 24832 bytes
  */
-#define HISTO_ADDR      (HISTO_RAM)
-	#define HISTO_LEN            (24832)
-	#define HISTO_NUM_BINS_GW    ( 2048)
-	#define HISTO_HDR_NUM_BYTES  (  256)
-
-#define NVM_SEQFLAG_ADDR  (0x6000F000)
+#define MEM_HISTO_LEN_GW        (24832u)
+#define MEM_HISTO_NUM_BINS_GW   ( 2048u)
+#define MEM_HISTO_HDR_LEN       (  256u)
 
 
-/** mem_ram_write
- * Function for writing data to RAM.
- * @param 	Reference to submodule (see defines at top of this file)
- * @param	uint8_t pointer to where data is to be transferred from
- * Return: None
- */
+/* Define eNVM base and top addresses (seemingly missing in CMSIS...?) */
+#define MEM_ENVM0_BASE    (0x60000000)
+#define MEM_ENVM0_TOP     (0x60003fff)
 
-void mem_ram_write(uint32_t modul, uint8_t *data);
+/* Reset Counter */
+#define MEM_RESET_COUNTER_ADDR  (0x6000f000)
+#define MEM_RESET_COUNTER_LEN   (4u)
 
+/* MSP Sequence Flags */
+#define MEM_SEQFLAGS_ADDR       (0x6000f100)
+#define MEM_SEQFLAGS_LEN        sizeof(msp_seqflags_t)
 
-/** mem_read
- * Function for reading data from NVM.
- * @param   Reference to submodule (see defines at top of this file)
- * @param   uint8_t pointer to where data is to be transferred
- * Return: None
- */
-uint32_t mem_read(uint32_t modul, uint32_t *data);
-
-/** mem_nvm_write
- * Function for writing data to NVM.
- * @param   uint32_t Reference to submodule to be written for.
- * @param   uint8_t pointer to where data is to be transferred from
- * @return  int with value 0 if passed, -1 if any failure.
- */
-
-int mem_nvm_write(uint32_t modul, uint8_t* data);
+/* Citiroc configuration in Non-Volatile Memory */
+#define MEM_CITIROC_CONF_ADDR_NVM   (0x60010000)
+#define MEM_CITIROC_CONF_ID_ADDR    (0x6001fff0)
+#define MEM_CITIROC_CONF_ID_LEN     (1u)
 
 
 /**
- * nvm_reset_counter_increment
+ * @brief Write data to ESRAM memory address
+ *
+ * @param   addr  Memory address to write to
+ * @param   len   Number of bytes to write to memory
+ * @param   data  Pointer to where data is to be read from
+ * @return  0  if the write was successful
+ *          1  if the write was not within ESRAM or peripheral memory space
+ *             (0x20000000 to 0x5fffffff)
+ */
+int mem_write(uint32_t addr, uint32_t len, uint8_t *data);
+
+
+/**
+ * @brief Read data from memory
+ *
+ * @param   addr  Reference to submodule (see defines at top of this file)
+ * @param   len   Number of bytes to read from memory
+ * @param   data  Pointer to where data is to be written to
+ */
+void mem_read(uint32_t addr, uint32_t len, uint32_t *data);
+
+/**
+ * @brief Write data to MSS Non-Volatile Memory
+ *
+ * This function unlocks `len` memory addresses starting from `addr` and
+ * attempts to write them using the `mss_nvm` API.
+ *
+ * @param addr  Address to start writing from
+ * @param len   Number of bytes to write
+ * @param data  Pointer to data to write to NVM
+ * @return `NVM_SUCCESS` in case of successful write
+ *         `NVM_WRITE_THRESHOLD_WARNING` in case the number of writes threshold
+ *                                       to a memory address has been reached.
+ *                                       Note that the write could still have
+ *                                       been performed successfully, but this
+ *                                       is not guaranteed.
+ *         In case of other error: See the `NVM_unlock()` and `NVM_write()`
+ *         functions of `mss_nvm.h`.
+ */
+nvm_status_t mem_write_nvm(uint32_t addr, uint32_t len, uint8_t *data);
+
+
+/**
  * @brief Read, increment, then write reset counter at appropriate NVM address
+ *
+ * @return See return status of `NVM_write()` function in `mss_nvm.h`.
  */
-void nvm_reset_counter_increment(void);
+nvm_status_t mem_reset_counter_increment(void);
+
 
 /**
- * nvm_reset_counter_read
- * @brief Read function of NVM reset counter.
- * @return uint32_t Value of counter
+ * @brief Read reset counter from NVM.
+ * @return Reset counter value
  */
 
-uint32_t nvm_reset_counter_read(void);
+uint32_t mem_reset_counter_read(void);
+
 
 /**
- * nvm_reset_counter_reset
- * @brief Reset value for NVM reset counter
+ * @brief Clear reset counter value stored in NVM (reset its contents to '0')
+ *
+ * @return See return status of `NVM_write()` function in `mss_nvm.h`.
  */
-void nvm_reset_counter_reset(void);
+nvm_status_t mem_reset_counter_clear(void);
 
 
 /**
  * @brief Save MSP sequence flags to NVM
- * @return Status of NVM unlock or write operation, search for "nvm_status_t" in
- *         mss_nvm.h
+ * @return `NVM_SUCCESS` in case of successful write
+ *         `NVM_WRITE_THRESHOLD_WARNING` in case the number of writes threshold
+ *                                       to a memory address has been reached.
+ *                                       Note that the write could still have
+ *                                       been performed successfully, but this
+ *                                       is not guaranteed.
+ *         In case of other error: See the `NVM_unlock()` and `NVM_write()`
+ *         functions of `mss_nvm.h`.
  */
-nvm_status_t nvm_save_msp_seqflags(void);
+nvm_status_t mem_save_msp_seqflags(void);
 
-void nvm_restore_msp_seqflags(void);
+
+/**
+ * @brief Read MSP sequence flags from NVM and restore them for a new transaction
+ */
+void mem_restore_msp_seqflags(void);
+
 
 #endif /* _MEM_MGMT_H_ */

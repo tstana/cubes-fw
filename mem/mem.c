@@ -1,8 +1,8 @@
 /**
- * @file mem_mgmt.c
+ * @file mem.c
  *
  *  Created on: 15 jan. 2019
- *  Copyright © 2020 Theodor Stana and Marcus Persson
+ *  Copyright © 2022 Theodor Stana (based on previous code by Marcus Persson)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
@@ -23,160 +23,95 @@
  * SOFTWARE.
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "mem_mgmt.h"
+#include "mem.h"
 
 #include "../msp/msp_exp_state.h"
 
 
-void mem_ram_write(uint32_t modul, uint8_t *data){
-	uint32_t length=0;
-	uint32_t *addr = (uint32_t *) 0x00000000;
-
-	switch(modul){
-	case RAM_CITI_CONF:
-		length=CITIROC_LEN;
-		addr=(uint32_t *)(CFG_RAM + CITIROC_OFS);
-		break;
-	case RAM_CITI_PROBE:
-		length = PROBE_LEN;
-		addr=(uint32_t *)(CFG_RAM + PROBE_OFS);
-		break;
-	default:
-		addr = (uint32_t *) modul;
-		length=8;
-		//return;
-	}
-	for(int i=0; i < length; i += 4) {
-		*addr = (data[i+3] << 24) |
-				(data[i+2] << 16) |
-				(data[i+1] <<  8) |
-				(data[i]);
-		addr += 1;
-	}
-}
-
-int mem_nvm_write(uint32_t modul, uint8_t *data){
-	uint32_t length=0;
-	uint32_t *addr = (uint32_t *)0x00000000;
-	switch(modul){
-	case NVM_CITIROC:
-		length=CITIROC_LEN;
-		addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET+(data[length-1]*length));
-		break;
-	case NVM_CITIROC_CONF_NUM:
-		length=CITIROC_NUM_LEN;
-		addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NUM_OFFSET);
-		break;
-	case NVM_SEQFLAG:
-		length=SEQFLAG_LEN;
-		addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
-		break;
-	case NVM_RESET:
-		length = 4;
-		addr=(uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address*/
-		break;
-	default:
-		return -1;
-	}
-	nvm_status_t status = NVM_unlock((uint32_t)addr, length);
-			if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-				status=NVM_write((uint32_t)addr, data, length, NVM_DO_NOT_LOCK_PAGE);
-				if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status))
-					return 0;
-				else
-					return -1;
-			}
-			else
-				return -1;
-}
-
-uint32_t mem_read(uint32_t modul, uint32_t *data)
+int mem_write(uint32_t addr, uint32_t len, uint8_t *data)
 {
-	uint32_t length=0;
-	uint32_t *addr;
+	if ((addr < MEM_ESRAM_BASE) || (addr >= MEM_ENVM0_BASE))
+		return 1;
 
-	/* Set length and address pointer to correct module through switch */
-	switch(modul){
-		case NVM_CITIROC:
-			length = CITIROC_LEN;
-			addr=(uint32_t *)(NVM_ADDR+CITIROC_OFFSET);
-			break;
-		case NVM_CITIROC_CONF_NUM:
-            length=CITIROC_NUM_LEN;
-            addr=(uint32_t *)(NVM_ADDR+CITIROC_CONF_NUM_OFFSET);
-            break;
-		case NVM_RESET:
-			length = 4;
-			addr= (uint32_t *)(NVM_ADDR+0xFE00); /* Free offset address */
-			break;
-		case NVM_SEQFLAG:
-			length = SEQFLAG_LEN;
-			addr=(uint32_t *)(NVM_ADDR+SEQFLAG_OFFSET);
-			break;
-		default:
-			return -1; /* If the statement isn't found, return without reading */
+	uint32_t* memaddr = (uint32_t*)addr;
+
+	for (int i = 0; i < len; i+=4) {
+		*memaddr = (data[i+3] << 24) |
+		           (data[i+2] << 16) |
+		           (data[i+1] <<  8) |
+		           (data[i]);
+		++memaddr;
 	}
 
-	/*
-	 * Inputs to length so far were in number of bytes; turn into number of
-	 * 32-bit addresses, then copy the actual data.
-	 */
-	length /= 4;
+	return 0;
+}
 
-	int i;
-	for (i = 0; i < length; ++i)
-	{
-		data[i] = addr[i];
+
+void mem_read(uint32_t addr, uint32_t len, uint32_t *data)
+{
+	uint32_t* memaddr = (uint32_t*)addr;
+
+	/* Length is in number of bytes; turn into number of 32-bit words, read...*/
+	len /= 4;
+	for (int i = 0; i < len; ++i) {
+		data[i] = memaddr[i];
 	}
-
-	/* and return the number of bytes copied */
-	return length*4;
 }
 
-void nvm_reset_counter_increment(void)
+
+nvm_status_t mem_write_nvm(uint32_t addr, uint32_t len, uint8_t *data)
 {
-	uint32_t counter = 0;
-	mem_read(NVM_RESET, &counter);
-	counter++;
-	mem_nvm_write(NVM_RESET, (uint8_t *)&counter);
-}
+	nvm_status_t status = NVM_unlock(addr, len);
 
-uint32_t nvm_reset_counter_read(void)
-{
-	uint32_t counter = 0;
-	mem_read(NVM_RESET, &counter);
-	return counter;
-}
+	if((status == NVM_SUCCESS) || (status == NVM_WRITE_THRESHOLD_WARNING))
+		status = NVM_write(addr, data, len, NVM_LOCK_PAGE);
 
-void nvm_reset_counter_reset(void){
-	uint8_t resetvalue[4] = {0, 0, 0, 0};
-	mem_nvm_write(NVM_RESET, resetvalue);
-}
-
-nvm_status_t nvm_save_msp_seqflags(void)
-{
-	msp_seqflags_t seqflags = msp_exp_state_get_seqflags();
-	nvm_status_t status;
-
-	status = NVM_unlock(NVM_SEQFLAG_ADDR, sizeof(msp_seqflags_t));
-	if((NVM_SUCCESS == status)||(NVM_WRITE_THRESHOLD_WARNING == status)){
-		status = NVM_write(NVM_SEQFLAG_ADDR,
-		                   (uint8_t*)&seqflags,
-		                   sizeof(msp_seqflags_t),
-		                   NVM_LOCK_PAGE);
-	}
 	return status;
 }
 
-void nvm_restore_msp_seqflags(void)
+
+nvm_status_t mem_reset_counter_increment(void)
 {
-	msp_seqflags_t seqflags;
-	mem_read(NVM_SEQFLAG, (uint32_t *)&seqflags);
-	msp_exp_state_initialize(seqflags);
+	uint32_t counter = 0;
+	mem_read(MEM_RESET_COUNTER_ADDR, 4, &counter);
+	counter++;
+	return mem_write_nvm(MEM_RESET_COUNTER_ADDR, 4, (uint8_t *)&counter);
 }
 
+
+uint32_t mem_reset_counter_read(void)
+{
+	uint32_t counter = 0;
+	mem_read(MEM_RESET_COUNTER_ADDR, 4, &counter);
+	return counter;
+}
+
+
+nvm_status_t mem_reset_counter_clear(void)
+{
+	uint8_t resetvalue[4] = {0, 0, 0, 0};
+	return mem_write_nvm(MEM_RESET_COUNTER_ADDR, 4, resetvalue);
+}
+
+
+nvm_status_t mem_save_msp_seqflags(void)
+{
+	nvm_status_t status;
+	msp_seqflags_t s = msp_exp_state_get_seqflags();
+
+	status = NVM_unlock(MEM_SEQFLAGS_ADDR, sizeof(msp_seqflags_t));
+	if((status == NVM_SUCCESS) || (status == NVM_WRITE_THRESHOLD_WARNING)) {
+		status = NVM_write(MEM_SEQFLAGS_ADDR, (uint8_t*)&s,
+		                   sizeof(msp_seqflags_t), NVM_LOCK_PAGE);
+	}
+
+	return status;
+}
+
+
+void mem_restore_msp_seqflags(void)
+{
+	msp_seqflags_t s;
+	mem_read(MEM_SEQFLAGS_ADDR, MEM_SEQFLAGS_LEN, (uint32_t*)&s);
+	msp_exp_state_initialize(s);
+}

@@ -30,7 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../mem_mgmt/mem_mgmt.h"
+#include <system_m2sxxx.h>
+
+#include "../mem/mem.h"
 
 #include "../hvps/hvps_c11204-02.h"
 
@@ -39,7 +41,6 @@
 #include "../firmware/drivers/mss_timer/mss_timer.h"
 #include "../utils/led.h"
 #include "../utils/timer_delay.h"
-#include "CMSIS/system_m2sxxx.h"
 
 #include "../hk_adc/hk_adc.h"
 
@@ -50,7 +51,7 @@
  * for the histogram.
  */
 static uint8_t *send_data;
-static unsigned char send_data_payload[HISTO_LEN]="";
+static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[64] = "";
 static uint8_t comp_date[70];
 
@@ -61,7 +62,7 @@ static uint8_t comp_date[70];
  * received from the OBC.
  */
 
-#define RECV_MAXLEN (CITIROC_LEN)
+#define RECV_MAXLEN (MEM_CITIROC_CONF_LEN)
 
 static unsigned char recv_data[RECV_MAXLEN];
 static unsigned long recv_length;
@@ -82,7 +83,7 @@ static uint8_t bin_cfg[6];
 static uint16_t *table;
 
 /* Global configuration id variable */
-extern uint8_t cfg_id;
+extern uint8_t citiroc_conf_id;
 
 // local variables used for TIM64
 static uint64_t timer_load_value;
@@ -186,27 +187,27 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 	unsigned long data_idx; // Index used to access data form histo_data
 	unsigned long start_idx; // first index in histo_data
 
-	uint32_t *histo_data = (uint32_t *)HISTO_ADDR;
+	uint32_t *histo_data = (uint32_t *)HISTO_RAM;
 
 	/* histogram header into send_data_payload */
 	len = 0;
-	for (i=0; i<HISTO_HDR_NUM_BYTES/4; i++) {
+	for (i = 0; i < MEM_HISTO_HDR_LEN/4; i++) {
 		send_idx = i*4;
 		send_data_payload[send_idx + 1] = histo_data[i] & 0xFF;
 		send_data_payload[send_idx + 0] = histo_data[i]>>8 & 0xFF;
 		send_data_payload[send_idx + 3] = histo_data[i]>>16 & 0xFF;
 		send_data_payload[send_idx + 2] = histo_data[i]>>24 & 0xFF;
 	}
-	len = HISTO_HDR_NUM_BYTES;
+	len = MEM_HISTO_HDR_LEN;
 
-	for (i=0; i<6; i++) {
+	for (i = 0; i < 6; i++) {
 		//start index for next histogram
-		start_idx = i*HISTO_NUM_BINS_GW/2 + HISTO_HDR_NUM_BYTES/4;
+		start_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
 
 		if (bin_config[i] == 0) {
 			/* No re-binning */
-			num_bins = HISTO_NUM_BINS_GW;
-			for (j=0; j<HISTO_NUM_BINS_GW/2; j++) {
+			num_bins = MEM_HISTO_NUM_BINS_GW;
+			for (j=0; j < MEM_HISTO_NUM_BINS_GW/2; j++) {
 				send_idx = j*4 + len;
 				data_idx = j + start_idx;
 				send_data_payload[send_idx + 1] = histo_data[data_idx] & 0xFF;
@@ -214,11 +215,11 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 				send_data_payload[send_idx + 3] = histo_data[data_idx]>>16 & 0xFF;
 				send_data_payload[send_idx + 2] = histo_data[data_idx]>>24 & 0xFF;
 			}
-			len = len + HISTO_NUM_BINS_GW*2;
+			len = len + MEM_HISTO_NUM_BINS_GW*2;
 		} else if (bin_config[i] < 7) {
 			/* Re-binning with equal interval bins */
-			num_bins = HISTO_NUM_BINS_GW>>bin_config[i];
-			bin_size = 1<<bin_config[i];
+			num_bins = MEM_HISTO_NUM_BINS_GW >> bin_config[i];
+			bin_size = 1 << bin_config[i];
 			for (j=0; j<num_bins; j++) {
 				bin = 0;
 				for (k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {
@@ -244,11 +245,11 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 				num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
 				table = table2;
 			}
-			for (j=0; j<num_bins; j++) {
+			for (j = 0; j < num_bins; j++) {
 			    bin_size = *(table+j+1) - *(table+j);
 				if (carry_over == 0 && bin_size%2 == 0) {
 					carry_over = 0;
-					for (k=*(table+j)/2; k<*(table+j+1)/2; k++) {
+					for (k = *(table+j)/2; k < *(table+j+1)/2; k++) {
 						data_idx = k + start_idx;
 						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 						      (histo_data[data_idx] & 0xFFFF);
@@ -257,7 +258,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 				} else if (carry_over == 0 && bin_size%2 == 1) {
 					carry_over = 1;
 					if (bin_size != 1) {
-						for (k=*(table+j)/2; k<(*(table+j+1)-1)/2; k++) {
+						for (k = *(table+j)/2; k < (*(table+j+1)-1)/2; k++) {
 							data_idx = k + start_idx;
 							bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 							      (histo_data[data_idx] & 0xFFFF);
@@ -272,7 +273,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 					carry_over = 1;
 					k = (*(table+j)-1)/2;
 					bin = histo_data[k + start_idx]>>16 & 0xFFFF;
-					for (k=(*(table+j)+1)/2; k<(*(table+j+1)-1)/2; k++) {
+					for (k = (*(table+j)+1)/2; k < (*(table+j+1)-1)/2; k++) {
 						data_idx = k + start_idx;
 						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 						      (histo_data[data_idx] & 0xFFFF);
@@ -284,7 +285,7 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 					k = (*(table+j)-1)/2;
 					bin = histo_data[k + start_idx]>>16 & 0xFFFF;
 					if (bin_size != 1) {
-						for (k=(*(table+j)+1)/2; k<*(table+j+1)/2; k++) {
+						for (k = (*(table+j)+1)/2; k < *(table+j+1)/2; k++) {
 							data_idx = k + start_idx;
 							bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
 							      (histo_data[data_idx] & 0xFFFF);
@@ -303,11 +304,11 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 
 	/* Set the `bin_cfg` fields in the Histo-RAM header */
 	for (i = 0; i < 6; i++) {
-		send_data_payload[HISTO_HDR_NUM_BYTES-6+i] = bin_cfg[i];
+		send_data_payload[MEM_HISTO_HDR_LEN - 6 + i] = bin_cfg[i];
 	}
 
 	/* Add configuration id */
-	send_data_payload[249] = cfg_id;
+	send_data_payload[249] = citiroc_conf_id;
 
 	return len;
 }
@@ -346,7 +347,7 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		u32val = cubes_get_time();
 		to_bigendian32(send_data_hk, u32val);
 
-		u32val = nvm_reset_counter_read();
+		u32val = mem_reset_counter_read();
 		to_bigendian32(send_data_hk+4, u32val);
 
 		u32val = citiroc_hcr_get(0);
@@ -604,29 +605,40 @@ void msp_exprecv_complete(unsigned char opcode)
 		}
 
 		case MSP_OP_SEND_CUBES_CITI_CONF:
-			mem_ram_write(RAM_CITI_CONF, recv_data);
+			// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
+			// TODO: Check for return code!
+			mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN, recv_data);
 			citiroc_send_slow_control();
 			break;
 
 		case MSP_OP_SEND_NVM_CITI_CONF:
-			mem_nvm_write(NVM_CITIROC, recv_data);
+			// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
+			// TODO: Check for return code!
+			mem_write_nvm(MEM_CITIROC_CONF_ADDR_NVM, MEM_CITIROC_CONF_LEN,
+					recv_data);
 			break;
 
 		case MSP_OP_SELECT_NVM_CITI_CONF:
 		{
-			cfg_id = (uint8_t)recv_data[0];
-			uint8_t *nvm_cfg_addr = 
-				(uint8_t *)(NVM_ADDR+CITIROC_OFFSET+(cfg_id*CITIROC_LEN));
-			if (cfg_id == nvm_cfg_addr[CITIROC_LEN-1]) {
-				mem_nvm_write(NVM_CITIROC_CONF_NUM, &cfg_id);
-				mem_ram_write(RAM_CITI_CONF, nvm_cfg_addr);
+			/* Get CONF_ID from MSP frame */
+			citiroc_conf_id = (uint8_t)recv_data[0];
+			uint32_t *nvm_conf_addr = (uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
+					(citiroc_conf_id * MEM_CITIROC_CONF_LEN));
+
+			/* Apply configuration if there is an existing one */
+			if (citiroc_conf_id == nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
+				mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
+						&citiroc_conf_id);
+				mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
+				          (uint8_t*)nvm_conf_addr);
 				citiroc_send_slow_control();
 			}
+
 			break;
 		}
 		
 		case MSP_OP_SEND_CUBES_PROB_CONF:
-            mem_ram_write(RAM_CITI_PROBE, recv_data);
+            mem_write(MEM_CITIROC_PROBE_ADDR, MEM_CITIROC_PROBE_LEN, recv_data);
             citiroc_send_probes();
             break;
 		
@@ -650,7 +662,7 @@ void msp_exprecv_complete(unsigned char opcode)
 		{
 			uint8_t resetvalue = recv_data[0];
 			if (resetvalue & 0b00000001)
-				nvm_reset_counter_reset();
+				mem_reset_counter_clear();    // TODO: Check return value?
 			if (resetvalue & 0b00000010)
 				citiroc_hcr_reset();
 			if (resetvalue & 0b00000100)
@@ -714,7 +726,7 @@ void msp_exprecv_syscommand(unsigned char opcode)
 		case MSP_OP_POWER_OFF:
 			hvps_turn_off();
 			citiroc_daq_stop();
-			nvm_save_msp_seqflags();
+			mem_save_msp_seqflags();     // TODO: Check return value!
 			led_blink_repeat(4, 500);
 			break;
 		case MSP_OP_CUBES_DAQ_START:

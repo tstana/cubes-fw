@@ -30,12 +30,11 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "hvps_c11204-02.h"
+
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
-#include "hvps_c11204-02.h"
 #include "../msp/msp_i2c.h"
-
-#include "../mem_mgmt/mem_mgmt.h"
 
 
 #define HVPS_MAX_VB (55.0)

@@ -28,6 +28,9 @@
 #include "../msp/msp_exp_state.h"
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 int mem_write(uint32_t addr, uint32_t len, uint8_t *data)
 {
 	if ((addr < MEM_ESRAM_BASE) || (addr >= MEM_ENVM0_BASE))
@@ -47,6 +50,9 @@ int mem_write(uint32_t addr, uint32_t len, uint8_t *data)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 void mem_read(uint32_t addr, uint32_t len, uint8_t *data)
 {
 	uint32_t* memaddr = (uint32_t*)addr;
@@ -60,6 +66,9 @@ void mem_read(uint32_t addr, uint32_t len, uint8_t *data)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 nvm_status_t mem_write_nvm(uint32_t addr, uint32_t len, uint8_t *data)
 {
 	nvm_status_t status = NVM_unlock(addr, len);
@@ -71,6 +80,9 @@ nvm_status_t mem_write_nvm(uint32_t addr, uint32_t len, uint8_t *data)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 nvm_status_t mem_reset_counter_increment(void)
 {
 	uint32_t counter = 0;
@@ -80,6 +92,9 @@ nvm_status_t mem_reset_counter_increment(void)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 uint32_t mem_reset_counter_read(void)
 {
 	uint32_t counter = 0;
@@ -88,6 +103,9 @@ uint32_t mem_reset_counter_read(void)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 nvm_status_t mem_reset_counter_clear(void)
 {
 	uint8_t resetvalue[4] = {0, 0, 0, 0};
@@ -95,6 +113,9 @@ nvm_status_t mem_reset_counter_clear(void)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 nvm_status_t mem_save_msp_seqflags(void)
 {
 	nvm_status_t status;
@@ -110,6 +131,9 @@ nvm_status_t mem_save_msp_seqflags(void)
 }
 
 
+/*
+ * See mem.h for this function's synopsis
+ */
 void mem_restore_msp_seqflags(void)
 {
 	msp_seqflags_t s;

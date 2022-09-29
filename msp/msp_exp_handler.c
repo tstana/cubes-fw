@@ -84,6 +84,7 @@ static uint16_t *table;
 
 /* Global configuration id variable */
 extern uint8_t citiroc_conf_id;
+extern uint8_t clean_poweroff;
 
 // local variables used for TIM64
 static uint64_t timer_load_value;
@@ -729,7 +730,10 @@ void msp_exprecv_syscommand(unsigned char opcode)
 		case MSP_OP_POWER_OFF:
 			hvps_turn_off();
 			citiroc_daq_stop();
-			mem_save_msp_seqflags();     // TODO: Check return value!
+			if (mem_save_msp_seqflags() == NVM_SUCCESS) {
+				clean_poweroff = 1;
+				mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
+			}
 			led_blink_repeat(4, 500);
 			break;
 		case MSP_OP_CUBES_DAQ_START:

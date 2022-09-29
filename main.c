@@ -1,7 +1,7 @@
 /*
  * Main file of CUBES Cortex-M3 Firmware
  *
- * Copyright © 2020 Theodor Stana and Marcus Persson
+ * Copyright © 2022 Theodor Stana and Marcus Persson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to deal
@@ -28,19 +28,24 @@
 
 #include "firmware/drivers/mss_timer/mss_timer.h"
 #include "firmware/drivers/citiroc/citiroc.h"
-#include "utils/led.h"
-#include "utils/timer_delay.h"
+
 #include "hk_adc/hk_adc.h"
+
 #include "hvps/hvps_c11204-02.h"
+
 #include "mem/mem.h"
+
 #include "msp/msp_exp.h"
 #include "msp/msp_i2c.h"
+
 #include "utils/led.h"
 #include "utils/timer_delay.h"
 
 extern unsigned int has_recv;
 extern unsigned int has_send;
 extern unsigned int has_syscommand;
+
+uint8_t clean_poweroff = 0;
 
 uint8_t citiroc_conf_id;
 
@@ -52,13 +57,10 @@ int main(void)
 {
 	mem_reset_counter_increment();
 
-	mem_restore_msp_seqflags();
-
+	/* Peripheral initializations */
 	timer_delay_init();
 
 	led_init();
-
-	msp_i2c_init(MSP_EXP_ADDR);
 
 	hvps_init();
 
@@ -68,6 +70,19 @@ int main(void)
 	MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
 	MSS_TIM64_enable_irq();
 	NVIC_SetPriority(Timer1_IRQn, 1);
+
+	/*
+	 * Init. MIST Space Protocol stack; use new MSP seq. flags if previous
+	 * power-off was "not so clean".
+	 */
+	msp_i2c_init(MSP_EXP_ADDR);
+
+	mem_read(MEM_CLEAN_POWEROFF_ADDR, 1, (uint32_t*)&clean_poweroff);
+
+	if (clean_poweroff)
+		mem_restore_msp_seqflags();
+	else
+		msp_exp_state_initialize(msp_seqflags_init());
 
     /* Flash on-board LED to indicate init. done; leave LED on after. */
 	led_blink_repeat(2, 500);

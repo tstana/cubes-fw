@@ -70,6 +70,8 @@
 #define MEM_SEQFLAGS_ADDR       (0x6000f100)
 #define MEM_SEQFLAGS_LEN        sizeof(msp_seqflags_t)
 
+#define MEM_CLEAN_POWEROFF_ADDR (0x6000f200)
+
 /* Citiroc configuration in Non-Volatile Memory */
 #define MEM_CITIROC_CONF_ADDR_NVM   (0x60010000)
 #define MEM_CITIROC_CONF_ID_ADDR    (0x6001fff0)

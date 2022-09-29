@@ -47,14 +47,15 @@ int mem_write(uint32_t addr, uint32_t len, uint8_t *data)
 }
 
 
-void mem_read(uint32_t addr, uint32_t len, uint32_t *data)
+void mem_read(uint32_t addr, uint32_t len, uint8_t *data)
 {
 	uint32_t* memaddr = (uint32_t*)addr;
 
-	/* Length is in number of bytes; turn into number of 32-bit words, read...*/
-	len /= 4;
-	for (int i = 0; i < len; ++i) {
+	for (int i = 0; i < len/4; ++i) {
 		data[i] = memaddr[i];
+		data[i+1] = memaddr[i] >>  8;
+		data[i+2] = memaddr[i] >> 16;
+		data[i+3] = memaddr[i] >> 24;
 	}
 }
 
@@ -73,7 +74,7 @@ nvm_status_t mem_write_nvm(uint32_t addr, uint32_t len, uint8_t *data)
 nvm_status_t mem_reset_counter_increment(void)
 {
 	uint32_t counter = 0;
-	mem_read(MEM_RESET_COUNTER_ADDR, 4, &counter);
+	mem_read(MEM_RESET_COUNTER_ADDR, 4, (uint8_t*)&counter);
 	counter++;
 	return mem_write_nvm(MEM_RESET_COUNTER_ADDR, 4, (uint8_t *)&counter);
 }
@@ -82,7 +83,7 @@ nvm_status_t mem_reset_counter_increment(void)
 uint32_t mem_reset_counter_read(void)
 {
 	uint32_t counter = 0;
-	mem_read(MEM_RESET_COUNTER_ADDR, 4, &counter);
+	mem_read(MEM_RESET_COUNTER_ADDR, 4, (uint8_t*)&counter);
 	return counter;
 }
 
@@ -112,6 +113,6 @@ nvm_status_t mem_save_msp_seqflags(void)
 void mem_restore_msp_seqflags(void)
 {
 	msp_seqflags_t s;
-	mem_read(MEM_SEQFLAGS_ADDR, MEM_SEQFLAGS_LEN, (uint32_t*)&s);
+	mem_read(MEM_SEQFLAGS_ADDR, MEM_SEQFLAGS_LEN, (uint8_t*)&s);
 	msp_exp_state_initialize(s);
 }

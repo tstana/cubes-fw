@@ -98,7 +98,7 @@ int mem_write(uint32_t addr, uint32_t len, uint8_t *data);
  * @param   len   Number of bytes to read from memory
  * @param   data  Pointer to where data is to be written to
  */
-void mem_read(uint32_t addr, uint32_t len, uint32_t *data);
+void mem_read(uint32_t addr, uint32_t len, uint8_t *data);
 
 /**
  * @brief Write data to MSS Non-Volatile Memory

@@ -55,13 +55,10 @@ int mem_write(uint32_t addr, uint32_t len, uint8_t *data)
  */
 void mem_read(uint32_t addr, uint32_t len, uint8_t *data)
 {
-	uint32_t* memaddr = (uint32_t*)addr;
+	uint8_t* byte = (uint8_t*)addr;
 
-	for (int i = 0; i < len/4; ++i) {
-		data[i] = memaddr[i];
-		data[i+1] = memaddr[i] >>  8;
-		data[i+2] = memaddr[i] >> 16;
-		data[i+3] = memaddr[i] >> 24;
+	for (int i = 0; i < len; ++i) {
+		data[i] = byte[i];
 	}
 }
 

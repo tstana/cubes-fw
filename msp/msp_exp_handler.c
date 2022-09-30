@@ -734,7 +734,6 @@ void msp_exprecv_syscommand(unsigned char opcode)
 				clean_poweroff = 1;
 				mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
 			}
-			led_blink_repeat(4, 500);
 			break;
 		case MSP_OP_CUBES_DAQ_START:
 			citiroc_hcr_reset();

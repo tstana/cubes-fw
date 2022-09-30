@@ -77,11 +77,13 @@ int main(void)
 	 */
 	msp_i2c_init(MSP_EXP_ADDR);
 
-	mem_read(MEM_CLEAN_POWEROFF_ADDR, 1, (uint32_t*)&clean_poweroff);
+	mem_read(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
 
-	if (clean_poweroff)
+	if (clean_poweroff) {
 		mem_restore_msp_seqflags();
-	else
+		clean_poweroff = 0;
+		mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
+	} else
 		msp_exp_state_initialize(msp_seqflags_init());
 
     /* Flash on-board LED to indicate init. done; leave LED on after. */
@@ -92,7 +94,7 @@ int main(void)
 	 * Load Citiroc configuration on startup
 	 */
 	mem_read(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
-			(uint32_t *)&citiroc_conf_id);
+				&citiroc_conf_id);
 	uint32_t *nvm_conf_addr = (uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
 			(citiroc_conf_id * MEM_CITIROC_CONF_LEN));
 

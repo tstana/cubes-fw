@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <system_m2sxxx.h>
+
 #include "firmware/drivers/mss_timer/mss_timer.h"
 #include "firmware/drivers/citiroc/citiroc.h"
 
@@ -48,6 +50,15 @@ extern unsigned int has_syscommand;
 uint8_t clean_poweroff = 0;
 
 uint8_t citiroc_conf_id;
+
+// local variables used for TIM64
+static uint64_t timer_load_value;
+static uint32_t load_value_u, load_value_l;
+uint64_t temp_value;
+
+extern uint8_t daq_dur;
+
+
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -113,13 +124,6 @@ int main(void)
 
 	/* Infinite loop */
 	while(1) {
-		/*
-		 * The "switch" statement below shows which REQ commands CUBES replies
-		 * to over MSP.
-		 *
-		 * Code that handles preparing the send data can be found in the
-		 * function "msp_expsend_start()", in the file "msp_exp_handler.c"
-		 */
 		if(has_send != 0) {
 			switch(has_send) {
 				case MSP_OP_REQ_PAYLOAD:
@@ -130,13 +134,6 @@ int main(void)
 			has_send=0;
 		}
 
-		/*
-		 * The "switch" statement below shows which SEND commands CUBES
-		 * expects over MSP.
-		 *
-		 * Code that handles using the receive data can be found in the function
-		 * "msp_exprecv_complete()", in the file "msp_exp_handler.c"
-		 */
 		else if(has_recv != 0) {
 			switch(has_recv) {
 				case MSP_OP_SEND_TIME:
@@ -161,24 +158,49 @@ int main(void)
 			has_recv=0;
 		}
 
-		/*
-		 * The "switch" statement below shows which SYSTEM commands CUBES
-		 * expects over MSP.
-		 *
-		 * Code that handles using the receive data can be found in the function
-		 * "msp_exprecv_syscommand()", in the file "msp_exp_handler.c"
-		 */
 		else if(has_syscommand != 0) {
 			switch(has_syscommand) {
 				case MSP_OP_ACTIVE:
+					hvps_turn_on();
 					break;
 				case MSP_OP_SLEEP:
+					hvps_turn_off();
+					citiroc_daq_stop();
 					break;
 				case MSP_OP_POWER_OFF:
+					hvps_turn_off();
+					citiroc_daq_stop();
+					if (mem_save_msp_seqflags() == NVM_SUCCESS) {
+						clean_poweroff = 1;
+						mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
+					}
 					break;
 				case MSP_OP_CUBES_DAQ_START:
+					citiroc_hcr_reset();
+					citiroc_histo_reset();
+					citiroc_daq_set_hvps_temp(hvps_get_temp());
+					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
+					citiroc_daq_set_hvps_volt(hvps_get_voltage());
+					citiroc_daq_set_hvps_curr(hvps_get_current());
+
+					timer_load_value = (uint64_t)(daq_dur-1)*(uint64_t)SystemCoreClock;
+					// split the 64-bit timer_load_value into two 32-bit numbers because
+					// TIM64 needs its parameters that way
+					temp_value = timer_load_value & 0xFFFFFFFF00000000ULL;
+					temp_value = temp_value >> 32;
+					load_value_u = temp_value;
+					load_value_l = (uint32_t)(timer_load_value & 0xFFFFFFFFULL);
+					MSS_TIM64_load_immediate(load_value_u, load_value_l);
+					MSS_TIM64_start();
+					citiroc_daq_start();
 					break;
 				case MSP_OP_CUBES_DAQ_STOP:
+					citiroc_daq_set_hvps_temp(hvps_get_temp());
+					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
+					citiroc_daq_set_hvps_volt(hvps_get_voltage());
+					citiroc_daq_set_hvps_curr(hvps_get_current());
+					citiroc_daq_stop();
+					MSS_TIM64_stop();
 					break;
 			}
 			has_syscommand = 0;
@@ -188,3 +210,13 @@ int main(void)
 	// This point should not be reached
 	return -1;
 }
+
+void Timer1_IRQHandler(void)
+{
+	citiroc_daq_set_hvps_temp(hvps_get_temp());
+	citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
+	citiroc_daq_set_hvps_volt(hvps_get_voltage());
+	citiroc_daq_set_hvps_curr(hvps_get_current());
+	MSS_TIM64_clear_irq();
+}
+

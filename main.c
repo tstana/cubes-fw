@@ -51,11 +51,6 @@ uint8_t clean_poweroff = 0;
 
 uint8_t citiroc_conf_id;
 
-// local variables used for TIM64
-static uint64_t timer_load_value;
-static uint32_t load_value_u, load_value_l;
-uint64_t temp_value;
-
 extern uint8_t daq_dur;
 
 
@@ -159,6 +154,9 @@ int main(void)
 		}
 
 		else if(has_syscommand != 0) {
+			uint64_t timer_load_value;
+			uint32_t load_value_u, load_value_l;
+
 			switch(has_syscommand) {
 				case MSP_OP_ACTIVE:
 					hvps_turn_on();
@@ -172,25 +170,29 @@ int main(void)
 					citiroc_daq_stop();
 					if (mem_save_msp_seqflags() == NVM_SUCCESS) {
 						clean_poweroff = 1;
-						mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
+						mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1,
+						              &clean_poweroff);
 					}
 					break;
 				case MSP_OP_CUBES_DAQ_START:
+					/* Prep. gateware for DAQ */
 					citiroc_hcr_reset();
 					citiroc_histo_reset();
 					citiroc_daq_set_hvps_temp(hvps_get_temp());
 					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
 					citiroc_daq_set_hvps_volt(hvps_get_voltage());
 					citiroc_daq_set_hvps_curr(hvps_get_current());
-
-					timer_load_value = (uint64_t)(daq_dur-1)*(uint64_t)SystemCoreClock;
-					// split the 64-bit timer_load_value into two 32-bit numbers because
-					// TIM64 needs its parameters that way
-					temp_value = timer_load_value & 0xFFFFFFFF00000000ULL;
-					temp_value = temp_value >> 32;
-					load_value_u = temp_value;
-					load_value_l = (uint32_t)(timer_load_value & 0xFFFFFFFFULL);
+					/*
+					 *  Prep. the timer used to store HK to DAQ file one second
+					 *  before end of DAQ. The 64-bit timer_load_value is split
+					 *  into two 32-bit numbers because TIM64 needs its
+					 *  parameters that way.
+					 */
+					timer_load_value = (daq_dur-1) * SystemCoreClock;
+					load_value_u = timer_load_value >> 32;
+					load_value_l = (uint32_t)timer_load_value;
 					MSS_TIM64_load_immediate(load_value_u, load_value_l);
+					/* Start timer and DAQ */
 					MSS_TIM64_start();
 					citiroc_daq_start();
 					break;

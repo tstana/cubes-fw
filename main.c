@@ -588,125 +588,152 @@ static uint16_t get_num_bins(uint8_t bin_config)
 
 static inline void prep_payload_data()
 {
-	unsigned long i, j, k, len;
+	unsigned long i, j, k;
 	uint16_t num_bins;
 	uint8_t bin_size;
 	uint32_t bin;
 
 	unsigned long send_idx; // start index used for send data payload
 	unsigned long data_idx; // Index used to access data form histo_data
-	unsigned long start_idx; // first index in histo_data
 
 	uint32_t *histo_data = (uint32_t *)HISTO_RAM;
 
+	send_idx = 0;
+
 	/* histogram header into send_data_payload */
-	len = 0;
 	for (i = 0; i < MEM_HISTO_HDR_LEN/4; i++) {
-		send_idx = i*4;
 		send_data_payload[send_idx + 1] = histo_data[i] & 0xFF;
 		send_data_payload[send_idx + 0] = histo_data[i]>>8 & 0xFF;
 		send_data_payload[send_idx + 3] = histo_data[i]>>16 & 0xFF;
 		send_data_payload[send_idx + 2] = histo_data[i]>>24 & 0xFF;
+		send_idx += 4;
 	}
-	len = MEM_HISTO_HDR_LEN;
 
 	for (i = 0; i < 6; i++) {
-		//start index for next histogram
-		start_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
+		// data index for next histogram
+		data_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
 
 		num_bins = get_num_bins(bin_cfg[i]);
 
 		if (bin_cfg[i] == 0) {
 			/* No re-binning */
 			for (j=0; j < MEM_HISTO_NUM_BINS_GW/2; j++) {
-				send_idx = j*4 + len;
-				data_idx = j + start_idx;
 				send_data_payload[send_idx + 1] = histo_data[data_idx] & 0xFF;
 				send_data_payload[send_idx] = histo_data[data_idx]>>8 & 0xFF;
 				send_data_payload[send_idx + 3] = histo_data[data_idx]>>16 & 0xFF;
 				send_data_payload[send_idx + 2] = histo_data[data_idx]>>24 & 0xFF;
+				send_idx += 4;
+				data_idx++;
 			}
-			len = len + MEM_HISTO_NUM_BINS_GW*2;
 		} else if (bin_cfg[i] < 7) {
 			/* Re-binning with equal interval bins */
 			bin_size = 1 << bin_cfg[i];
 			for (j=0; j<num_bins; j++) {
 				bin = 0;
 				for (k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {
-
-					data_idx = k + start_idx;
 					bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 					       (histo_data[data_idx] & 0xFFFF);
+					data_idx++;
 				}
 				bin >>= bin_cfg[i];
-				send_idx = j*2 + len;
 				send_data_payload[send_idx + 1] = bin & 0xFF;
 				send_data_payload[send_idx] = (bin>>8) & 0xFF;
+				send_idx += 2;
 			}
-			len = len + num_bins*2;
 		} else if ((11 <= bin_cfg[i]) && (bin_cfg[i] <= 12)) {
 			/* Log-scale binning */
-			unsigned char carry_over;
-			carry_over = 0;
+
+			/*
+			 * Carry-over basically signals the previous bin ended at a
+			 * half-word (bit 16) within a 32-bit word.
+			 */
+			uint8_t carry_over = 0;
+
+			/* Start by selecting the appropriate table array */
 			if (bin_cfg[i] == 11) {
 				table = table1;
 			} else if (bin_cfg[i] == 12) {
 				table = table2;
 			}
+
+			/* Prepare new bin */
+			bin = 0;
+
 			for (j = 0; j < num_bins; j++) {
+				/* Get next bin size by subtracting subsequent val's in table */
 			    bin_size = *(table+j+1) - *(table+j);
-				if (carry_over == 0 && bin_size%2 == 0) {
+
+				if ((carry_over == 0) && (bin_size%2 == 0)) {
+					/*
+					 * Re-binned data will end on 32-bit boundary: new bin is
+					 * simple average.
+					 */
 					carry_over = 0;
 					for (k = *(table+j)/2; k < *(table+j+1)/2; k++) {
-						data_idx = k + start_idx;
-						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
-						      (histo_data[data_idx] & 0xFFFF);
+						bin += (histo_data[data_idx]>>16 & 0xFFFF) +
+						       (histo_data[data_idx] & 0xFFFF);
+						data_idx++;
 					}
-					bin = bin/bin_size;
-				} else if (carry_over == 0 && bin_size%2 == 1) {
+					bin /= bin_size;
+				} else if ((carry_over == 0) && (bin_size%2 == 1)) {
+					/*
+					 * Re-binned data starts at word boundary and will end on
+					 * half-word boundary: new bin will start at word and carry
+					 * over.
+					 */
 					carry_over = 1;
-					if (bin_size != 1) {
+
+					if (bin_size == 1) {
+						bin = histo_data[data_idx] & 0xFFFF;
+					} else {
 						for (k = *(table+j)/2; k < (*(table+j+1)-1)/2; k++) {
-							data_idx = k + start_idx;
-							bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
-							      (histo_data[data_idx] & 0xFFFF);
+							bin += (histo_data[data_idx]>>16 & 0xFFFF) +
+							       (histo_data[data_idx] & 0xFFFF);
+							data_idx++;
 						}
-						bin = bin + (histo_data[k + start_idx] & 0xFFFF);
-						bin = bin/bin_size;
-					} else if (bin_size == 1) {
-						k = *(table+j)/2;
-						bin = histo_data[k + start_idx] & 0xFFFF;
+						bin += (histo_data[data_idx] & 0xFFFF);
+						bin /= bin_size;
 					}
-				} else if (carry_over == 1 && bin_size%2 == 0) {
+				} else if ((carry_over == 1) && (bin_size%2 == 0)) {
+					/*
+					 * Re-binned data starts at half-word and will end at
+					 * half-word: new bin will start at half-word and carry over
+					 */
 					carry_over = 1;
-					k = (*(table+j)-1)/2;
-					bin = histo_data[k + start_idx]>>16 & 0xFFFF;
+					bin = histo_data[data_idx]>>16 & 0xFFFF;
+					data_idx++;
 					for (k = (*(table+j)+1)/2; k < (*(table+j+1)-1)/2; k++) {
-						data_idx = k + start_idx;
-						bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
-						      (histo_data[data_idx] & 0xFFFF);
+						bin += (histo_data[data_idx]>>16 & 0xFFFF) +
+						       (histo_data[data_idx] & 0xFFFF);
+						data_idx++;
 					}
-					bin = bin + (histo_data[k + start_idx] & 0xFFFF);
-					bin = bin/bin_size;
-				} else if (carry_over == 1 && bin_size%2 == 1) {
+					bin += (histo_data[data_idx] & 0xFFFF);
+					bin /= bin_size;
+				} else if ((carry_over == 1) && (bin_size%2 == 1)) {
+					/*
+					 * Re-binned data starts at half-word and will end at word
+					 * boundary: new bin starts at half-word and will not carry
+					 * over.
+					 */
 					carry_over = 0;
-					k = (*(table+j)-1)/2;
-					bin = histo_data[k + start_idx]>>16 & 0xFFFF;
+
+					bin = histo_data[data_idx]>>16 & 0xFFFF;
+					data_idx++;
 					if (bin_size != 1) {
 						for (k = (*(table+j)+1)/2; k < *(table+j+1)/2; k++) {
-							data_idx = k + start_idx;
-							bin = bin + (histo_data[data_idx]>>16 & 0xFFFF) +
-							      (histo_data[data_idx] & 0xFFFF);
+							bin += (histo_data[data_idx]>>16 & 0xFFFF) +
+							       (histo_data[data_idx] & 0xFFFF);
+							data_idx++;
 						}
-						bin = bin/bin_size;
+						bin /= bin_size;
 					}
 				}
-				send_idx = j*2 + len;
+
+				/* Copy re-binned data in big-endian format to payload data */
 				send_data_payload[send_idx + 1] = bin & 0xFF;
 				send_data_payload[send_idx] = bin>>8 & 0xFF;
-				bin = 0;
+				send_idx += 2;
 			}
-			len = len + num_bins*2;
 		}
 	}
 
@@ -715,7 +742,7 @@ static inline void prep_payload_data()
 		send_data_payload[MEM_HISTO_HDR_LEN - 6 + i] = bin_cfg[i];
 	}
 
-	/* Add configuration id */
+	/* Add configuration ID to Histo-RAM header */
 	send_data_payload[249] = citiroc_conf_id;
 }
 

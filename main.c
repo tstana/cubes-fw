@@ -67,6 +67,11 @@ static unsigned int has_syscommand = 0;
 #define NUM_BYTES_HK    (46)
 #define NUM_BYTES_ID    (25)
 
+// TODO: Add comment
+static uint16_t get_num_bins(uint8_t bin_cfg);
+// TODO: Add comment
+static inline void prep_payload_data();
+
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[NUM_BYTES_HK] = "";
@@ -161,7 +166,7 @@ int main(void)
 					sprintf((char*)cubes_id, "%s %s",__DATE__, __TIME__);
 					itsy_ram = citiroc_read_id();
 					to_bigendian32(cubes_id+21, itsy_ram);
-					send_data = (uint8_t *)cubes_id;
+					send_data = cubes_id;
 					break;
 				case MSP_OP_REQ_HK:
 					/* Reset counter and hit counter register readouts */
@@ -227,9 +232,11 @@ int main(void)
 					send_data_hk[45] = u16val & 0xff;
 
 					/* Finally, prep the data to be sent */
-					send_data = (uint8_t *)send_data_hk;
+					send_data = send_data_hk;
 					break;
 				case MSP_OP_REQ_PAYLOAD:
+					prep_payload_data();
+					send_data = send_data_payload;
 					break;
 			}
 
@@ -548,7 +555,38 @@ static uint16_t table2[129] = {
  * Prepare data for MSP_OP_PREQ_PAYLOAD
  * ------------------------------------
  */
-static unsigned long prep_payload_data(uint8_t *bin_config)
+static uint16_t get_num_bins(uint8_t bin_config)
+{
+	uint16_t n;
+
+	switch (bin_config) {
+	case 0:
+		n = MEM_HISTO_NUM_BINS_GW;
+		break;
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+		n = MEM_HISTO_NUM_BINS_GW >> bin_config;
+		break;
+	case 10:
+		n = (sizeof(table1)/sizeof(table1[0])) - 1;
+		break;
+	case 11:
+		n = (sizeof(table2)/sizeof(table2[0])) - 1;
+		break;
+	default:
+		n = 0;
+		break;
+	}
+
+	return n;
+}
+
+
+static inline void prep_payload_data()
 {
 	unsigned long i, j, k, len;
 	uint16_t num_bins;
@@ -576,9 +614,10 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 		//start index for next histogram
 		start_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
 
-		if (bin_config[i] == 0) {
+		num_bins = get_num_bins(bin_cfg[i]);
+
+		if (bin_cfg[i] == 0) {
 			/* No re-binning */
-			num_bins = MEM_HISTO_NUM_BINS_GW;
 			for (j=0; j < MEM_HISTO_NUM_BINS_GW/2; j++) {
 				send_idx = j*4 + len;
 				data_idx = j + start_idx;
@@ -588,10 +627,9 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 				send_data_payload[send_idx + 2] = histo_data[data_idx]>>24 & 0xFF;
 			}
 			len = len + MEM_HISTO_NUM_BINS_GW*2;
-		} else if (bin_config[i] < 7) {
+		} else if (bin_cfg[i] < 7) {
 			/* Re-binning with equal interval bins */
-			num_bins = MEM_HISTO_NUM_BINS_GW >> bin_config[i];
-			bin_size = 1 << bin_config[i];
+			bin_size = 1 << bin_cfg[i];
 			for (j=0; j<num_bins; j++) {
 				bin = 0;
 				for (k=j*bin_size/2; k<(j+1)*bin_size/2; k++) {
@@ -600,21 +638,19 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 					bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 					       (histo_data[data_idx] & 0xFFFF);
 				}
-				bin >>= bin_config[i];
+				bin >>= bin_cfg[i];
 				send_idx = j*2 + len;
 				send_data_payload[send_idx + 1] = bin & 0xFF;
 				send_data_payload[send_idx] = (bin>>8) & 0xFF;
 			}
 			len = len + num_bins*2;
-		} else if ((10 < bin_config[i]) && (bin_config[i] < 14)) {
+		} else if ((11 <= bin_cfg[i]) && (bin_cfg[i] <= 12)) {
 			/* Log-scale binning */
 			unsigned char carry_over;
 			carry_over = 0;
-			if (bin_config[i] == 11) {
-				num_bins = (sizeof(table1)/sizeof(table1[0])) - 1;
+			if (bin_cfg[i] == 11) {
 				table = table1;
-			} else if (bin_config[i] == 12) {
-				num_bins = (sizeof(table2)/sizeof(table2[0])) - 1;
+			} else if (bin_cfg[i] == 12) {
 				table = table2;
 			}
 			for (j = 0; j < num_bins; j++) {
@@ -681,8 +717,6 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
 
 	/* Add configuration id */
 	send_data_payload[249] = citiroc_conf_id;
-
-	return len;
 }
 
 
@@ -693,17 +727,20 @@ static unsigned long prep_payload_data(uint8_t *bin_config)
  */
 void msp_expsend_start(unsigned char opcode, unsigned long *len)
 {
+	unsigned long l, i;
+	// TODO: Really need to check for citiroc_daq_is_rdy()?
 	if (opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()) {
-		// `bin_cfg` should have been set by SEND_DAQ_DUR command...
-		*len = prep_payload_data(bin_cfg);
-		send_data = (uint8_t*)send_data_payload;
+		l = MEM_HISTO_HDR_LEN;
+		for (i = 0; i < 6; ++i)
+			l += get_num_bins(bin_cfg[i]);
 	} else if(opcode == MSP_OP_REQ_HK) {
-		*len = NUM_BYTES_HK;
+		l = NUM_BYTES_HK;
 	} else if(opcode == MSP_OP_REQ_CUBES_ID) {
-		*len = NUM_BYTES_ID;
+		l = NUM_BYTES_ID;
 	} else {
-		*len = 0;
+		l = 0;
 	}
+	*len = l;
 	has_send = opcode;
 }
 
@@ -734,9 +771,9 @@ void msp_expsend_error(unsigned char opcode, int error)
 
 
 /*
- *-----------------------------
+ * ----------------------------
  * Experiment Receive Callbacks
- *-----------------------------
+ * ----------------------------
  */
 void msp_exprecv_start(unsigned char opcode, unsigned long len)
 {

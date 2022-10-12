@@ -759,7 +759,7 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 	if (opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()) {
 		l = MEM_HISTO_HDR_LEN;
 		for (i = 0; i < 6; ++i)
-			l += get_num_bins(bin_cfg[i]);
+			l += 2 * get_num_bins(bin_cfg[i]);
 	} else if(opcode == MSP_OP_REQ_HK) {
 		l = NUM_BYTES_HK;
 	} else if(opcode == MSP_OP_REQ_CUBES_ID) {

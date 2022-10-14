@@ -64,8 +64,8 @@ static unsigned int has_syscommand = 0;
  * Define the MSP send data buffer. The max number of bytes that can be sent by
  * CUBES corresponds to the histogram size in gateware.
  */
-#define NUM_BYTES_HK    (46)
-#define NUM_BYTES_ID    (25)
+#define HK_LEN    (46)
+#define ID_LEN    (25)
 
 // TODO: Add comment
 static uint16_t get_num_bins(uint8_t bin_cfg);
@@ -74,8 +74,8 @@ static inline void prep_payload_data();
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
-static unsigned char send_data_hk[NUM_BYTES_HK] = "";
-static unsigned char cubes_id[NUM_BYTES_ID];
+static unsigned char send_data_hk[HK_LEN] = "";
+static unsigned char cubes_id[ID_LEN];
 
 /* Receive data, Citiroc configuration is the largest */
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
@@ -162,12 +162,14 @@ int main(void)
 			uint16_t u16val = 0;
 
 			switch (has_send) {
+
 				case MSP_OP_REQ_CUBES_ID:
 					sprintf((char*)cubes_id, "%s %s",__DATE__, __TIME__);
 					itsy_ram = citiroc_read_id();
 					to_bigendian32(cubes_id+21, itsy_ram);
 					send_data = cubes_id;
 					break;
+
 				case MSP_OP_REQ_HK:
 					/* Reset counter and hit counter register readouts */
 					u32val = cubes_get_time();
@@ -234,6 +236,7 @@ int main(void)
 					/* Finally, prep the data to be sent */
 					send_data = send_data_hk;
 					break;
+
 				case MSP_OP_REQ_PAYLOAD:
 					prep_payload_data();
 					send_data = send_data_payload;
@@ -241,16 +244,18 @@ int main(void)
 			}
 
 			has_send = 0;
-		}
 
-		else if (has_recv != 0) {
+		} else if (has_recv != 0) {
+
 			switch (has_recv) {
+
 				case MSP_OP_SEND_TIME:
 					cubes_set_time((recv_data[0] << 24) |
 					               (recv_data[1] << 16) |
 					               (recv_data[2] <<  8) |
 					               (recv_data[3]));
 					break;
+
 				case MSP_OP_SEND_CUBES_HVPS_CONF:
 				{
 					uint8_t turn_on = recv_data[0] & 0x01;
@@ -289,6 +294,7 @@ int main(void)
 					}
 					break;
 				}
+
 				case MSP_OP_SEND_CUBES_HVPS_TMP_VOLT:
 				{
 					uint8_t turn_on = recv_data[0] & 0x01;
@@ -307,6 +313,7 @@ int main(void)
 
 					break;
 				}
+
 				case MSP_OP_SEND_CUBES_CITI_CONF:
 					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
 					// TODO: Check for return code!
@@ -314,12 +321,14 @@ int main(void)
 					          recv_data);
 					citiroc_send_slow_control();
 					break;
+
 				case MSP_OP_SEND_CUBES_PROB_CONF:
 					// TODO: Check for return value here!
 					mem_write(MEM_CITIROC_PROBE_ADDR, MEM_CITIROC_PROBE_LEN,
 					          recv_data);
 					citiroc_send_probes();
 					break;
+
 				case MSP_OP_SEND_NVM_CITI_CONF:
 					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
 					// TODO: Check for return code!
@@ -327,6 +336,7 @@ int main(void)
 					              MEM_CITIROC_CONF_LEN,
 					              recv_data);
 					break;
+
 				case MSP_OP_SELECT_NVM_CITI_CONF:
 				{
 					/* Get CONF_ID from MSP frame */
@@ -348,9 +358,11 @@ int main(void)
 					}
 					break;
 				}
+
 				case MSP_OP_SEND_READ_REG_DEBUG:
 					citiroc_rrd(recv_data[0] & 0x01, (recv_data[0] & 0x3e)>>1);
 					break;
+
 				case MSP_OP_SEND_CUBES_DAQ_CONF:
 					daq_dur = recv_data[0];
 					memcpy(bin_cfg, recv_data+1, 6);
@@ -360,6 +372,7 @@ int main(void)
 		//				bin_cfg = 3;
 					citiroc_daq_set_dur(daq_dur);
 					break;
+
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:
 				{
 					uint8_t resetvalue = recv_data[0];
@@ -381,6 +394,7 @@ int main(void)
 						citiroc_read_reg_reset();
 					break;
 				}
+
 				case MSP_OP_SEND_CUBES_CALIB_PULSE_CONF:
 					citiroc_calib_set((recv_data[0] << 24) |
 					                  (recv_data[1] << 16) |
@@ -389,20 +403,22 @@ int main(void)
 					break;
 			}
 			has_recv = 0;
-		}
 
-		else if (has_syscommand != 0) {
+		} else if (has_syscommand != 0) {
 			uint64_t timer_load_value;
 			uint32_t load_value_u, load_value_l;
 
 			switch (has_syscommand) {
+
 				case MSP_OP_ACTIVE:
 					hvps_turn_on();
 					break;
+
 				case MSP_OP_SLEEP:
 					hvps_turn_off();
 					citiroc_daq_stop();
 					break;
+
 				case MSP_OP_POWER_OFF:
 					hvps_turn_off();
 					citiroc_daq_stop();
@@ -412,6 +428,7 @@ int main(void)
 						              &clean_poweroff);
 					}
 					break;
+
 				case MSP_OP_CUBES_DAQ_START:
 					/* Prep. gateware for DAQ */
 					citiroc_hcr_reset();
@@ -434,6 +451,7 @@ int main(void)
 					MSS_TIM64_start();
 					citiroc_daq_start();
 					break;
+
 				case MSP_OP_CUBES_DAQ_STOP:
 					citiroc_daq_set_hvps_temp(hvps_get_temp());
 					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
@@ -610,7 +628,8 @@ static inline void prep_payload_data()
 	}
 
 	for (i = 0; i < 6; i++) {
-		// data index for next histogram
+		// data index for next histogram; /2 and /4  because histo_data is
+		// uint32_t, histogram bins are 2 bytes wide and HDR_LEN is in bytes
 		data_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
 
 		num_bins = get_num_bins(bin_cfg[i]);
@@ -665,8 +684,8 @@ static inline void prep_payload_data()
 
 				if ((carry_over == 0) && (bin_size%2 == 0)) {
 					/*
-					 * Re-binned data will end on 32-bit boundary: new bin is
-					 * simple average.
+					 * Re-binned data ends on 32-bit boundary and even number of
+					 * sub-bins: new bin is simple average.
 					 */
 					carry_over = 0;
 					for (k = *(table+j)/2; k < *(table+j+1)/2; k++) {
@@ -677,9 +696,9 @@ static inline void prep_payload_data()
 					bin /= bin_size;
 				} else if ((carry_over == 0) && (bin_size%2 == 1)) {
 					/*
-					 * Re-binned data starts at word boundary and will end on
-					 * half-word boundary: new bin will start at word and carry
-					 * over.
+					 * Re-binned data starts at word boundary and odd number of
+					 * sub-bins means it will end on half-word boundary: next
+					 * bin will start at half-word boundary, i.e., carry over.
 					 */
 					carry_over = 1;
 
@@ -696,8 +715,9 @@ static inline void prep_payload_data()
 					}
 				} else if ((carry_over == 1) && (bin_size%2 == 0)) {
 					/*
-					 * Re-binned data starts at half-word and will end at
-					 * half-word: new bin will start at half-word and carry over
+					 * Re-binned data starts at half-word boundary and will end
+					 * at half-word boundary (even number of sub-bins): next bin
+					 * will start at half-word and carry over.
 					 */
 					carry_over = 1;
 					bin = histo_data[data_idx]>>16 & 0xFFFF;
@@ -711,9 +731,9 @@ static inline void prep_payload_data()
 					bin /= bin_size;
 				} else if ((carry_over == 1) && (bin_size%2 == 1)) {
 					/*
-					 * Re-binned data starts at half-word and will end at word
-					 * boundary: new bin starts at half-word and will not carry
-					 * over.
+					 * Re-binned data starts at half-word bounadry and will end
+					 * at word boundary (odd number of sub-bins): new bin starts
+					 * at half-word and will not carry over.
 					 */
 					carry_over = 0;
 
@@ -761,9 +781,9 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		for (i = 0; i < 6; ++i)
 			l += 2 * get_num_bins(bin_cfg[i]);
 	} else if(opcode == MSP_OP_REQ_HK) {
-		l = NUM_BYTES_HK;
+		l = HK_LEN;
 	} else if(opcode == MSP_OP_REQ_CUBES_ID) {
-		l = NUM_BYTES_ID;
+		l = ID_LEN;
 	} else {
 		l = 0;
 	}

@@ -65,7 +65,7 @@ static unsigned int has_syscommand = 0;
  * CUBES corresponds to the histogram size in gateware.
  */
 #define HK_LEN    (46)
-#define ID_LEN    (25)
+#define CUBES_ID_LEN    (25)
 
 // TODO: Add comment
 static uint16_t get_num_bins(uint8_t bin_cfg);
@@ -75,7 +75,7 @@ static inline void prep_payload_data();
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[HK_LEN] = "";
-static unsigned char send_data_id[ID_LEN];
+static unsigned char send_data_cubes_id[CUBES_ID_LEN];
 
 /* Receive data, Citiroc configuration is the largest */
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
@@ -88,7 +88,8 @@ uint8_t citiroc_conf_id;
 
 /* DAQ-related variables */
 static uint8_t daq_dur;
-uint8_t bin_cfg[6];
+static uint8_t bin_cfg[6];
+static uint8_t daq_timer_triggered = 0;
 
 
 /**
@@ -153,19 +154,29 @@ int main(void)
 		/* TODO: Handle what happens if no config found... */
 	}
 
-	/* Infinite loop */
+	/*
+	 * Infinite loop
+	 */
 	while(1) {
+		/* Prepare payload data if DAQ just finished */
+		if (daq_timer_triggered && citiroc_daq_is_rdy()) {
+			prep_payload_data();
+			daq_timer_triggered = 0;
+		}
+
+		/* MSP commands */
 		if (has_send != 0) {
 			uint32_t itsy_ram;
 			uint32_t u32val = 0;
 			uint16_t u16val = 0;
 
+			/* Handle OBC request commands */
 			switch (has_send) {
 
 				case MSP_OP_REQ_CUBES_ID:
-					sprintf((char*)send_data_id, "%s %s",__DATE__, __TIME__);
+					sprintf((char*)send_data_cubes_id, "%s %s",__DATE__, __TIME__);
 					itsy_ram = citiroc_read_id();
-					to_bigendian32(send_data_id+21, itsy_ram);
+					to_bigendian32(send_data_cubes_id+21, itsy_ram);
 					break;
 
 				case MSP_OP_REQ_HK:
@@ -234,7 +245,6 @@ int main(void)
 					break;
 
 				case MSP_OP_REQ_PAYLOAD:
-					prep_payload_data();
 					break;
 			}
 
@@ -242,6 +252,7 @@ int main(void)
 
 		} else if (has_recv != 0) {
 
+			/* Handle OBC receive commands */
 			switch (has_recv) {
 
 				case MSP_OP_SEND_TIME:
@@ -401,6 +412,8 @@ int main(void)
 			has_recv = 0;
 
 		} else if (has_syscommand != 0) {
+
+			/* Handle system commands */
 
 			uint64_t timer_load_value;
 			uint32_t load_value_u, load_value_l;
@@ -784,9 +797,8 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		l = HK_LEN;
 		send_data = send_data_hk;
 	} else if (opcode == MSP_OP_REQ_CUBES_ID) {
-		l = ID_LEN;
-		send_data = send_data_id;
-
+		l = CUBES_ID_LEN;
+		send_data = send_data_cubes_id;
 	} else {
 		l = 0;
 	}
@@ -885,6 +897,7 @@ void Timer1_IRQHandler(void)
 	citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
 	citiroc_daq_set_hvps_volt(hvps_get_voltage());
 	citiroc_daq_set_hvps_curr(hvps_get_current());
+	daq_timer_triggered = 1;
 	MSS_TIM64_clear_irq();
 }
 

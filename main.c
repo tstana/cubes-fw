@@ -180,12 +180,6 @@ int main(void)
 		msp_exp_state_initialize(msp_seqflags_init());
 
 	/*
-	 * Flash on-board LED to indicate init. done.
-	 */
-	led_blink_repeat(2, 500);
-	led_turn_on();
-
-	/*
 	 * Load Citiroc configuration on startup
 	 */
 	mem_read(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
@@ -205,6 +199,12 @@ int main(void)
 	} else {
 		/* TODO: Handle what happens if no config found... */
 	}
+
+	/*
+	 * Flash on-board LED to indicate init. done.
+	 */
+	led_blink_repeat(4, 200);
+
 
 	/*
 	 * Infinite loop

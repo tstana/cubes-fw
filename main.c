@@ -29,6 +29,7 @@
 
 #include <system_m2sxxx.h>
 
+#include "firmware/drivers/mss_i2c/mss_i2c.h"
 #include "firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
 #include "firmware/drivers/mss_timer/mss_timer.h"
 #include "firmware/drivers/citiroc/citiroc.h"
@@ -40,16 +41,47 @@
 #include "mem/mem.h"
 
 #include "msp/msp_exp.h"
-#include "msp/msp_i2c.h"
 
 #include "utils/led.h"
 #include "utils/timer_delay.h"
 
 /*
- * ---------------------
- * MSP-related variables
- * ---------------------
+ * -----------------------------------
+ * MSP-related functions and variables
+ * -----------------------------------
  */
+
+/*
+ * Define RX and TX buffers for I2C; their sizes are the max. data that is to
+ * be sent via MSP. For the RX buffer, this is perhaps strictly not needed, but
+ * better to avoid a HardFault in case the OBC tries to send CUBES more data
+ * than it expects.
+ *
+ * Note: If the OBC tries to send it more than the MTU is another matter!
+ */
+static uint8_t i2c_tx_buffer[MSP_EXP_MAX_FRAME_SIZE];
+static uint8_t i2c_rx_buffer[MSP_EXP_MAX_FRAME_SIZE];
+
+static uint32_t slave_buffer_size = 0;
+
+/**
+ * @brief Slave write handler for the I2C slave dedicated to MSP communication
+ *
+ * On MSP, each transaction starts with a write transaction from the OBC master.
+ * We use this to make our callbacks.
+ *
+ * @param this_i2c   Pointer to I2C interface (use g_mss_i2c0 or g_mss_i2c1)
+ * @param p_rx_data  Receive data buffer
+ * @param rx_size    Number of bytes that have been received in the receive data
+ *                   buffer
+ * @return MSS_I2C_REENABLE_SLAVE_RX  to indicate data buffer should be released
+ *         MSS_I2C_PAUSE_SLAVE_RX     to indicate data buffer should _not_ be
+ *                                    released
+ */
+static mss_i2c_slave_handler_ret_t I2C1_SlaveWriteHandler(
+		mss_i2c_instance_t * this_i2c,
+		uint8_t * p_rx_data,
+        uint16_t rx_size);
 
 /* Op-codes from ISR callbacks */
 static unsigned int has_send;
@@ -60,6 +92,7 @@ static unsigned int has_recv_error = 0;
 static unsigned int has_recv_errorcode = 0;
 static unsigned int has_syscommand = 0;
 
+
 /*
  * Define the MSP send data buffer. The max number of bytes that can be sent by
  * CUBES corresponds to the histogram size in gateware.
@@ -67,10 +100,12 @@ static unsigned int has_syscommand = 0;
 #define HK_LEN    (46)
 #define CUBES_ID_LEN    (25)
 
+
 // TODO: Add comment
 static uint16_t get_num_bins(uint8_t bin_cfg);
 // TODO: Add comment
 static inline void prep_payload_data();
+
 
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
@@ -115,13 +150,27 @@ int main(void)
 	NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/*
-	 * Init. MIST Space Protocol stack; use new MSP seq. flags if previous
-	 * power-off was "not so clean".
+	 * Initialize I2C1 peripheral, used to communicate to OBC via MSP
 	 */
-	msp_i2c_init(MSP_EXP_ADDR);
+	MSS_I2C_init(&g_mss_i2c1, MSP_EXP_ADDR, MSS_I2C_PCLK_DIV_60);
+	MSS_I2C_set_slave_tx_buffer(&g_mss_i2c1, i2c_tx_buffer, sizeof(i2c_tx_buffer));
+	MSS_I2C_set_slave_rx_buffer(&g_mss_i2c1, i2c_rx_buffer, sizeof(i2c_rx_buffer));
 
+	/* CUBES can not be addressed by a general call address */
+	MSS_I2C_clear_gca(&g_mss_i2c1);
+
+	/* Register local write handler function and enable slave */
+	MSS_I2C_register_write_handler(&g_mss_i2c1, I2C1_SlaveWriteHandler);
+	MSS_I2C_enable_slave(&g_mss_i2c1);
+
+	/* Set interrupt priority lower than UART's */
+	NVIC_SetPriority(g_mss_i2c1.irqn, 1);
+
+	/*
+	 * Restore MSP sequence flags from NVM or use new ones if previous power-off
+	 * was "not so clean"...
+	 */
 	mem_read(MEM_CLEAN_POWEROFF_ADDR, 1, &clean_poweroff);
-
 	if (clean_poweroff) {
 		mem_restore_msp_seqflags();
 		clean_poweroff = 0;
@@ -129,7 +178,9 @@ int main(void)
 	} else
 		msp_exp_state_initialize(msp_seqflags_init());
 
-	/* Flash on-board LED to indicate init. done; leave LED on after. */
+	/*
+	 * Flash on-board LED to indicate init. done.
+	 */
 	led_blink_repeat(2, 500);
 	led_turn_on();
 
@@ -781,6 +832,23 @@ static inline void prep_payload_data()
 
 	/* Add configuration ID to Histo-RAM header */
 	send_data_payload[249] = citiroc_conf_id;
+}
+
+
+/*
+ * -----------------
+ * I2C Write Handler
+ * -----------------
+ */
+static mss_i2c_slave_handler_ret_t I2C1_SlaveWriteHandler(
+		mss_i2c_instance_t * this_i2c,
+		uint8_t * p_rx_data,
+        uint16_t rx_size)
+{
+	msp_recv_callback(p_rx_data, rx_size);
+	msp_send_callback((unsigned char *)i2c_tx_buffer,
+	                  (unsigned long *)&slave_buffer_size);
+	return MSS_I2C_REENABLE_SLAVE_RX;
 }
 
 

@@ -34,7 +34,6 @@
 
 #include "../firmware/drivers/mss_uart/mss_uart.h"
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
-#include "../msp/msp_i2c.h"
 
 
 #define HVPS_MAX_VB (55.0)

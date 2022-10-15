@@ -981,3 +981,17 @@ void Timer1_IRQHandler(void)
 	MSS_TIM64_clear_irq();
 }
 
+
+/*
+ *==============================================================================
+ * HardFault ISR Handler
+ *==============================================================================
+ */
+void HardFault_Handler(void)
+{
+	/* Blink LED indefinitely; only processor reset can take us out of here. */
+	while (1) {
+		led_blink_repeat(2000000, 200);
+	}
+}
+

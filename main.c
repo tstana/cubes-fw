@@ -221,7 +221,7 @@ int main(void)
 		}
 
 		/* Prepare payload data if DAQ just finished */
-		if (deinhibit_prep_payload && citiroc_daq_is_rdy()) {
+		if (citiroc_daq_is_rdy() && deinhibit_prep_payload) {
 			prep_payload_data();
 			deinhibit_prep_payload = 0;
 		}

@@ -601,10 +601,10 @@ static uint16_t get_num_bins(uint8_t bin_config)
 	case 6:
 		n = MEM_HISTO_NUM_BINS_GW >> bin_config;
 		break;
-	case 10:
+	case 11:
 		n = (sizeof(table1)/sizeof(table1[0])) - 1;
 		break;
-	case 11:
+	case 12:
 		n = (sizeof(table2)/sizeof(table2[0])) - 1;
 		break;
 	default:

@@ -75,7 +75,7 @@ static inline void prep_payload_data();
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[HK_LEN] = "";
-static unsigned char cubes_id[ID_LEN];
+static unsigned char send_data_id[ID_LEN];
 
 /* Receive data, Citiroc configuration is the largest */
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
@@ -89,7 +89,6 @@ uint8_t citiroc_conf_id;
 /* DAQ-related variables */
 static uint8_t daq_dur;
 uint8_t bin_cfg[6];
-
 
 
 /**
@@ -164,10 +163,9 @@ int main(void)
 			switch (has_send) {
 
 				case MSP_OP_REQ_CUBES_ID:
-					sprintf((char*)cubes_id, "%s %s",__DATE__, __TIME__);
+					sprintf((char*)send_data_id, "%s %s",__DATE__, __TIME__);
 					itsy_ram = citiroc_read_id();
-					to_bigendian32(cubes_id+21, itsy_ram);
-					send_data = cubes_id;
+					to_bigendian32(send_data_id+21, itsy_ram);
 					break;
 
 				case MSP_OP_REQ_HK:
@@ -233,13 +231,10 @@ int main(void)
 					send_data_hk[44] = (u16val >> 8) & 0xff;
 					send_data_hk[45] = u16val & 0xff;
 
-					/* Finally, prep the data to be sent */
-					send_data = send_data_hk;
 					break;
 
 				case MSP_OP_REQ_PAYLOAD:
 					prep_payload_data();
-					send_data = send_data_payload;
 					break;
 			}
 
@@ -402,9 +397,11 @@ int main(void)
 					                  (recv_data[3]));
 					break;
 			}
+
 			has_recv = 0;
 
 		} else if (has_syscommand != 0) {
+
 			uint64_t timer_load_value;
 			uint32_t load_value_u, load_value_l;
 
@@ -461,7 +458,9 @@ int main(void)
 					MSS_TIM64_stop();
 					break;
 			}
+
 			has_syscommand = 0;
+
 		}
 	}
 
@@ -780,10 +779,14 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		l = MEM_HISTO_HDR_LEN;
 		for (i = 0; i < 6; ++i)
 			l += 2 * get_num_bins(bin_cfg[i]);
-	} else if(opcode == MSP_OP_REQ_HK) {
+		send_data = send_data_payload;
+	} else if (opcode == MSP_OP_REQ_HK) {
 		l = HK_LEN;
-	} else if(opcode == MSP_OP_REQ_CUBES_ID) {
+		send_data = send_data_hk;
+	} else if (opcode == MSP_OP_REQ_CUBES_ID) {
 		l = ID_LEN;
+		send_data = send_data_id;
+
 	} else {
 		l = 0;
 	}

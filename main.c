@@ -125,6 +125,7 @@ uint8_t citiroc_conf_id;
 static uint8_t daq_dur;
 static uint8_t bin_cfg[6];
 static uint8_t daq_timer_triggered = 0;
+static uint8_t deinhibit_prep_payload = 0;
 
 
 /**
@@ -209,10 +210,20 @@ int main(void)
 	 * Infinite loop
 	 */
 	while(1) {
-		/* Prepare payload data if DAQ just finished */
-		if (daq_timer_triggered && citiroc_daq_is_rdy()) {
-			prep_payload_data();
+		/* Read pre-end-of-DAQ HK outside ISR */
+		if (daq_timer_triggered) {
+			citiroc_daq_set_hvps_temp(hvps_get_temp());
+			citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
+			citiroc_daq_set_hvps_volt(hvps_get_voltage());
+			citiroc_daq_set_hvps_curr(hvps_get_current());
 			daq_timer_triggered = 0;
+			deinhibit_prep_payload = 1;
+		}
+
+		/* Prepare payload data if DAQ just finished */
+		if (deinhibit_prep_payload && citiroc_daq_is_rdy()) {
+			prep_payload_data();
+			deinhibit_prep_payload = 0;
 		}
 
 		/* MSP commands */
@@ -966,10 +977,6 @@ void msp_exprecv_syscommand(unsigned char opcode)
  */
 void Timer1_IRQHandler(void)
 {
-	citiroc_daq_set_hvps_temp(hvps_get_temp());
-	citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
-	citiroc_daq_set_hvps_volt(hvps_get_voltage());
-	citiroc_daq_set_hvps_curr(hvps_get_current());
 	daq_timer_triggered = 1;
 	MSS_TIM64_clear_irq();
 }

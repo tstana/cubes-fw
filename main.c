@@ -623,8 +623,9 @@ static inline void prep_payload_data()
 	uint8_t bin_size;
 	uint32_t bin;
 
-	unsigned long send_idx; // start index used for send data payload
-	unsigned long data_idx; // Index used to access data form histo_data
+	unsigned long send_idx;  // index for send_data_payload
+	unsigned long data_idx;  // index used to access data from histo_data
+	unsigned long start_idx; // histogram start index
 
 	uint32_t *histo_data = (uint32_t *)HISTO_RAM;
 
@@ -640,9 +641,10 @@ static inline void prep_payload_data()
 	}
 
 	for (i = 0; i < 6; i++) {
-		// data index for next histogram; /2 and /4  because histo_data is
+		// start index for next histogram; /2 and /4  because histo_data is
 		// uint32_t, histogram bins are 2 bytes wide and HDR_LEN is in bytes
-		data_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
+		start_idx = i*MEM_HISTO_NUM_BINS_GW/2 + MEM_HISTO_HDR_LEN/4;
+		data_idx = start_idx;
 
 		num_bins = get_num_bins(bin_cfg[i]);
 
@@ -701,9 +703,9 @@ static inline void prep_payload_data()
 					 */
 					carry_over = 0;
 					for (k = *(table+j)/2; k < *(table+j+1)/2; k++) {
+						data_idx = start_idx + k;
 						bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 						       (histo_data[data_idx] & 0xFFFF);
-						data_idx++;
 					}
 					bin /= bin_size;
 				} else if ((carry_over == 0) && (bin_size%2 == 1)) {
@@ -715,12 +717,14 @@ static inline void prep_payload_data()
 					carry_over = 1;
 
 					if (bin_size == 1) {
+						k = *(table+j)/2;
+						data_idx = start_idx + k;
 						bin = histo_data[data_idx] & 0xFFFF;
 					} else {
 						for (k = *(table+j)/2; k < (*(table+j+1)-1)/2; k++) {
+							data_idx = start_idx + k;
 							bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 							       (histo_data[data_idx] & 0xFFFF);
-							data_idx++;
 						}
 						bin += (histo_data[data_idx] & 0xFFFF);
 						bin /= bin_size;
@@ -732,12 +736,13 @@ static inline void prep_payload_data()
 					 * will start at half-word and carry over.
 					 */
 					carry_over = 1;
+					k = (*(table+j)-1)/2;
+					data_idx = start_idx + k;
 					bin = histo_data[data_idx]>>16 & 0xFFFF;
-					data_idx++;
 					for (k = (*(table+j)+1)/2; k < (*(table+j+1)-1)/2; k++) {
+						data_idx = start_idx + k;
 						bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 						       (histo_data[data_idx] & 0xFFFF);
-						data_idx++;
 					}
 					bin += (histo_data[data_idx] & 0xFFFF);
 					bin /= bin_size;
@@ -748,14 +753,14 @@ static inline void prep_payload_data()
 					 * at half-word and will not carry over.
 					 */
 					carry_over = 0;
-
+					k = (*(table+j)-1)/2;
+					data_idx = start_idx + k;
 					bin = histo_data[data_idx]>>16 & 0xFFFF;
-					data_idx++;
 					if (bin_size != 1) {
 						for (k = (*(table+j)+1)/2; k < *(table+j+1)/2; k++) {
+							data_idx = start_idx + k;
 							bin += (histo_data[data_idx]>>16 & 0xFFFF) +
 							       (histo_data[data_idx] & 0xFFFF);
-							data_idx++;
 						}
 						bin /= bin_size;
 					}

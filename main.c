@@ -201,9 +201,10 @@ int main(void)
 	}
 
 	/*
-	 * Flash on-board LED to indicate init. done.
+	 * Flash on-board LED to indicate init done; ensure LED is off after
 	 */
 	led_blink_repeat(4, 200);
+	led_turn_off();
 
 
 	/*
@@ -991,7 +992,7 @@ void HardFault_Handler(void)
 {
 	/* Blink LED indefinitely; only processor reset can take us out of here. */
 	while (1) {
-		led_blink_repeat(2000000, 200);
+		led_blink_repeat(2000000, 100);
 	}
 }
 

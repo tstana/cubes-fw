@@ -116,7 +116,6 @@ static unsigned char send_data_cubes_id[CUBES_ID_LEN];
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
 static unsigned char recv_data[RECV_MAXLEN];
 
-
 uint8_t clean_poweroff = 0;
 
 uint8_t citiroc_conf_id;
@@ -124,9 +123,24 @@ uint8_t citiroc_conf_id;
 /* DAQ-related variables */
 static uint8_t daq_dur;
 static uint8_t bin_cfg[6];
-static uint8_t daq_timer_triggered = 0;
-static uint8_t deinhibit_prep_payload = 0;
 
+/* HK-related variables */
+static uint8_t end_daq_hk_time;
+static uint8_t hk_timer_trig = 0;
+static uint8_t end_daq_hk_ready = 0;
+
+static uint32_t cubes_time;
+static uint32_t trig_count_ch0, trig_count_ch16, trig_count_ch31,
+                trig_count_or32;
+static uint16_t hvps_volt;
+static uint16_t hvps_curr;
+static uint16_t hvps_temp;
+static uint16_t hvps_status;
+static uint16_t hvps_cmds_sent;
+static uint16_t hvps_cmds_acked;
+static uint16_t hvps_cmds_failed;
+static uint16_t hvps_last_cmd_err;
+static uint16_t batt_volt, batt_curr, citi_temp;
 
 /**
  * @brief Main function, entry point of C code upon MSS reset
@@ -144,11 +158,6 @@ int main(void)
 	hvps_init();
 
 	hk_adc_init();
-
-	/* Init timer to write HK before DAQ end */
-	MSS_TIM64_init(MSS_TIMER_ONE_SHOT_MODE);
-	MSS_TIM64_enable_irq();
-	NVIC_SetPriority(Timer1_IRQn, 1);
 
 	/*
 	 * Initialize I2C1 peripheral, used to communicate to OBC via MSP
@@ -201,6 +210,17 @@ int main(void)
 	}
 
 	/*
+	 * Init timer to read HK once a second from HVPS and other external devices.
+	 * This is used so that the HK data is ready for the OBC when it asks for it
+	 * and CUBES can reply without delaying the I2C comms.
+	  */
+	MSS_TIM1_init(MSS_TIMER_PERIODIC_MODE);
+	MSS_TIM1_enable_irq();
+	NVIC_SetPriority(Timer1_IRQn, 1);
+	MSS_TIM1_load_immediate(SystemCoreClock);
+	MSS_TIM1_start();
+
+	/*
 	 * Flash on-board LED to indicate init done; ensure LED is off after
 	 */
 	led_blink_repeat(4, 200);
@@ -211,20 +231,42 @@ int main(void)
 	 * Infinite loop
 	 */
 	while(1) {
-		/* Read pre-end-of-DAQ HK outside ISR */
-		if (daq_timer_triggered) {
-			citiroc_daq_set_hvps_temp(hvps_get_temp());
-			citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
-			citiroc_daq_set_hvps_volt(hvps_get_voltage());
-			citiroc_daq_set_hvps_curr(hvps_get_current());
-			daq_timer_triggered = 0;
-			deinhibit_prep_payload = 1;
+		/* Read and prepare HK data once a second (outside ISRs) */
+		if (hk_timer_trig) {
+			cubes_time = cubes_get_time();
+			trig_count_ch0 = citiroc_hcr_get(0);
+			trig_count_ch16 = citiroc_hcr_get(16);
+			trig_count_ch31 = citiroc_hcr_get(31);
+			trig_count_or32 = citiroc_hcr_get(32);
+			hvps_volt = hvps_get_voltage();
+			hvps_curr = hvps_get_current();
+			hvps_temp = hvps_get_temp();
+			hvps_status = hvps_get_status();
+			hvps_cmds_sent = hvps_get_cmd_counter(HVPS_CMDS_SENT);
+			hvps_cmds_acked = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
+			hvps_cmds_failed = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
+			hvps_last_cmd_err = hvps_get_last_cmd_err();
+			batt_volt = hk_adc_calc_avg_voltage();
+			batt_curr = hk_adc_calc_avg_current();
+			citi_temp = hk_adc_calc_avg_citi_temp();
+
+			/* Prep end-of-DAQ HK for histogram header (only once per DAQ) */
+			if ((!citiroc_daq_is_rdy()) && (!end_daq_hk_ready) &&
+					(end_daq_hk_time == 0)) {
+				citiroc_daq_set_citi_temp(citi_temp);
+				citiroc_daq_set_hvps_temp(hvps_temp);
+				citiroc_daq_set_hvps_volt(hvps_volt);
+				citiroc_daq_set_hvps_curr(hvps_curr);
+				end_daq_hk_ready = 1;  // DAQ almost ready!
+			}
+
+			hk_timer_trig = 0;
 		}
 
 		/* Prepare payload data if DAQ just finished */
-		if (citiroc_daq_is_rdy() && deinhibit_prep_payload) {
+		if (citiroc_daq_is_rdy() && end_daq_hk_ready) {
 			prep_payload_data();
-			deinhibit_prep_payload = 0;
+			end_daq_hk_ready = 0;
 		}
 
 		/* MSP commands */
@@ -244,64 +286,64 @@ int main(void)
 
 				case MSP_OP_REQ_HK:
 					/* Reset counter and hit counter register readouts */
-					u32val = cubes_get_time();
+					u32val = cubes_time;
 					to_bigendian32(send_data_hk, u32val);
 
-					u32val = mem_reset_counter_read();
+					u32val = mem_reset_counter_read();;
 					to_bigendian32(send_data_hk+4, u32val);
 
-					u32val = citiroc_hcr_get(0);
+					u32val = trig_count_ch0;
 					to_bigendian32(send_data_hk+8, u32val);
-					u32val = citiroc_hcr_get(16);
+					u32val = trig_count_ch16;
 					to_bigendian32(send_data_hk+12, u32val);
-					u32val = citiroc_hcr_get(31);
+					u32val = trig_count_ch31;
 					to_bigendian32(send_data_hk+16, u32val);
-					u32val = citiroc_hcr_get(32);  // OR32
+					u32val = trig_count_or32;
 					to_bigendian32(send_data_hk+20, u32val);
 
 					/* HVPS HK */
-					u16val = hvps_get_voltage();
+					u16val = hvps_volt;
 					send_data_hk[24] = (u16val >> 8) & 0xff;
 					send_data_hk[25] = u16val & 0xff;
 
-					u16val = hvps_get_current();
+					u16val = hvps_curr;
 					send_data_hk[26] = (u16val >> 8) & 0xff;
 					send_data_hk[27] = u16val & 0xff;
 
-					u16val = hvps_get_temp();
+					u16val = hvps_temp;
 					send_data_hk[28] = (u16val >> 8) & 0xff;
 					send_data_hk[29] = u16val & 0xff;
 
-					u16val = hvps_get_status();
+					u16val = hvps_status;
 					send_data_hk[30] = (u16val >> 8) & 0xff;
 					send_data_hk[31] = u16val & 0xff;
 
-					u16val = hvps_get_cmd_counter(HVPS_CMDS_SENT);
+					u16val = hvps_cmds_sent;
 					send_data_hk[32] = (u16val >> 8)  & 0xff;
 					send_data_hk[33] = u16val  & 0xff;
 
-					u16val = hvps_get_cmd_counter(HVPS_CMDS_ACKED);
+					u16val = hvps_cmds_acked;
 					send_data_hk[34] = (u16val >> 8)  & 0xff;
 					send_data_hk[35] = u16val  & 0xff;
 
-					u16val = hvps_get_cmd_counter(HVPS_CMDS_FAILED);
+					u16val = hvps_cmds_failed;
 					send_data_hk[36] = (u16val >> 8)  & 0xff;
 					send_data_hk[37] = u16val  & 0xff;
 
-					u16val = hvps_get_last_cmd_err();
+					u16val = hvps_last_cmd_err;
 					send_data_hk[38] = (u16val >> 8) & 0xff;
 					send_data_hk[39] = u16val & 0xff;
 
 					/* On-board ADC HK */
-					u16val = hk_adc_calc_avg_voltage();
+					u16val = batt_volt;
 					send_data_hk[40] = (u16val >> 8) & 0xff;
 					send_data_hk[41] = u16val & 0xff;
 
-					u16val = hk_adc_calc_avg_current();
+					u16val = batt_curr;
 					send_data_hk[42] = (u16val >> 8) & 0xff;
 					send_data_hk[43] = u16val & 0xff;
 
-					u16val = hk_adc_calc_avg_citi_temp();
+					u16val = citi_temp;
 					send_data_hk[44] = (u16val >> 8) & 0xff;
 					send_data_hk[45] = u16val & 0xff;
 
@@ -477,10 +519,6 @@ int main(void)
 		} else if (has_syscommand != 0) {
 
 			/* Handle system commands */
-
-			uint64_t timer_load_value;
-			uint32_t load_value_u, load_value_l;
-
 			switch (has_syscommand) {
 
 				case MSP_OP_ACTIVE:
@@ -510,18 +548,12 @@ int main(void)
 					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
 					citiroc_daq_set_hvps_volt(hvps_get_voltage());
 					citiroc_daq_set_hvps_curr(hvps_get_current());
-					/*
-					 * Prep. the timer used to store HK to DAQ file one second
-					 * before end of DAQ. The 64-bit timer_load_value is split
-					 * into two 32-bit numbers because TIM64 needs its
-					 * parameters that way.
+
+					/* Start DAQ and prep pre-end-DAQ timer value, which is used
+					 * to prep the end-of-DAQ HK data to be stored to the
+					 * histogram headers
 					 */
-					timer_load_value = (daq_dur-1) * SystemCoreClock;
-					load_value_u = timer_load_value >> 32;
-					load_value_l = (uint32_t)timer_load_value;
-					MSS_TIM64_load_immediate(load_value_u, load_value_l);
-					/* Start timer and DAQ */
-					MSS_TIM64_start();
+					end_daq_hk_time = daq_dur - 1;
 					citiroc_daq_start();
 					break;
 
@@ -531,7 +563,6 @@ int main(void)
 					citiroc_daq_set_hvps_volt(hvps_get_voltage());
 					citiroc_daq_set_hvps_curr(hvps_get_current());
 					citiroc_daq_stop();
-					MSS_TIM64_stop();
 					break;
 			}
 
@@ -978,8 +1009,10 @@ void msp_exprecv_syscommand(unsigned char opcode)
  */
 void Timer1_IRQHandler(void)
 {
-	daq_timer_triggered = 1;
-	MSS_TIM64_clear_irq();
+	if (end_daq_hk_time > 0)
+		end_daq_hk_time--;
+	hk_timer_trig = 1;
+	MSS_TIM1_clear_irq();
 }
 
 

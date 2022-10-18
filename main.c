@@ -544,10 +544,10 @@ int main(void)
 					/* Prep. gateware for DAQ */
 					citiroc_hcr_reset();
 					citiroc_histo_reset();
-					citiroc_daq_set_hvps_temp(hvps_get_temp());
-					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
-					citiroc_daq_set_hvps_volt(hvps_get_voltage());
-					citiroc_daq_set_hvps_curr(hvps_get_current());
+					citiroc_daq_set_citi_temp(citi_temp);
+					citiroc_daq_set_hvps_temp(hvps_temp);
+					citiroc_daq_set_hvps_volt(hvps_volt);
+					citiroc_daq_set_hvps_curr(hvps_curr);
 
 					/* Start DAQ and prep pre-end-DAQ timer value, which is used
 					 * to prep the end-of-DAQ HK data to be stored to the
@@ -558,10 +558,10 @@ int main(void)
 					break;
 
 				case MSP_OP_CUBES_DAQ_STOP:
-					citiroc_daq_set_hvps_temp(hvps_get_temp());
-					citiroc_daq_set_citi_temp(hk_adc_calc_avg_citi_temp());
-					citiroc_daq_set_hvps_volt(hvps_get_voltage());
-					citiroc_daq_set_hvps_curr(hvps_get_current());
+					citiroc_daq_set_citi_temp(citi_temp);
+					citiroc_daq_set_hvps_temp(hvps_temp);
+					citiroc_daq_set_hvps_volt(hvps_volt);
+					citiroc_daq_set_hvps_curr(hvps_curr);
 					citiroc_daq_stop();
 					break;
 			}

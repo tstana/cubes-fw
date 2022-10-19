@@ -100,13 +100,6 @@ static unsigned int has_syscommand = 0;
 #define HK_LEN    (46)
 #define CUBES_ID_LEN    (25)
 
-
-// TODO: Add comment
-static uint16_t get_num_bins(uint8_t bin_cfg);
-// TODO: Add comment
-static inline void prep_payload_data();
-
-
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[HK_LEN] = "";
@@ -115,6 +108,21 @@ static unsigned char send_data_cubes_id[CUBES_ID_LEN];
 /* Receive data, Citiroc configuration is the largest */
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
 static unsigned char recv_data[RECV_MAXLEN];
+
+
+/**
+ * @brief Get number of bins from a bin configuration
+ * @param bin_cfg An element of the bin_cfg array
+ * @return The number of bins corresponding to that bin configuration
+ */
+static uint16_t get_num_bins(uint8_t bin_cfg);
+
+/**
+ * @brief Prepare data for REQ_PAYLOAD command
+ *
+ * This function is to be called after a DAQ has completed.
+ */
+static inline void prep_payload_data();
 
 uint8_t clean_poweroff = 0;
 
@@ -531,6 +539,7 @@ int main(void)
 						citiroc_daq_set_hvps_temp(hvps_temp);
 						citiroc_daq_set_hvps_volt(hvps_volt);
 						citiroc_daq_set_hvps_curr(hvps_curr);
+						end_daq_hk_ready = 1;
 						citiroc_daq_stop();
 					}
 					hvps_turn_off();
@@ -542,6 +551,7 @@ int main(void)
 						citiroc_daq_set_hvps_temp(hvps_temp);
 						citiroc_daq_set_hvps_volt(hvps_volt);
 						citiroc_daq_set_hvps_curr(hvps_curr);
+						end_daq_hk_ready = 1;
 						citiroc_daq_stop();
 					}
 					hvps_turn_off();
@@ -574,6 +584,7 @@ int main(void)
 					citiroc_daq_set_hvps_temp(hvps_temp);
 					citiroc_daq_set_hvps_volt(hvps_volt);
 					citiroc_daq_set_hvps_curr(hvps_curr);
+					end_daq_hk_ready = 1;
 					citiroc_daq_stop();
 					break;
 			}

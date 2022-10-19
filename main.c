@@ -1036,8 +1036,14 @@ void Timer1_IRQHandler(void)
 void HardFault_Handler(void)
 {
 	/* Blink LED indefinitely; only processor reset can take us out of here. */
+	int i;
 	while (1) {
-		led_blink_repeat(2000000, 100);
+		led_turn_on();
+		for (i = 0; i < 500000; i++)
+			;
+		led_turn_off();
+		for (i = 0; i < 500000; i++)
+			;
 	}
 }
 

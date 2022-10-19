@@ -45,6 +45,17 @@
 #include "utils/led.h"
 #include "utils/timer_delay.h"
 
+
+/*
+ * ----------------------------------------
+ * Power-up-related functions and variables
+ * ----------------------------------------
+ */
+uint8_t clean_poweroff = 0;
+
+uint8_t citiroc_conf_id;
+
+
 /*
  * -----------------------------------
  * MSP-related functions and variables
@@ -110,6 +121,12 @@ static unsigned char send_data_cubes_id[CUBES_ID_LEN];
 static unsigned char recv_data[RECV_MAXLEN];
 
 
+/*
+ * -----------------------------------
+ * DAQ-related functions and variables
+ * -----------------------------------
+ */
+
 /**
  * @brief Get number of bins from a bin configuration
  * @param bin_cfg An element of the bin_cfg array
@@ -120,19 +137,25 @@ static uint16_t get_num_bins(uint8_t bin_cfg);
 /**
  * @brief Prepare data for REQ_PAYLOAD command
  *
- * This function is to be called after a DAQ has completed.
+ * This function is to be called after a DAQ has completed. Based on the
+ * bin_cfg array sent to CUBES via MSP_OP_SEND_CUBES_DAQ_CONF, the function
+ * parses the Histo-RAM and copies data from it to the `send_data_payload` array
+ * which is read from when data is sent back to the OBC as part of the
+ * REQ_PAYLOAD command response.
  */
 static inline void prep_payload_data();
 
-uint8_t clean_poweroff = 0;
 
-uint8_t citiroc_conf_id;
-
-/* DAQ-related variables */
+/* DAQ duration and bin_cfg array, sent via MSP_OP_SEND_CUBES_DAQ_CONF */
 static uint8_t daq_dur;
 static uint8_t bin_cfg[6];
 
-/* HK-related variables */
+
+/*
+ * --------------------
+ * HK-related variables
+ * --------------------
+ */
 static uint8_t end_daq_hk_time;
 static uint8_t hk_timer_trig = 0;
 static uint8_t end_daq_hk_ready = 0;
@@ -150,9 +173,11 @@ static uint16_t hvps_cmds_failed;
 static uint16_t hvps_last_cmd_err;
 static uint16_t batt_volt, batt_curr, citi_temp;
 
-/**
- * @brief Main function, entry point of C code upon MSS reset
- * @return -1 if the infinite loop stops for some reason
+
+/*
+ *==============================================================================
+ * main()
+ *==============================================================================
  */
 int main(void)
 {

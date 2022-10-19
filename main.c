@@ -526,13 +526,25 @@ int main(void)
 					break;
 
 				case MSP_OP_SLEEP:
+					if (!citiroc_daq_is_rdy()) {
+						citiroc_daq_set_citi_temp(citi_temp);
+						citiroc_daq_set_hvps_temp(hvps_temp);
+						citiroc_daq_set_hvps_volt(hvps_volt);
+						citiroc_daq_set_hvps_curr(hvps_curr);
+						citiroc_daq_stop();
+					}
 					hvps_turn_off();
-					citiroc_daq_stop();
 					break;
 
 				case MSP_OP_POWER_OFF:
+					if (!citiroc_daq_is_rdy()) {
+						citiroc_daq_set_citi_temp(citi_temp);
+						citiroc_daq_set_hvps_temp(hvps_temp);
+						citiroc_daq_set_hvps_volt(hvps_volt);
+						citiroc_daq_set_hvps_curr(hvps_curr);
+						citiroc_daq_stop();
+					}
 					hvps_turn_off();
-					citiroc_daq_stop();
 					if (mem_save_msp_seqflags() == NVM_SUCCESS) {
 						clean_poweroff = 1;
 						mem_write_nvm(MEM_CLEAN_POWEROFF_ADDR, 1,

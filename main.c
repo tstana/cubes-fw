@@ -111,6 +111,8 @@ static unsigned int has_syscommand = 0;
 #define HK_LEN    (46)
 #define CUBES_ID_LEN    (25)
 
+static struct hvps_temp_corr_factor hvps_temp_corr;
+
 static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[HK_LEN] = "";
@@ -293,6 +295,12 @@ int main(void)
 				end_daq_hk_ready = 1;  // DAQ almost ready!
 			}
 
+			/*
+			 * Also read temp. compensation factor from HVPS -- but this is for
+			 * readout by command, not through HK.
+			 */
+			hvps_get_temp_corr_factor(&hvps_temp_corr);
+
 			hk_timer_trig = 0;
 		}
 
@@ -383,6 +391,11 @@ int main(void)
 					break;
 
 				case MSP_OP_REQ_PAYLOAD:
+					/* Payload data prepared when DAQ is ready (see above) */
+					break;
+
+				case MSP_OP_REQ_CUBES_HVPS_TEMP_COMP:
+					/* Data read out from HVPS once a second (see above) */
 					break;
 			}
 
@@ -963,6 +976,9 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 	} else if (opcode == MSP_OP_REQ_CUBES_ID) {
 		l = CUBES_ID_LEN;
 		send_data = send_data_cubes_id;
+	} else if (opcode == MSP_OP_REQ_CUBES_HVPS_TEMP_COMP) {
+		l = sizeof(struct hvps_temp_corr_factor);
+		send_data = (uint8_t*)&hvps_temp_corr;
 	} else {
 		l = 0;
 	}

@@ -60,6 +60,7 @@ uint16_t  hvps_get_current(void);
 uint16_t  hvps_get_status(void);
 uint16_t  hvps_get_cmd_counter(enum hvps_cmd_counter);
 uint16_t  hvps_get_last_cmd_err(void);
+int       hvps_get_temp_corr_factor(struct hvps_temp_corr_factor *f);
 
 
 #endif /* _HVPS_C11204_02_H_ */

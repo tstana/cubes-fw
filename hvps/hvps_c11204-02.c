@@ -342,6 +342,36 @@ uint16_t hvps_get_last_cmd_err(void)
 
 
 /**
+ * @brief Read temperature correction factor
+ *
+ * This function sends an `HRT` command over UART to the C11204-02 to read the
+ * temperature correction factor, reference voltage and reference temperature
+ * currently used by the C11204-02.
+ *
+ * @param f Structure to save the temperature correction factors, voltage
+ *          and current into
+ * @return  0 if the HVPS acknowledges the command (replies with `hrt`)
+ *          1 if any other reply than `hrt` was received from the HVPS
+ */
+int hvps_get_temp_corr_factor(struct hvps_temp_corr_factor *f)
+{
+	int ret = send_cmd_and_check_reply("HRT");
+
+	if (ret == 0)
+	{
+		f->dtp1 = strtol((char*)hvps_reply+4, NULL, 16);;
+		f->dtp2 = strtol((char*)hvps_reply+8, NULL, 16);;
+		f->dt1 = strtol((char*)hvps_reply+12, NULL, 16);;
+		f->dt2 = strtol((char*)hvps_reply+16, NULL, 16);;
+		f->vb = strtol((char*)hvps_reply+20, NULL, 16);;
+		f->tb = strtol((char*)hvps_reply+24, NULL, 16);;
+	}
+
+	return ret;
+}
+
+
+/**
  * @brief Check whether the HVPS output is on
  *
  * This function requests the status of the MPPC bias module using the `HGS`

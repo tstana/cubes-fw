@@ -34,7 +34,8 @@
 #define MSP_OP_CUBES_DAQ_START	0x51
 #define MSP_OP_CUBES_DAQ_STOP	0x52
 
-#define MSP_OP_REQ_CUBES_ID		0x61
+#define MSP_OP_REQ_CUBES_ID                     0x61
+#define MSP_OP_REQ_CUBES_HVPS_TEMP_COMP         0x62
 
 #define MSP_OP_SEND_CUBES_HVPS_CONF             0x71
 #define MSP_OP_SEND_CUBES_CITI_CONF             0x72

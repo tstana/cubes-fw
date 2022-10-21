@@ -237,9 +237,12 @@ int hvps_set_temporary_voltage(uint16_t vb)
 uint16_t hvps_get_temp(void)
 {
 	uint16_t temp = 1; // default should not be valid reading
+	char valstr[4];
 
-	if (send_cmd_and_check_reply("HGT") == 0)
-		temp = strtol((char*)hvps_reply+4, NULL, 16);
+	if (send_cmd_and_check_reply("HGT") == 0) {
+		strncpy(valstr, hvps_reply + 4, 4);
+		temp = (uint16_t)strtoul(valstr, NULL, 16);
+	}
 
 	return temp;
 }
@@ -261,9 +264,12 @@ uint16_t hvps_get_temp(void)
 uint16_t hvps_get_voltage(void)
 {
 	uint16_t v = 0xffff; // default should not be valid reading
+	char valstr[4];
 
-	if (send_cmd_and_check_reply("HGV") == 0)
-		v = strtol((char*)hvps_reply+4, NULL, 16);
+	if (send_cmd_and_check_reply("HGV") == 0) {
+		strncpy(valstr, hvps_reply + 4, 4);
+		v = (uint16_t)strtoul(valstr, NULL, 16);
+	}
 
 	return v;
 }
@@ -284,12 +290,15 @@ uint16_t hvps_get_voltage(void)
  */
 uint16_t hvps_get_current(void)
 {
-	uint16_t c = 0xffff; // default should not be valid reading
+	uint16_t i = 0xffff; // default should not be valid reading
+	char valstr[4];
 
-	if (send_cmd_and_check_reply("HGC") == 0)
-		c = strtol((char*)hvps_reply+4, NULL, 16);
+	if (send_cmd_and_check_reply("HGC") == 0) {
+		strncpy(valstr, hvps_reply + 4, 4);
+		i = (uint16_t)strtoul(valstr, NULL, 16);
+	}
 
-	return c;
+	return i;
 }
 
 /**
@@ -310,9 +319,12 @@ uint16_t hvps_get_current(void)
 uint16_t hvps_get_status(void)
 {
     uint16_t s = 0xffff; // default should not be a valid reading
+	char valstr[4];
 
-    if (send_cmd_and_check_reply("HGS") == 0)
-        s = strtol((char*)hvps_reply+4, NULL, 16);
+    if (send_cmd_and_check_reply("HGS") == 0) {
+		strncpy(valstr, hvps_reply + 4, 4);
+		s = (uint16_t)strtoul(valstr, NULL, 16);
+    }
 
     return s;
 }
@@ -396,9 +408,12 @@ int hvps_get_temp_corr_factor(struct hvps_temp_corr_factor *f)
 int hvps_is_on(void)
 {
 	uint16_t status = 0xffff; // default should not be valid reading
+	char valstr[4];
 
-	if (send_cmd_and_check_reply("HGS") == 0)
-		status = strtol((char*)hvps_reply+4, NULL, 16);
+	if (send_cmd_and_check_reply("HGS") == 0) {
+		strncpy(valstr, hvps_reply + 4, 4);
+		status = (uint16_t)strtoul(valstr, NULL, 16);
+	}
 
 	return (int)(status & 0x0001);
 }
@@ -555,7 +570,7 @@ static int voltage_less_than(double v)
 		}
 	}
 	/* Convert to long and check value for limit of 55 */
-	val = strtol(data, NULL, 16);
+	val = (uint16_t)strtoul(data, NULL, 16);
 	val = val * (1.812/pow(10, 3));
 	if(val > v)
 		return 0;

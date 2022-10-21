@@ -356,15 +356,27 @@ uint16_t hvps_get_last_cmd_err(void)
 int hvps_get_temp_corr_factor(struct hvps_temp_corr_factor *f)
 {
 	int ret = send_cmd_and_check_reply("HRT");
+	char valstr[4];
 
 	if (ret == 0)
 	{
-		f->dtp1 = strtol((char*)hvps_reply+4, NULL, 16);;
-		f->dtp2 = strtol((char*)hvps_reply+8, NULL, 16);;
-		f->dt1 = strtol((char*)hvps_reply+12, NULL, 16);;
-		f->dt2 = strtol((char*)hvps_reply+16, NULL, 16);;
-		f->vb = strtol((char*)hvps_reply+20, NULL, 16);;
-		f->tb = strtol((char*)hvps_reply+24, NULL, 16);;
+		strncpy(valstr, hvps_reply + 4, 4);
+		f->dtp1 = (int16_t)strtol(valstr, NULL, 16);
+
+		strncpy(valstr, hvps_reply + 8, 4);
+		f->dtp2 = (int16_t)strtol(valstr, NULL, 16);
+
+		strncpy(valstr, hvps_reply + 12, 4);
+		f->dt1 = (uint16_t)strtoul(valstr, NULL, 16);
+
+		strncpy(valstr, hvps_reply + 16, 4);
+		f->dt2 = (uint16_t)strtoul(valstr, NULL, 16);
+
+		strncpy(valstr, hvps_reply + 20, 4);
+		f->vb = (uint16_t)strtoul(valstr, NULL, 16);
+
+		strncpy(valstr, hvps_reply+24, 4);
+		f->tb = (uint16_t)strtoul(valstr, NULL, 16);
 	}
 
 	return ret;

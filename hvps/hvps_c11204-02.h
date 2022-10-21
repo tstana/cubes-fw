@@ -35,8 +35,8 @@ enum hvps_cmd_counter {
 };
 
 struct hvps_temp_corr_factor {
-	uint16_t dtp1;
-	uint16_t dtp2;
+	int16_t dtp1;
+	int16_t dtp2;
 	uint16_t dt1;
 	uint16_t dt2;
 	uint16_t vb;

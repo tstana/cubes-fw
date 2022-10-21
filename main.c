@@ -117,6 +117,7 @@ static uint8_t *send_data;
 static unsigned char send_data_payload[MEM_HISTO_LEN_GW]="";
 static unsigned char send_data_hk[HK_LEN] = "";
 static unsigned char send_data_cubes_id[CUBES_ID_LEN];
+static unsigned char send_data_hvps_temp_comp[sizeof(hvps_temp_corr)];
 
 /* Receive data, Citiroc configuration is the largest */
 #define RECV_MAXLEN    (MEM_CITIROC_CONF_LEN)
@@ -395,7 +396,30 @@ int main(void)
 					break;
 
 				case MSP_OP_REQ_CUBES_HVPS_TEMP_COMP:
-					/* Data read out from HVPS once a second (see above) */
+					send_data_hvps_temp_comp[0] =
+							(uint8_t)(hvps_temp_corr.dtp1 >> 8);
+					send_data_hvps_temp_comp[1] =
+							(uint8_t)(hvps_temp_corr.dtp1);
+					send_data_hvps_temp_comp[2] =
+							(uint8_t)(hvps_temp_corr.dtp2 >> 8);
+					send_data_hvps_temp_comp[3] =
+							(uint8_t)(hvps_temp_corr.dtp2);
+					send_data_hvps_temp_comp[4] =
+							(uint8_t)(hvps_temp_corr.dt1 >> 8);
+					send_data_hvps_temp_comp[5] =
+							(uint8_t)(hvps_temp_corr.dt1);
+					send_data_hvps_temp_comp[6] =
+							(uint8_t)(hvps_temp_corr.dt2 >> 8);
+					send_data_hvps_temp_comp[7] =
+							(uint8_t)(hvps_temp_corr.dt2);
+					send_data_hvps_temp_comp[8] =
+							(uint8_t)(hvps_temp_corr.vb >> 8);
+					send_data_hvps_temp_comp[9] =
+							(uint8_t)(hvps_temp_corr.vb);
+					send_data_hvps_temp_comp[10] =
+							(uint8_t)(hvps_temp_corr.tb >> 8);
+					send_data_hvps_temp_comp[11] =
+							(uint8_t)(hvps_temp_corr.tb);
 					break;
 			}
 
@@ -978,7 +1002,7 @@ void msp_expsend_start(unsigned char opcode, unsigned long *len)
 		send_data = send_data_cubes_id;
 	} else if (opcode == MSP_OP_REQ_CUBES_HVPS_TEMP_COMP) {
 		l = sizeof(struct hvps_temp_corr_factor);
-		send_data = (uint8_t*)&hvps_temp_corr;
+		send_data = send_data_hvps_temp_comp;
 	} else {
 		l = 0;
 	}

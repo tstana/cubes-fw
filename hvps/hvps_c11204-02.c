@@ -36,7 +36,14 @@
 #include "../firmware/drivers/mss_nvm/mss_nvm.h"
 
 
-#define HVPS_MAX_VB (55.0)
+/*
+ * Maximum bias voltage to apply to MPPC. Setting criteria, based on datasheet
+ * of S13360-6050PE MPPC:
+ * -- Vbr = 53 +/- 5 V;
+ * -- recommended op. voltage: Vbr + 3V
+ * -- result for max: 53 + 5 + 3 V
+ */
+#define HVPS_MAX_VB (61.0) // from DS of S13360-6050CS: Vbr = 53 +/- 5;
 
 /*
  * =============================================================================

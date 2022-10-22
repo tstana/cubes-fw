@@ -501,6 +501,7 @@ int main(void)
 					mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 					          recv_data);
 					citiroc_send_slow_control();
+					citiroc_conf_id = 255; // temporary SC config.
 					break;
 
 				case MSP_OP_SEND_CUBES_PROB_CONF:

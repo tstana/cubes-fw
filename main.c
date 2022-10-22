@@ -230,7 +230,7 @@ int main(void)
 	mem_read(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
 				&citiroc_conf_id);
 	uint32_t *nvm_conf_addr = (uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
-			(citiroc_conf_id * MEM_CITIROC_CONF_LEN));
+			((citiroc_conf_id - 1) * MEM_CITIROC_CONF_LEN));
 
 	/* Apply configuration if there is an existing one */
 	if (citiroc_conf_id == nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
@@ -521,22 +521,24 @@ int main(void)
 
 				case MSP_OP_SELECT_NVM_CITI_CONF:
 				{
-					/* Get CONF_ID from MSP frame */
+					/* Get CONF_ID from MSP frame and apply it if valid */
 					citiroc_conf_id = (uint8_t)recv_data[0];
-					uint32_t *nvm_conf_addr =
-						(uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
-						            (citiroc_conf_id * MEM_CITIROC_CONF_LEN));
-					/* Apply configuration if there is an existing one */
-					if (citiroc_conf_id ==
-					    nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
-						// TODO: Check for return value here!
-						mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR,
-						              MEM_CITIROC_CONF_ID_LEN,
-						              &citiroc_conf_id);
-						// TODO: Check for return value here!
-						mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
-						          (uint8_t*)nvm_conf_addr);
-						citiroc_send_slow_control();
+					if ((citiroc_conf_id >= 1) && (citiroc_conf_id <= 254)) {
+						uint32_t *nvm_conf_addr =
+							(uint32_t*)(MEM_CITIROC_CONF_ADDR_NVM +
+								((citiroc_conf_id - 1) * MEM_CITIROC_CONF_LEN));
+						/* Apply configuration if there is an existing one */
+						if (citiroc_conf_id ==
+							nvm_conf_addr[MEM_CITIROC_CONF_LEN-1]) {
+							// TODO: Check for return value here!
+							mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR,
+										  MEM_CITIROC_CONF_ID_LEN,
+										  &citiroc_conf_id);
+							// TODO: Check for return value here!
+							mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
+									  (uint8_t*)nvm_conf_addr);
+							citiroc_send_slow_control();
+						}
 					}
 					break;
 				}

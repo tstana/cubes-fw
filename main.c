@@ -32,7 +32,9 @@
 #include "firmware/drivers/mss_i2c/mss_i2c.h"
 #include "firmware/drivers/cubes_timekeeping/cubes_timekeeping.h"
 #include "firmware/drivers/mss_timer/mss_timer.h"
+
 #include "firmware/drivers/citiroc/citiroc.h"
+#include "firmware/drivers/citiroc/citiroc_defconfig.h"
 
 #include "hk_adc/hk_adc.h"
 
@@ -242,7 +244,9 @@ int main(void)
 		          (uint8_t*)nvm_conf_addr);
 		citiroc_send_slow_control();
 	} else {
-		/* TODO: Handle what happens if no config found... */
+		mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
+				CITIROC_DEFCONFIG);
+		citiroc_conf_id = CITIROC_DEFCONFIG[MEM_CITIROC_CONF_LEN-1];
 	}
 
 	/*

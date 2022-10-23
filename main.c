@@ -522,17 +522,24 @@ int main(void)
 					break;
 
 				case MSP_OP_SEND_NVM_CITI_CONF:
-					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
-					// TODO: Check for return code!
-					mem_write_nvm(MEM_CITIROC_CONF_ADDR_NVM,
-					              MEM_CITIROC_CONF_LEN,
-					              recv_data);
+					/*
+					 * Write at NVM conf addr offset w/o changing operating
+					 * conf_id and w/o applying to ASIC; for these to happen,
+					 * a separate MSP_OP_SELECT_NVM_CITI_CONF is needed.
+					 */
+					tmp_conf_id = recv_data[MEM_CITIROC_CONF_LEN-1];
+					if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
+						nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
+								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
+						mem_write_nvm(nvm_conf_addr, MEM_CITIROC_CONF_LEN,
+									  recv_data);
+					}
 					break;
 
 				case MSP_OP_SELECT_NVM_CITI_CONF:
 				{
 					/* Get conf_id from MSP frame and apply it if valid */
-					tmp_conf_id = (uint8_t)recv_data[0];
+					tmp_conf_id = recv_data[0];
 					if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
 						nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
 								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));

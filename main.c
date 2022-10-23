@@ -246,6 +246,7 @@ int main(void)
 	} else {
 		mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 				CITIROC_DEFCONFIG);
+		citiroc_send_slow_control();
 		citiroc_conf_id = CITIROC_DEFCONFIG[MEM_CITIROC_CONF_LEN-1];
 	}
 

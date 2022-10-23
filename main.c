@@ -506,8 +506,7 @@ int main(void)
 				}
 
 				case MSP_OP_SEND_CUBES_CITI_CONF:
-					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
-					// TODO: Check for return code!
+					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN-1`?
 					mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 					          recv_data);
 					citiroc_send_slow_control();
@@ -515,7 +514,7 @@ int main(void)
 					break;
 
 				case MSP_OP_SEND_CUBES_PROB_CONF:
-					// TODO: Check for return value here!
+					// TODO: Check that we got all of `MEM_CITIROC_PROBE_LEN`?
 					mem_write(MEM_CITIROC_PROBE_ADDR, MEM_CITIROC_PROBE_LEN,
 					          recv_data);
 					citiroc_send_probes();
@@ -528,11 +527,11 @@ int main(void)
 					 * a separate MSP_OP_SELECT_NVM_CITI_CONF is needed.
 					 */
 					tmp_conf_id = recv_data[MEM_CITIROC_CONF_LEN-1];
+					// TODO: Check that we got all of `MEM_CITIROC_CONF_LEN`?
 					if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
-						nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
-								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
-						mem_write_nvm(nvm_conf_addr, MEM_CITIROC_CONF_LEN,
-									  recv_data);
+						uint32_t nvm_addr = MEM_CITIROC_CONF_ADDR_NVM +
+								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN);
+						mem_write_nvm(nvm_addr, MEM_CITIROC_CONF_LEN, recv_data);
 					}
 					break;
 

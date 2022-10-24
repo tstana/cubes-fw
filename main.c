@@ -540,14 +540,14 @@ int main(void)
 					break;
 
 				case MSP_OP_SELECT_NVM_CITI_CONF:
-				{
-					/* Get conf_id from MSP frame and apply it if valid */
 					tmp_conf_id = recv_data[0];
+					/* Get conf_id from MSP frame and apply it if valid */
 					if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
 						nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
 								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
 
-						if (nvm_conf_addr[MEM_CITIROC_CONF_LEN-1] == tmp_conf_id) {
+						if (nvm_conf_addr[MEM_CITIROC_CONF_LEN-1] ==
+								tmp_conf_id) {
 							// TODO: Check for return value here!
 							mem_write(MEM_CITIROC_CONF_ADDR,
 									MEM_CITIROC_CONF_LEN, nvm_conf_addr);
@@ -555,12 +555,15 @@ int main(void)
 							conf_id = tmp_conf_id;
 							// TODO: Check for return value here!
 							mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR,
-										  MEM_CITIROC_CONF_ID_LEN,
-										  &conf_id);
+									MEM_CITIROC_CONF_ID_LEN, &conf_id);
 						}
+					} else if (tmp_conf_id == 0) {
+						mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
+								CITIROC_DEFCONFIG);
+						citiroc_send_slow_control();
+						conf_id = CITIROC_DEFCONFIG[MEM_CITIROC_CONF_LEN-1];
 					}
 					break;
-				}
 
 				case MSP_OP_SEND_READ_REG_DEBUG:
 					citiroc_rrd(recv_data[0] & 0x01, (recv_data[0] & 0x3e)>>1);

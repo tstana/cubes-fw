@@ -1,28 +1,31 @@
-/*
- * msp_seqflags.c
- * Author: John Wikman
+/**
+ * @file      msp_seqflags.c
+ * @author    John Wikman
+ * @copyright MIT License
+ * @brief     Defines functions for keeping track of transaction-ID's in MSP.
+ *
+ * @details
+ * A sequence flag keeps track of the transaction-ID from the last successful
+ * MSP transaction. Every request, send and system command opcodes has a
+ * designated sequence flag. This also goes for custom opcodes.
  */
 
-#include "../msp/msp_seqflags.h"
+#include "msp_opcodes.h"
+#include "msp_seqflags.h"
 
-#include "../msp/msp_opcodes.h"
-
-struct flag_position {
+struct msp_flag_position {
 	int index;
 	unsigned short mask;
 };
 
-/**
- * Returns flag position information for the specified opcode. The mask field
- * is set to 0 if the opcode does not have an associated flag.
- */
-static struct flag_position get_flag_pos(unsigned char opcode);
+static struct msp_flag_position msp_get_flag_pos(unsigned char opcode);
 
 /**
- * Creates a new set of sequence flags. Use MSP_seqflagsIncrement to set
- * specific flags to 1.
+ * @brief Creates a new (blank) set of sequence flags.
+ * @return A new set of sequence flags.
  *
- * @return  A set of sequence flags with all flags set to 0.
+ * Creates a new set of sequence flags with all flags being uninitialized and
+ * having their value set to 0.
  */
 msp_seqflags_t msp_seqflags_init(void)
 {
@@ -40,18 +43,19 @@ msp_seqflags_t msp_seqflags_init(void)
 }
 
 /**
- * Increments the sequence flag belonging to that specific OP
- * CODE.
+ * @brief Increments a sequence flag.
+ * @param flags Pointer to the set of sequence flags.
+ * @param opcode The opcode corresponding to the sequence flag.
+ * @return 1 if the opcode has no designated sequence flag, 0 otherwise.
  *
- * @return  0 if corresponding flag was incremented.
- *      1 if the entered op code does not have an associated
- *        sequence flag.
+ * Increments a sequence flag an initializes it. If the specified opcode has no
+ * designated sequence flag, the value 1 is returned and no action is taken.
  */
 int msp_seqflags_increment(volatile msp_seqflags_t *flags, unsigned char opcode)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
-	fp = get_flag_pos(opcode);
+	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
 		return 1;
 
@@ -62,19 +66,25 @@ int msp_seqflags_increment(volatile msp_seqflags_t *flags, unsigned char opcode)
 }
 
 /**
- * Returns the current value of the sequence flag associated with
- * the entered OP CODE.
- * 
- * @return  0 if the associated flag is set to 0.
- *      1 if the associated flag is set to 1.
- *      -1  if the entered op code does not have an
- *        associated sequence flag.
+ * @brief Returns the value of a sequence flag.
+ * @param flags Pointer to the set of sequence flags.
+ * @param opcode The opcode corresponding to the sequence flag.
+ * @return
+ *    -  -1 if the opcode has no corresponding sequence flag,
+ *    -  0 if the sequence flag is set to 0,
+ *    -  1 if the sequence flag is set to 1.
+ *
+ * Returns the value of the sequence flag associated with the opcode. Returns
+ * -1 if the specified opcode is not associated with a sequence flag.
+ *
+ * Since this function can return -1, it is important to check the returned
+ * value against -1 or make sure that the opcode is always valid.
  */
 int msp_seqflags_get(volatile const msp_seqflags_t *flags, unsigned char opcode)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
-	fp = get_flag_pos(opcode);
+	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
 		return -1;
 
@@ -85,15 +95,26 @@ int msp_seqflags_get(volatile const msp_seqflags_t *flags, unsigned char opcode)
 		return 0;
 }
 
-/*
- * Returns the next unacknowledged sequence flag for the given OP code. If the
- * flag for the given opcode is not initialized, it returns 0.
+/**
+ * @brief Returns the next expected value of a sequence flag.
+ * @param flags Pointer to the set of sequence flags.
+ * @param opcode The opcode corresponding to the sequence flag.
+ * @return
+ *    -  -1 if the opcode has no corresponding sequence flag,
+ *    -  0 if the sequence flag is uninitialized or if it is set to 1,
+ *    -  1 if the sequence flag is initialized and currently set to 0.
+ *
+ * Returns the next expected sequence flag. In the case of MSP, it returns the
+ * transaction-ID of the next transaction with the specified opcode.
+ *
+ * Since this function can return -1, it is important to check the returned
+ * value against -1 or make sure that the opcode is always valid.
  */
 int msp_seqflags_get_next(volatile const msp_seqflags_t *flags, unsigned char opcode)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
-	fp = get_flag_pos(opcode);
+	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
 		return -1;
 
@@ -109,16 +130,25 @@ int msp_seqflags_get_next(volatile const msp_seqflags_t *flags, unsigned char op
 }
 
 /**
- * Returns 1 if the seqflags is set to the specific flag for the entered op
- * code. Else returns 0. Returns -1 if OP CODE has no sequence flag.
+ * @brief Checks if a sequence flag is set to a specific value.
+ * @param flags Pointer to the set of sequence flags.
+ * @param opcode The opcode corresponding to the sequence flag.
+ * @param flag The value to check the sequence flag against.
+ * @return 1 if the value of the sequence flag matches the value in the flag
+ *         parameter, 0 otherwise.
+ *
+ * Checks if the sequence flag corresponding to the specified opcode is equal
+ * to a specific value. Returns 1 if the values are equal. Returns 0 if the
+ * specified opcode does not have a corresponding sequence flag or if the
+ * values are not equal.
  */
 int msp_seqflags_is_set(volatile const msp_seqflags_t *flags, unsigned char opcode, unsigned char flag)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
-	fp = get_flag_pos(opcode);
+	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
-		return -1;
+		return 0;
 
 	/* Make sure that the flag has been set at least once */
 	if ((flags->inits[fp.index] & fp.mask) == 0)
@@ -136,16 +166,25 @@ int msp_seqflags_is_set(volatile const msp_seqflags_t *flags, unsigned char opco
 }
 
 /**
- * Returns 0 if the seqflag was set successfully. Returns -1 if
- * OP CODE has no sequence flag.
+ * @brief Sets a sequence flag to a specific value.
+ * @param flags Pointer to the set of sequence flags.
+ * @param opcode The opcode corresponding to the sequence flag.
+ * @param flag The value that the sequence flag should be set to.
+ * @return -1 if the opcode does not have a designated sequence flag, 0
+ *         otherwise.
+ *
+ * Sets the sequence flag corresponding to the opcode to the value specified
+ * by the flag parameter. If the flag parameter is 0, the sequence flag will be
+ * set to 0. If the flag parameter is any other value, the sequence flag will
+ * be set to 1.
  */
 int msp_seqflags_set(volatile msp_seqflags_t *flags, unsigned char opcode, unsigned char flag)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
-	fp = get_flag_pos(opcode);
+	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
-		return 1;
+		return -1;
 
 	/* Initialize the flag */
 	flags->inits[fp.index] |= fp.mask;
@@ -159,10 +198,13 @@ int msp_seqflags_set(volatile msp_seqflags_t *flags, unsigned char opcode, unsig
 }
 
 
-/* Retrieves flag position information for the specified opcode */
-static struct flag_position get_flag_pos(unsigned char opcode)
+/*
+ * Returns flag position information for the specified opcode. The mask field
+ * is set to 0 if the opcode does not have an associated flag.
+ */
+static struct msp_flag_position msp_get_flag_pos(unsigned char opcode)
 {
-	struct flag_position fp;
+	struct msp_flag_position fp;
 
 	if (MSP_OP_IS_CUSTOM(opcode)) {
 		switch (MSP_OP_TYPE(opcode)) {

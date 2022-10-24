@@ -1,20 +1,23 @@
-/*
- * msp_exp_callback.c
- * Author: John Wikman
+/**
+ * @file      msp_exp_callback.c
+ * @author    John Wikman
+ * @copyright MIT License
+ * @brief     Implements the callback functions for the experiment side of MSP.
  *
+ * @details
  * Implements the MSP Callbacks defined in msp_exp_callback.h.
  */
 
-#include "../msp/msp_exp_callback.h"
+#include "msp_debug.h"
+#include "msp_endian.h"
+#include "msp_opcodes.h"
 
-#include "../msp/msp_debug.h"
-#include "../msp/msp_endian.h"
-#include "../msp/msp_exp_definitions.h"
-#include "../msp/msp_exp_error.h"
-#include "../msp/msp_exp_frame.h"
-#include "../msp/msp_exp_handler.h"
-#include "../msp/msp_exp_state.h"
-#include "../msp/msp_opcodes.h"
+#include "msp_exp_callback.h"
+#include "msp_exp_definitions.h"
+#include "msp_exp_error.h"
+#include "msp_exp_frame.h"
+#include "msp_exp_handler.h"
+#include "msp_exp_state.h"
 
 
 static int handle_incoming_frame(const unsigned char *frame, unsigned long len);
@@ -133,7 +136,7 @@ static int handle_incoming_frame(const unsigned char *frame, unsigned long len)
 		if (len != 9) {
 			return MSP_EXP_ERR_INVALID_HEADER_FRAME;
 		} else {
-			dl = from_bigendian32(frame + 1);
+			dl = msp_from_bigendian32(frame + 1);
 			return handle_incoming_header_frame(opcode, frame_id, dl);
 		}
 	}
@@ -161,7 +164,7 @@ static int handle_incoming_frame(const unsigned char *frame, unsigned long len)
 static int handle_incoming_data_frame(const unsigned char *data, unsigned char frame_id, unsigned long len)
 {
 	/* We should only receive data frames in the OBC Send state */
-	if (msp_exp_state.type != MSP_EXP_STATE_OBC_SEND_TX)
+	if (msp_exp_state.type != MSP_EXP_STATE_OBC_SEND_RX)
 		return MSP_EXP_ERR_UNEXPECTED_DATA_FRAME;
 
 	/* Check that the frame-ID is different from the previous frame */
@@ -312,9 +315,9 @@ static int handle_incoming_system_frame(unsigned char opcode, unsigned char fram
 
 	/* Set the MSP state */
 	if (msp_seqflags_is_set(&msp_exp_state.seqflags, opcode, frame_id)) {
-		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_TX_DUPLICATE;
+		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_RX_DUPLICATE;
 	} else {
-		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_TX;
+		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_RX;
 	}
 
 	return 0;
@@ -367,9 +370,9 @@ static int handle_incoming_send_frame(unsigned char opcode, unsigned char frame_
 
 	/* Set the MSP state */
 	if (msp_seqflags_is_set(&msp_exp_state.seqflags, opcode, frame_id)) {
-		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_TX_DUPLICATE;
+		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_RX_DUPLICATE;
 	} else {
-		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_TX;
+		msp_exp_state.type = MSP_EXP_STATE_OBC_SEND_RX;
 		
 		/* If this is not a duplicate, then we call the appropriate handler to
 		 * setup all the data. */
@@ -410,8 +413,8 @@ static int handle_outgoing_frame(unsigned char *buf, unsigned long *len)
 	case MSP_EXP_STATE_OBC_REQ_TX:
 		code = handle_outgoing_data_frame(buf, len);
 		break;
-	case MSP_EXP_STATE_OBC_SEND_TX:
-	case MSP_EXP_STATE_OBC_SEND_TX_DUPLICATE:
+	case MSP_EXP_STATE_OBC_SEND_RX:
+	case MSP_EXP_STATE_OBC_SEND_RX_DUPLICATE:
 		code = handle_outgoing_acknowledge_frame(buf, len);
 		break;
 	default:
@@ -454,7 +457,7 @@ static int handle_outgoing_response_frame(unsigned char *buf, unsigned long *len
  */
 static int handle_outgoing_data_frame(unsigned char *buf, unsigned long *len)
 {
-	unsigned long send_len;
+	unsigned long send_len, remaining_len;
 	unsigned long fcs;
 
 	/* If we have nothing left to send, something has gone very wrong. Send a
@@ -469,8 +472,9 @@ static int handle_outgoing_data_frame(unsigned char *buf, unsigned long *len)
 
 	/* Calculate how many bytes that are to be sent. */
 	send_len = MSP_EXP_MTU;
-	if (msp_exp_state.processed_length + send_len > msp_exp_state.total_length) {
-		send_len = msp_exp_state.total_length - msp_exp_state.processed_length;
+	remaining_len = msp_exp_state.total_length - msp_exp_state.processed_length;
+	if (remaining_len < MSP_EXP_MTU) {
+		send_len = remaining_len;
 	}
 
 	/* This is needed for when we receive acknowledgments */
@@ -482,7 +486,7 @@ static int handle_outgoing_data_frame(unsigned char *buf, unsigned long *len)
 
 	/* Generate and format the Frame Check Sequence (from_obc = 0) */
 	fcs = msp_exp_frame_generate_fcs(buf, 0, send_len+1);
-	to_bigendian32(buf + (send_len + 1), fcs);
+	msp_to_bigendian32(buf + (send_len + 1), fcs);
 
 	/* Set the total length of the frame */
 	*len = send_len+5;
@@ -504,7 +508,7 @@ static int handle_outgoing_acknowledge_frame(unsigned char *buf, unsigned long *
 	unsigned char opcode;
 	unsigned char transaction_id;
 
-	if (msp_exp_state.type == MSP_EXP_STATE_OBC_SEND_TX_DUPLICATE) {
+	if (msp_exp_state.type == MSP_EXP_STATE_OBC_SEND_RX_DUPLICATE) {
 		msp_exp_frame_format_header(buf, MSP_OP_T_ACK, msp_exp_state.transaction_id, 0);
 		*len = 9;
 		msp_exp_state.type = MSP_EXP_STATE_READY;
@@ -555,7 +559,7 @@ static int handle_outgoing_acknowledge_frame(unsigned char *buf, unsigned long *
 static void ensure_ready_state(void)
 {
 	switch (msp_exp_state.type) {
-	case MSP_EXP_STATE_OBC_SEND_TX:
+	case MSP_EXP_STATE_OBC_SEND_RX:
 		/* System Control OP codes are an exception as they have a special
 		 * handler. */
 		if (MSP_OP_TYPE(msp_exp_state.opcode) != MSP_OP_TYPE_SYS)

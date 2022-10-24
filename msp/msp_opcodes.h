@@ -1,8 +1,12 @@
 /*
  * msp_opcodes.h
- * Author: John Wikman
+ * Authors: John Wikman
+ *          Marcus Persson
+ *          Theodor-Adrian Stana
+ *          Ibrahim Hamed
+ *          Patrik Johansson
  *
- * Defines all the opcodes in MSP.
+ * Defines all the CUBES MSP opcodes.
  */
 
 #ifndef MSP_OPCODES_H

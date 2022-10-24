@@ -1,25 +1,31 @@
-/*
- * msp_exp_frame.c
- * Author: John Wikman
+/**
+ * @file      msp_exp_frame.c
+ * @author    John Wikman
+ * @copyright MIT License
+ * @brief     Functions for handling MSP frames on the experiment side.
  */
 
-#include "../msp/msp_exp_frame.h"
+#include "msp_crc.h"
+#include "msp_endian.h"
 
-#include "../msp/msp_crc.h"
-#include "../msp/msp_endian.h"
-#include "../msp/msp_exp_definitions.h"
+#include "msp_exp_frame.h"
+#include "msp_exp_definitions.h"
 
-/*
- * Constructs an FCS based on the entered data. Also includes the pseudo header
- * in the calculation.
+/**
+ * @brief Calculates the FCS of an MSP frame.
+ * @param data Pointer to the all of the bytes to be included in the FCS
+ *             calculation, excluding the pseudo header. Should point to the
+ *             byte in the MSP frame that contains the opcode and frame-ID.
+ * @param from_obc A boolean value that specifies whether the FCS should be
+ *                 calculated as if the frame came from the OBC or from the
+ *                 experiment. 
+ * @param len The number of bytes pointed to be the data parameter. In the
+ *            case of a header frame, this should have the value 5. In the case
+ *            of a data frame, this should have the value 1 + the length of the
+ *            data field.
+ * @return The calculated FCS value.
  *
- * Arguments
- *  data: Pointer to the all of the bytes to be included in the FCS calculation
- *        except for the pseudo header.
- *  from_obc: A boolean value that specifies whether this frame is supposed to
- *            come from the OBC or not.
- *  len: Number of bytes in data that should be included in the FCS
- *       calculation.
+ * Calculates an FCS value based on the entered data.
  */
 unsigned long msp_exp_frame_generate_fcs(const unsigned char *data, int from_obc, unsigned long len)
 {
@@ -31,32 +37,32 @@ unsigned long msp_exp_frame_generate_fcs(const unsigned char *data, int from_obc
 	if (!from_obc)
 		pseudo_header |= 0x01;
 
-	remainder = crc32(&pseudo_header, 1, 0);
+	remainder = msp_crc32(&pseudo_header, 1, 0);
 
 	/* Now account for the rest of the frame */
-	remainder = crc32(data, len, remainder);
+	remainder = msp_crc32(data, len, remainder);
 
 	return remainder;
 }
 
-/*
- * Check if the MSP frame stored in the pointers data has a valid FCS.
- *
- * Arguments
- *  data: Pointer to the data that contains the MSP frame.
- *  from_obc: A boolean value that specifies whether this frame is supposed to
- *            come from the OBC or not.
- *  len: Length of the data that contains the MSP frame (in bytes).
- *
- * Returns
- *  1 if valid, 0 otherwise.
+/**
+ * @brief Checks if the FCS of an MSP frame is valid.
+ * @param data Pointer to the first byte in the MSP frame (the byte that
+ *             contains the opcode and frame-ID).
+ * @param from_obc A boolean value that specifies whether the FCS should be
+ *                 calculated as if the frame came from the OBC or from the
+ *                 experiment. 
+ * @param len Number of bytes in the MSP frame. In the case of a header frame,
+ *            this should have the value 9. In the case of a data frame, this
+ *            should have the value 5 + the length of the data field.
+ * @return 1 if the FCS is valid, 0 otherwise.
  */
 int msp_exp_frame_fcs_valid(const unsigned char *data, int from_obc, unsigned long len)
 {
 	unsigned long fcs;
 
 	/* FCS is the last 4 bytes of the frame */
-	fcs = from_bigendian32(data + (len - 4));
+	fcs = msp_from_bigendian32(data + (len - 4));
 
 	/* Check if the FCS' match up. */
 	if (fcs == msp_exp_frame_generate_fcs(data, from_obc, len - 4))
@@ -66,15 +72,18 @@ int msp_exp_frame_fcs_valid(const unsigned char *data, int from_obc, unsigned lo
 }
 
 
-/*
- * Formats a header with the specified opcode, frame-ID and DL. The result is
- * stored in dest.
+/**
+ * @brief Formats a header frame into a sequence of bytes.
+ * @param dest Pointer to the buffer where the formatted frame will be stored.
+ * @param opcode Opcode of the frame.
+ * @param frame_id Frame-ID of the frame.
+ * @param dl The value of the DL field.
  *
- * Arguments
- *  dest: Address to the buffer where the frame will be stored.
- *  opcode: The opcode of the resulting frame.
- *  frame_id: The frame-ID of the resulting frame.
- *  dl: The value of the DL field in the resulting frame.
+ * Formats a header with the specified opcode, frame-ID and DL value. The
+ * result is stored in the buffer pointed to by dest.
+ *
+ * This function formats the entire frame, including the FCS value. The
+ * resulting sequence of bytes can be sent directly to the OBC.
  */
 void msp_exp_frame_format_header(unsigned char *dest, unsigned char opcode, unsigned char frame_id, unsigned long dl)
 {
@@ -85,23 +94,23 @@ void msp_exp_frame_format_header(unsigned char *dest, unsigned char opcode, unsi
 	dest[0] |= (frame_id & 0x1) << 7;
 
 	/* Format the DL field */
-	to_bigendian32(dest + 1, dl);
+	msp_to_bigendian32(dest + 1, dl);
 
 	/* Format the FCS field */
 	fcs = msp_exp_frame_generate_fcs(dest, 0, 5);
-	to_bigendian32(dest + 5, fcs);
+	msp_to_bigendian32(dest + 5, fcs);
 }
 
-/*
- * Formats a header that has the specified opcode, but with frame-ID and DL set
- * to 0. The resulting frame is stored in dest.
+/**
+ * @brief Formats a header frame with frame-ID and DL set to 0 into a sequence
+ *        of bytes.
+ * @param dest Pointer to the buffer where the frame will be stored.
+ * @param opcode Opcode of the frame.
  *
- * Same as calling:
- * msp_exp_frame_format_header(dest, opcode, 0, 0);
- *
- * Arguments
- *  dest: Address to the buffer where the frame will be stored.
- *  opcode: The opcode of the resulting frame.
+ * Same as calling msp_exp_frame_format_header(dest, opcode, 0, 0).
+ * 
+ * This function should be used for header frames with opcodes that have traits
+ * FID0 and DL0.
  */
 void msp_exp_frame_format_empty_header(unsigned char *dest, unsigned char opcode)
 {

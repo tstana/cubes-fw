@@ -260,7 +260,7 @@ int main(void)
 	 */
 	sprintf((char*)send_data_cubes_id, "%s %s",__DATE__, __TIME__);
 	uint32_t itsy_ram = citiroc_read_id();
-	to_bigendian32(send_data_cubes_id+21, itsy_ram);
+	msp_to_bigendian32(send_data_cubes_id+21, itsy_ram);
 
 	/*
 	 * Init timer to read HK once a second from HVPS and other external devices.
@@ -343,19 +343,19 @@ int main(void)
 				case MSP_OP_REQ_HK:
 					/* Reset counter and hit counter register readouts */
 					u32val = cubes_time;
-					to_bigendian32(send_data_hk, u32val);
+					msp_to_bigendian32(send_data_hk, u32val);
 
 					u32val = mem_reset_counter_read();;
-					to_bigendian32(send_data_hk+4, u32val);
+					msp_to_bigendian32(send_data_hk+4, u32val);
 
 					u32val = trig_count_ch0;
-					to_bigendian32(send_data_hk+8, u32val);
+					msp_to_bigendian32(send_data_hk+8, u32val);
 					u32val = trig_count_ch16;
-					to_bigendian32(send_data_hk+12, u32val);
+					msp_to_bigendian32(send_data_hk+12, u32val);
 					u32val = trig_count_ch31;
-					to_bigendian32(send_data_hk+16, u32val);
+					msp_to_bigendian32(send_data_hk+16, u32val);
 					u32val = trig_count_or32;
-					to_bigendian32(send_data_hk+20, u32val);
+					msp_to_bigendian32(send_data_hk+20, u32val);
 
 					/* HVPS HK */
 					u16val = hvps_volt;

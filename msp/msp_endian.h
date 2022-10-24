@@ -1,15 +1,18 @@
-/*
- * msp_endian.h
- * Author: John Wikman
+/**
+ * @file      msp_endian.h
+ * @author    John Wikman 
+ * @copyright MIT License
+ * @brief     Functions for endian conversion.
  *
- * Defines function prototypes for converting a byte sequence from Big-Endian
+ * @details
+ * Declares function prototypes for converting a byte sequence from Big-Endian
  * into system defined integers.
  */
 
 #ifndef MSP_ENDIAN_H
 #define MSP_ENDIAN_H
 
-void to_bigendian32(unsigned char *dest, unsigned long number);
-unsigned long from_bigendian32(const unsigned char *src);
+void msp_to_bigendian32(unsigned char *dest, unsigned long number);
+unsigned long msp_from_bigendian32(const unsigned char *src);
 
-#endif
+#endif /* MSP_ENDIAN_H */

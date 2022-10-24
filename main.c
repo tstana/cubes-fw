@@ -256,6 +256,13 @@ int main(void)
 	}
 
 	/*
+	 * Prepare CUBES ID data
+	 */
+	sprintf((char*)send_data_cubes_id, "%s %s",__DATE__, __TIME__);
+	uint32_t itsy_ram = citiroc_read_id();
+	to_bigendian32(send_data_cubes_id+21, itsy_ram);
+
+	/*
 	 * Init timer to read HK once a second from HVPS and other external devices.
 	 * This is used so that the HK data is ready for the OBC when it asks for it
 	 * and CUBES can reply without delaying the I2C comms.
@@ -323,7 +330,6 @@ int main(void)
 
 		/* MSP commands */
 		if (has_send != 0) {
-			uint32_t itsy_ram;
 			uint32_t u32val = 0;
 			uint16_t u16val = 0;
 
@@ -331,9 +337,7 @@ int main(void)
 			switch (has_send) {
 
 				case MSP_OP_REQ_CUBES_ID:
-					sprintf((char*)send_data_cubes_id, "%s %s",__DATE__, __TIME__);
-					itsy_ram = citiroc_read_id();
-					to_bigendian32(send_data_cubes_id+21, itsy_ram);
+					/* CUBES_ID data prepared once on init. */
 					break;
 
 				case MSP_OP_REQ_HK:

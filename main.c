@@ -573,13 +573,20 @@ int main(void)
 					break;
 
 				case MSP_OP_SEND_CUBES_DAQ_CONF:
+					/* Set DAQ duration */
 					daq_dur = recv_data[0];
-					memcpy(bin_cfg, recv_data+1, 6);
-					// Ensure the bin configuration is not an unsupported one
-					// 		!!----FIXME----!!
-		//			if (bin_cfg > 3)
-		//				bin_cfg = 3;
 					citiroc_daq_set_dur(daq_dur);
+
+					/* Set bin_cfg, with any adjustment if out of range */
+					memcpy(bin_cfg, recv_data+1, 6);
+					for (int i = 0; i < 6; i++) {
+						if ((bin_cfg[i] > 6) && (bin_cfg[i] <= 9))
+							bin_cfg[i] = 6;
+						else if ((bin_cfg[i] == 10))
+							bin_cfg[i] = 11;
+						else if (bin_cfg[i] > 12)
+							bin_cfg[i] = 12;
+					}
 					break;
 
 				case MSP_OP_SEND_CUBES_GATEWARE_CONF:

@@ -55,9 +55,6 @@
  */
 uint8_t clean_poweroff = 0;
 
-uint8_t conf_id = 0; // hard-coded config if none saved to NVM
-
-
 /*
  * -----------------------------------
  * MSP-related functions and variables
@@ -150,10 +147,15 @@ static uint16_t get_num_bins(uint8_t bin_cfg);
  */
 static inline void prep_payload_data();
 
-
 /* DAQ duration and bin_cfg array, sent via MSP_OP_SEND_CUBES_DAQ_CONF */
 static uint8_t daq_dur;
 static uint8_t bin_cfg[6];
+
+/* Citiroc Configuration ID */
+uint8_t conf_id = 0; // hard-coded config if none saved to NVM
+
+#define CONF_ID_NVM_MIN  (  1)
+#define CONF_ID_NVM_MAX  (254)
 
 
 /*
@@ -234,7 +236,7 @@ int main(void)
 
 	/* If config. found in NVM, apply it and store tmp_conf_id to NVM */
 	mem_read(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN, &tmp_conf_id);
-	if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
+	if ((tmp_conf_id >= CONF_ID_NVM_MIN) && (tmp_conf_id <= CONF_ID_NVM_MAX)) {
 		nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
 				((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
 
@@ -542,7 +544,8 @@ int main(void)
 				case MSP_OP_SELECT_NVM_CITI_CONF:
 					tmp_conf_id = recv_data[0];
 					/* Get conf_id from MSP frame and apply it if valid */
-					if ((tmp_conf_id >= 1) && (tmp_conf_id <= 254)) {
+					if ((tmp_conf_id >= CONF_ID_NVM_MIN) &&
+							(tmp_conf_id <= CONF_ID_NVM_MAX)) {
 						nvm_conf_addr = (uint8_t*)(MEM_CITIROC_CONF_ADDR_NVM +
 								((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
 

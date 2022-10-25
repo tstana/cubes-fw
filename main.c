@@ -255,6 +255,8 @@ int main(void)
 				CITIROC_DEFCONFIG);
 		citiroc_send_slow_control();
 		conf_id = CITIROC_DEFCONFIG[MEM_CITIROC_CONF_LEN-1];
+		mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
+				&conf_id);
 	}
 
 	/*
@@ -565,6 +567,8 @@ int main(void)
 								CITIROC_DEFCONFIG);
 						citiroc_send_slow_control();
 						conf_id = CITIROC_DEFCONFIG[MEM_CITIROC_CONF_LEN-1];
+						mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR,
+								MEM_CITIROC_CONF_ID_LEN, &conf_id);
 					}
 					break;
 

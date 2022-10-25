@@ -202,9 +202,5 @@ void citiroc_read_reg_reset()
 
 uint32_t citiroc_read_id()
 {
-//	uint16_t boardid;
-//	uint32_t gwid;
-//	boardid = *(uint32_t *)(CITIROC + 0x100);
-//	gwid = *(uint32_t *)(CITIROC + 0x104);
-	return 0; // (((boardid & 0xff)<<24) | (gwid & 0x00ffffff)) ;
+	return CITIROC->RAM_ITSY;
 }

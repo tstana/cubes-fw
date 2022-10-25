@@ -76,6 +76,8 @@ struct citiroc_csr {
 	uint32_t CH31HCR;
 	uint32_t OR32HCR;
 	uint32_t ASICCALR;
+	uint32_t _RESERVED[26];
+	uint32_t RAM_ITSY;
 };
 
 typedef struct citiroc_csr citiroc_csr_t;

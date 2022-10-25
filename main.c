@@ -200,6 +200,14 @@ int main(void)
 	hk_adc_init();
 
 	/*
+	 * Set BOARD_ID (two-char string) from -D compiler flag to Itsy-RAM
+	 */
+	uint16_t board_rev = BOARD_ID[0];
+	uint16_t board_num = BOARD_ID[1];
+	CITIROC->RAM_ITSY &= 0xffff0000;
+	CITIROC->RAM_ITSY |= (((board_rev << 8) | (board_num)) & 0xffff);
+
+	/*
 	 * Initialize I2C1 peripheral, used to communicate to OBC via MSP
 	 */
 	MSS_I2C_init(&g_mss_i2c1, MSP_EXP_ADDR, MSS_I2C_PCLK_DIV_60);

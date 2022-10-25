@@ -107,8 +107,8 @@ static unsigned int has_syscommand = 0;
  * Define the MSP send data buffer. The max number of bytes that can be sent by
  * CUBES corresponds to the histogram size in gateware.
  */
-#define HK_LEN    (46)
-#define CUBES_ID_LEN    (25)
+#define HK_LEN          (46)
+#define CUBES_ID_LEN    (16)
 
 static struct hvps_temp_corr_factor hvps_temp_corr;
 
@@ -260,9 +260,9 @@ int main(void)
 	/*
 	 * Prepare CUBES ID data
 	 */
-	sprintf((char*)send_data_cubes_id, "%s %s",__DATE__, __TIME__);
+	sprintf((char*)send_data_cubes_id, "%s", __DATE__);
 	uint32_t itsy_ram = citiroc_read_id();
-	msp_to_bigendian32(send_data_cubes_id+21, itsy_ram);
+	msp_to_bigendian32(send_data_cubes_id + 12, itsy_ram);
 
 	/*
 	 * Init timer to read HK once a second from HVPS and other external devices.

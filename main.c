@@ -108,7 +108,7 @@ static unsigned int has_syscommand = 0;
  * CUBES corresponds to the histogram size in gateware.
  */
 #define HK_LEN          (46)
-#define CUBES_ID_LEN    (16)
+#define CUBES_ID_LEN    (26)
 
 static struct hvps_temp_corr_factor hvps_temp_corr;
 
@@ -200,14 +200,6 @@ int main(void)
 	hk_adc_init();
 
 	/*
-	 * Set BOARD_ID (two-char string) from -D compiler flag to Itsy-RAM
-	 */
-	uint16_t board_rev = BOARD_ID[0];
-	uint16_t board_num = BOARD_ID[1];
-	CITIROC->RAM_ITSY &= 0xffff0000;
-	CITIROC->RAM_ITSY |= (((board_rev << 8) | (board_num)) & 0xffff);
-
-	/*
 	 * Initialize I2C1 peripheral, used to communicate to OBC via MSP
 	 */
 	MSS_I2C_init(&g_mss_i2c1, MSP_EXP_ADDR, MSS_I2C_PCLK_DIV_60);
@@ -270,9 +262,25 @@ int main(void)
 	/*
 	 * Prepare CUBES ID data
 	 */
-	sprintf((char*)send_data_cubes_id, "%s", __DATE__);
-	uint32_t itsy_ram = citiroc_read_id();
-	msp_to_bigendian32(send_data_cubes_id + 12, itsy_ram);
+	/*
+	 * Set BOARD_ID (two-char string) from -D compiler flag to Itsy-RAM
+	 */
+	uint16_t board_rev = BOARD_ID[0];
+	uint16_t board_num = BOARD_ID[1];
+	CITIROC->RAM_ITSY &= 0xffff0000;
+	CITIROC->RAM_ITSY |= (((board_rev << 8) | (board_num)) & 0xffff);
+
+	uint32_t itsy_ram;
+	itsy_ram = citiroc_read_id();
+	send_data_cubes_id[0] = (itsy_ram >> 8) & 0xff;
+	send_data_cubes_id[1] = itsy_ram & 0xff;
+	uint16_t gwdate;
+	gwdate = itsy_ram >> 16;
+	sprintf((char*)send_data_cubes_id+2, "|20%02d-%02d-%02d|",
+			gwdate & 0xfe00,
+			gwdate & 0x01e0,
+			gwdate & 0x001f);
+	sprintf((char*)send_data_cubes_id+14, "%s", __DATE__);
 
 	/*
 	 * Init timer to read HK once a second from HVPS and other external devices.

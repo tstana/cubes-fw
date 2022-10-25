@@ -8,6 +8,5 @@
 #define MSP_CONFIGURATION_H
 
 #define MSP_EXP_MTU 507
-#define MSP_EXP_ADDR 0x35
 
 #endif

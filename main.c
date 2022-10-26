@@ -277,9 +277,9 @@ int main(void)
 	uint16_t gwdate;
 	gwdate = itsy_ram >> 16;
 	sprintf((char*)send_data_cubes_id+2, "|20%02d-%02d-%02d|",
-			gwdate & 0xfe00,
-			gwdate & 0x01e0,
-			gwdate & 0x001f);
+			(gwdate & 0xfe00) >> 9,
+			(gwdate & 0x01e0) >> 5,
+			(gwdate & 0x001f));
 	sprintf((char*)send_data_cubes_id+14, "%s", __DATE__);
 
 	/*

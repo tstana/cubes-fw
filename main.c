@@ -241,12 +241,10 @@ int main(void)
 				((tmp_conf_id - 1) * MEM_CITIROC_CONF_LEN));
 
 		if (nvm_conf_addr[MEM_CITIROC_CONF_LEN-1] == tmp_conf_id) {
-			// TODO: Check for return value here!
 			mem_write(MEM_CITIROC_CONF_ADDR, MEM_CITIROC_CONF_LEN,
 					nvm_conf_addr);
 			citiroc_send_slow_control();
 			conf_id = tmp_conf_id;
-			// TODO: Check for return value here!
 			mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR, MEM_CITIROC_CONF_ID_LEN,
 					&conf_id);
 		}
@@ -569,12 +567,10 @@ int main(void)
 
 						if (nvm_conf_addr[MEM_CITIROC_CONF_LEN-1] ==
 								tmp_conf_id) {
-							// TODO: Check for return value here!
 							mem_write(MEM_CITIROC_CONF_ADDR,
 									MEM_CITIROC_CONF_LEN, nvm_conf_addr);
 							citiroc_send_slow_control();
 							conf_id = tmp_conf_id;
-							// TODO: Check for return value here!
 							mem_write_nvm(MEM_CITIROC_CONF_ID_ADDR,
 									MEM_CITIROC_CONF_ID_LEN, &conf_id);
 						}
@@ -613,7 +609,7 @@ int main(void)
 				{
 					uint8_t resetvalue = recv_data[0];
 					if (resetvalue & 0b00000001)
-						mem_reset_counter_clear();    // TODO: Check return value?
+						mem_reset_counter_clear();
 					if (resetvalue & 0b00000010)
 						citiroc_hcr_reset();
 					if (resetvalue & 0b00000100)
@@ -1042,11 +1038,10 @@ static mss_i2c_slave_handler_ret_t I2C1_SlaveWriteHandler(
  */
 void msp_expsend_start(unsigned char opcode, unsigned long *len)
 {
-	unsigned long l, i;
-	// TODO: Really need to check for citiroc_daq_is_rdy()?
+	unsigned long l = 0;
 	if (opcode == MSP_OP_REQ_PAYLOAD && citiroc_daq_is_rdy()) {
 		l = MEM_HISTO_HDR_LEN;
-		for (i = 0; i < 6; ++i)
+		for (int i = 0; i < 6; ++i)
 			l += 2 * get_num_bins(bin_cfg[i]);
 		send_data = send_data_payload;
 	} else if (opcode == MSP_OP_REQ_HK) {

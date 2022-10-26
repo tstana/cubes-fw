@@ -10,7 +10,9 @@
  * date of creation: 2019-02-15
  *
  * description:
- * 		<TODO: Add description here...>
+ *
+ * 	This file contains functions for accessing the various submodules of the
+ * 	`citiroc_intf` module in CUBES gateware.
  *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
@@ -115,10 +117,6 @@ typedef struct citiroc_csr citiroc_csr_t;
 #define CALIBEN         (31)
 
 /** Function definitions */
-/* TODO: return something?
- * TODO: citiroc_init params (cfg_ram_base, histo_ram_base, etc.)
- * TODO: implem. readout and send config functions here?
- */
 void        citiroc_init();
 
 void        citiroc_daq_set_dur(uint8_t duration);

@@ -11,7 +11,7 @@
  *
  * description:
  *
- *      TODO: Add description here...
+ *  This file contains functions to get and set the UTC time in CUBES gateware.
  *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
@@ -30,7 +30,6 @@
 
 #include "cubes_timekeeping.h"
 
-/* TODO: Add return here, if error on AMBA bus? */
 void cubes_set_time(uint32_t newtime)
 {
 	CUBES_TIME_REG = newtime;

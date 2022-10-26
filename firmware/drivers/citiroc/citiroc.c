@@ -10,7 +10,9 @@
  * date of creation: 2019-02-15
  *
  * description:
- * 		<TODO: Add description here...>
+ *
+ * 	This file contains functions for accessing the various submodules of the
+ * 	`citiroc_intf` module in CUBES gateware.
  *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
@@ -115,7 +117,6 @@ void citiroc_hcr_reset()
 
 void citiroc_send_slow_control()
 {
-	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
 	CITIROC->ROCR |= (1 << NEWSC);
 	while (CITIROC->ROSR & (1 << SCBUSY))
 		;
@@ -123,7 +124,6 @@ void citiroc_send_slow_control()
 
 void citiroc_send_probes()
 {
-	// TODO: Add mem_write to CFG_RAM_BASE here & add data buffer as param ???
 	CITIROC->ROCR |= (1 << ASICPRBEN);
 	CITIROC->ROCR |= (1 << NEWSC);
 	while (CITIROC->ROSR & (1 << SCBUSY))

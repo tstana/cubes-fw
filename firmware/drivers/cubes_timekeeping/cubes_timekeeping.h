@@ -10,7 +10,8 @@
  * date of creation: 2019-02-13
  *
  * description:
- * 		<TODO: Add description here...>
+ *
+ * 	This file contains functions to get and set the UTC time in CUBES gateware.
  *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE

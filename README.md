@@ -1,5 +1,15 @@
 # Firmware for the CUBesat x-ray Explorer using Scintillators (CUBES)
 
+- [Introduction](#introduction)
+- [Getting Started](#getting-started)
+- [Folder Structure](#folder-structure)
+  - [Regenerating the `firmware` folder](#regenerating-the-firmware-folder)
+  - [Regenerating the `msp` folder](#regenerating-the-msp-folder)
+- [Programming](#programming)
+  - [Programming Port and Board ID](#programming-port-and-board-id)
+  - [Debug: Program to CUBES RAM](#debug-program-to-cubes-ram)
+  - [Production: Program to CUBES NVM](#production-program-to-cubes-nvm)
+
 ## Introduction
 
 The code on this repository runs on the Cortex-M3 core embedded on the SmartFusion2 FPGA.

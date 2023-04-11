@@ -136,8 +136,8 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag:
     readouts "make sense".
 
 **IMPORTANT:**
-- Revert the project file back to its original contents, to ensure you are not
-  unnecessarily programming to NVM:
+- Revert the `.cproject` file back to its original contents, to ensure you are not
+  unnecessarily programming to NVM next time:
 
-  `git restore .project`
+  `git restore .cproject`
    

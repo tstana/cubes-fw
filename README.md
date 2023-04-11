@@ -114,11 +114,15 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag:
 4. Still in the **Properties** window, **C/C++ Build > Settings**, navigate to
    **GNU ARM Cross C Compiler > Preprocessor**.
 5. Change the `BOARD_ID` macro for the board you are programming as outlined in
-   the [section above](#programming-port-and-board-id).
+   the [section above](#programming-port-and-board-id) (note the escape characters
+   before each double quote):
+     
+     ![board-id-macro.png](/fig/board-id-macro.png)
+
 6. Change the `MSP_EXP_ADDR` macro for the board according to the `i2c.h` config file
    under the `obcsw` GitLab repository.
    
-   ![board-id-i2c-addr-change.png](fig/board-id-i2c-addr-change.png)
+   ![msp-exp-addr-macro.png](/fig/msp-exp-addr-macro.png)
    
 7. Click the Debug (yes -- Debug!) button in the SoftConsole main window to program the
    board. The **Console** window should display information about it programming to NVM.

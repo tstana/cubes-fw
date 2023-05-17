@@ -6,7 +6,8 @@
   - [Regenerating the `firmware` folder](#regenerating-the-firmware-folder)
   - [Regenerating the `msp` folder](#regenerating-the-msp-folder)
 - [Programming](#programming)
-  - [Programming Port and Board ID](#programming-port-and-board-id)
+  - [Programming Port](#programming-port)
+  - [Board ID](#board-id)
   - [Debug: Program to CUBES RAM](#debug-program-to-cubes-ram)
   - [Production: Program to CUBES NVM](#production-program-to-cubes-nvm)
 
@@ -59,13 +60,18 @@ The code on this repository runs on the Cortex-M3 core embedded on the SmartFusi
 
 ## Programming
 
-### Programming Port and Board ID
+### Programming Port
 
 CUBES should be programmed using a FlashPro5 programmer from Microchip. The standard
 10-pin JTAG connector supplied with the FlashPro5 should be adapted to the 1.27-mm pitch
-programming port on the CUBES board using a 2.54-to-1.27-mm adapter. One such adapter can
-be found in AlbaNova, in the "PoGO lab" on the bottom floor of the building. The adaptor
-should be located in the plastic box labeled "CUBES".
+programming port on the CUBES board using a 2.54-to-1.27-mm adapter:
+
+- https://www.mikroe.com/50-100mil-adapter-board
+
+One such adapter can be found in AlbaNova, in the "PoGO lab" on the bottom floor of the
+building. The adaptor should be located in the plastic box labeled "CUBES".
+
+### Board ID
 
 Each CUBES board has its own ID, labeled on the top side of CUBES boards, corresponding to
 the -Z face of the satellite. The number on this label corresponds to the second character
@@ -114,8 +120,8 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag:
 4. Still in the **Properties** window, **C/C++ Build > Settings**, navigate to
    **GNU ARM Cross C Compiler > Preprocessor**.
 5. Change the `BOARD_ID` macro for the board you are programming as outlined in
-   the [section above](#programming-port-and-board-id) (note the escape characters
-   before each double quote):
+   the [Board ID section above](#board-id) (note the escape characters before each
+   double quote):
      
      ![board-id-macro.png](/fig/board-id-macro.png)
 

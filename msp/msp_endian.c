@@ -13,6 +13,7 @@
 
 /**
  * @brief Converts a number into big-endian.
+ * @note Assumes valid input.
  * @param dest Pointer to where the converted number will be stored. The place
  *             that is pointed to must be able to store at least 4 bytes.
  * @param number The number to be converted into big-endian.
@@ -31,6 +32,7 @@ void msp_to_bigendian32(unsigned char *dest, unsigned long number)
 
 /**
  * @brief Converts a sequence of bytes from big-endian.
+ * @note Assumes valid input.
  * @param src Pointer to a sequence of 4 bytes that will be converted from
  *            big-endian.
  * @return The converted number.

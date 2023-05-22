@@ -90,7 +90,7 @@ int msp_send_callback(unsigned char *data, unsigned long *len)
 {
 	int code;
 
-	if (data == NULL || len == NULL)
+	if (data == NULL || len == 0)
 		return MSP_EXP_ERR_NULL_POINTER;
 
 	if (!msp_exp_state.initialized) {

@@ -18,7 +18,9 @@ The code on this repository runs on the Cortex-M3 core embedded on the SmartFusi
 ## Getting Started
 
 - Clone this repository/unzip the archive downloaded via GitHub
-- Download SoftConsole (any latest version should work)
+- Download and install SoftConsole
+  - NOTE: Latest version to support Cortex-M3 development is **2021.1**
+  - Download from [Microchip website](https://www.microchip.com/en-us/products/fpgas-and-plds/fpga-and-soc-design-tools/soc-fpga/softconsole)
 - Import this project into SoftConsole
 - Most of the code is under `main.c`, in the `while (1)` loop:
   - `REQ_HK` data is prepared once a second; the second counting is handled

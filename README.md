@@ -2,6 +2,7 @@
 
 - [Introduction](#introduction)
 - [Getting Started](#getting-started)
+  - [Code Summary](#code-summary)
 - [Folder Structure](#folder-structure)
   - [Regenerating the `firmware` folder](#regenerating-the-firmware-folder)
   - [Regenerating the `msp` folder](#regenerating-the-msp-folder)
@@ -22,17 +23,42 @@ The code on this repository runs on the Cortex-M3 core embedded on the SmartFusi
   - Download from [Microchip website](https://www.microchip.com/en-us/products/fpgas-and-plds/fpga-and-soc-design-tools/soc-fpga/softconsole)
 - Clone this repository/unzip the archive downloaded via GitHub
 - Import this project from the repo/unzipped archive into SoftConsole
-- Most of the code is under `main.c`, in the `while (1)` loop:
-  - `REQ_HK` data is prepared once a second; the second counting is handled
-    by `Timer1` (see also `Timer1_IRQHandler()`);
-  - `REQ_PAYLOAD` data is prepared once the DAQ has finished; note that this
-    is a lenghty process (several hundreds of microseconds), especially if
-    histogram binning is performed;
-  - MSP commands are then handled in the next `if`/`else if` statements.
-- MSP callbacks functions and some ISRs are also present at the bottom of
-  `main.c`.
-- Other [folders](#folder-structure) under `cubes-fw` contain various APIs for handling devices
-  on the CUBES board.
+
+### Code Summary
+
+Most of the code is under `main.c`, in the `while (1)` loop:
+- `REQ_HK` data is prepared once a second; the second counting is handled
+  by `Timer1_IRQHandler`;
+- `REQ_PAYLOAD` data is prepared once the DAQ has finished; note that this
+  is a lenghty process (several hundreds of microseconds), especially if
+  histogram binning is performed;
+- Prepping data for and acting upon data from MSP commands are then handled
+  in the next `if`/`else if` statements:
+  - `if (has_send)` for MSP send commands (from CUBES to OBC);
+  - `else if (has_rcvd)` for MSP receive commands (by CUBES from OBC);
+  - `else if (has_syscommand)` for MSP system commands (for CUBES from OBC).
+
+MSP callbacks functions and main I2C ISR are also present at the bottom of
+`main.c`.
+- MSP send (CUBES to OBC)
+  - `msp_expsend_start` is where the MSP send buffer is assigned to the data to
+  be sent; the `has_send` variable is also assigned, which informs the main
+  loop to update with new send data based on MSP command;
+  - MSP frames are then sent via `msp_expsend_data` (`msp_expsend_complete` only
+  clears the `REQ_PAYLOAD` buffer so it doesn't contain stale data in case of a
+  new `REQ_PAYLOAD` being issued);
+- MSP receive (CUBES from OBC)
+  - `msp_exprecv_start` clears the MSP receive buffer for new data;
+  - `msp_exprecv_data` buffers in data retrieved in MSP frames
+  - `msp_exprecv_complete` informs the main loop the data is ready to be processed
+- The whole process for sending MSP frames starts in `I2C1_SlaveWriteHandler`,
+  which essentially (1) waits for an MSP frame from the OBC, `msp_recv_callback`;
+  and (2) sends a reply MSP frame to the OBC, `msp_send_callback`.
+- **NOTE:** To better understand the way MSP functions, right-click any of the MSP callbacks,
+  (e.g., `msp_expsend_start` or `msp_exprecv_data`), then click **Open Call Hierarchy**.
+
+Other [folders](#folder-structure) under `cubes-fw` contain various APIs for handling devices
+on the CUBES board.
 
 ## Folder Structure
 

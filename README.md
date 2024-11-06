@@ -103,10 +103,13 @@ building. The adaptor should be located in the plastic box labeled "CUBES".
 
 Each CUBES board has its own ID, labeled on the top side of CUBES boards, corresponding to
 the -Z face of the satellite. The number on this label corresponds to the second character
-in the `BOARD_ID` macro, defined via a `-D` compiler flag:
+in the `BOARD_ID` macro, defined via a `-D` compiler flag (see programming sections below):
 
-- `BOARD_ID = C<number-on-label>` (`C` stands for CUBES)
-- Example: `BOARD_ID = C3`:
+- `BOARD_ID = C<number-on-label>` (`C` stands for CUBES, `<number-on-label>` corresponds to
+  board number, `1` through `5`)
+- Board IDs:
+  - `BOARD_ID = C3` for CUBES-1 on MIST
+  - `BOARD_ID = C4` for CUBES-2 on MIST
 
   <img alt="cubes-prog.png" src="/fig/cubes-prog.png" width=800px />
 
@@ -124,10 +127,27 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag:
 
    <img alt="esram-linker-script.png" src="/fig/esram-linker-script.png" width=640px />
    
-4. Press the **Apply and Close** button in the **Properties** dialog.
-5. Connect the FlashPro5 programmer to the CUBES PCB of interest.
-6. Press the **Debug** (bug) button on the SoftConsole interface.
-7. The code should now be programmed to CUBES volatile memory; HK can be read out
+4. Still in the **Properties** window, **C/C++ Build > Settings**, navigate to
+   **GNU ARM Cross C Compiler > Preprocessor**.
+5. Change the `BOARD_ID` macro for the board you are programming as outlined in
+   the [Board ID section above](#board-id) (note the escape characters before each
+   double quote):
+   - `BOARD_ID = \"C3\"` or
+   - `BOARD_ID = \"C4\"`
+     
+     ![board-id-macro.png](/fig/board-id-macro.png)
+
+6. Change the `MSP_EXP_ADDR` macro for the board according to the `i2c.h` config file
+   under the `obcsw` GitLab repository, nominally:
+   - `MSP_EXP_ADDR = 0x35` for CUBES-1
+   - `MSP_EXP_ADDR = 0x36` for CUBES-2
+   
+   ![msp-exp-addr-macro.png](/fig/msp-exp-addr-macro.png)
+   
+8. Press the **Apply and Close** button in the **Properties** dialog.
+9. Connect the FlashPro5 programmer to the CUBES PCB of interest.
+10. Press the **Debug** (bug) button on the SoftConsole interface.
+11. The code should now be programmed to CUBES volatile memory; HK can be read out
    from CUBES and checked if it "makes sense".
 
 ### Production: Program to CUBES NVM
@@ -154,19 +174,21 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag:
      ![board-id-macro.png](/fig/board-id-macro.png)
 
 6. Change the `MSP_EXP_ADDR` macro for the board according to the `i2c.h` config file
-   under the `obcsw` GitLab repository.
+   under the `obcsw` GitLab repository, nominally:
+   - `MSP_EXP_ADDR = 0x35` for CUBES-1
+   - `MSP_EXP_ADDR = 0x36` for CUBES-2
    
    ![msp-exp-addr-macro.png](/fig/msp-exp-addr-macro.png)
    
-7. Click the Debug (yes -- Debug!) button in the SoftConsole main window to program the
+8. Click the Debug (yes -- Debug!) button in the SoftConsole main window to program the
    board. The **Console** window should display information about it programming to NVM.
    Programming should also take longer than in the case of RAM.
-8. End the debug session from SoftConsole's _Debug_ perspective.
-9. Move the FlashPro5 programmer from the board you just programmed to the next one you
+9. End the debug session from SoftConsole's _Debug_ perspective.
+10. Move the FlashPro5 programmer from the board you just programmed to the next one you
    want to program.
-10. Repeat steps 4-7.
-11. Reset the CUBES stackup by power-cycling the `5V_CUBES` power rail.
-12. Perform a `REQ_HK` MSP command from each of the two CUBES boards and ensure the
+11. Repeat steps 4-7.
+12. Reset the CUBES stackup by power-cycling the `5V_CUBES` power rail.
+13. Perform a `REQ_HK` MSP command from each of the two CUBES boards and ensure the
     readouts "make sense".
 
 **IMPORTANT:**

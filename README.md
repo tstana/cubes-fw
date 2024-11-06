@@ -18,11 +18,12 @@ The code on this repository runs on the Cortex-M3 core embedded on the SmartFusi
 
 ## Getting Started
 
-- Download and install SoftConsole
+1. Download and install SoftConsole
   - NOTE: Latest version to support Cortex-M3 development is **2021.1**
   - Download from [Microchip website](https://www.microchip.com/en-us/products/fpgas-and-plds/fpga-and-soc-design-tools/soc-fpga/softconsole)
-- Clone this repository/unzip the archive downloaded via GitHub
-- Import this project from the repo/unzipped archive into SoftConsole
+2. Clone this repository/unzip the archive downloaded via GitHub
+3. Import this project from the repo/unzipped archive into SoftConsole
+4. Program firmware [to RAM](#debug-program-to-cubes-ram) or [to NVM](#production-program-to-cubes-nvm).
 
 ### Code Summary
 
@@ -187,8 +188,9 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag (see programming secti
 10. Move the FlashPro5 programmer from the board you just programmed to the next one you
    want to program.
 11. Repeat steps 4-7.
-12. Reset the CUBES stackup by power-cycling the `5V_CUBES` power rail.
-13. Perform a `REQ_HK` MSP command from each of the two CUBES boards and ensure the
+    - **NOTE:** Remember that the `BOARD_ID` and `MSP_EXP_ADDR` macros need to be different.
+13. Reset the CUBES stackup by power-cycling the `5V_CUBES` power rail.
+14. Perform a `REQ_HK` MSP command from each of the two CUBES boards and ensure the
     readouts "make sense".
 
 **IMPORTANT:**

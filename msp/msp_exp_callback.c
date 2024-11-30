@@ -8,6 +8,8 @@
  * Implements the MSP Callbacks defined in msp_exp_callback.h.
  */
 
+#include <stdlib.h>
+
 #include "msp_debug.h"
 #include "msp_endian.h"
 #include "msp_opcodes.h"
@@ -48,6 +50,13 @@ int msp_recv_callback(const unsigned char *data, unsigned long len)
 {
 	int code;
 
+	if (data == NULL)
+		return MSP_EXP_ERR_NULL_POINTER;
+
+	/* Treat frames that are too short as FCS errors */
+	if (len < 5)
+		return MSP_EXP_ERR_FCS_MISMATCH;
+
 	if (!msp_exp_state.initialized) /* Check that we are initialized */
 		msp_exp_state_initialize(msp_seqflags_init());
 	else if (msp_exp_state.busy) /* If we are busy, just return */
@@ -80,6 +89,9 @@ int msp_recv_callback(const unsigned char *data, unsigned long len)
 int msp_send_callback(unsigned char *data, unsigned long *len)
 {
 	int code;
+
+	if (data == NULL || len == 0)
+		return MSP_EXP_ERR_NULL_POINTER;
 
 	if (!msp_exp_state.initialized) {
 		/* Check that we are initialized */

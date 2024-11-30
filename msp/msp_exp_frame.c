@@ -5,6 +5,8 @@
  * @brief     Functions for handling MSP frames on the experiment side.
  */
 
+#include <stdlib.h>
+
 #include "msp_crc.h"
 #include "msp_endian.h"
 
@@ -60,6 +62,10 @@ unsigned long msp_exp_frame_generate_fcs(const unsigned char *data, int from_obc
 int msp_exp_frame_fcs_valid(const unsigned char *data, int from_obc, unsigned long len)
 {
 	unsigned long fcs;
+
+	/* A length of the minimum 4 bytes is enforced */
+	if (data == NULL || len < 4)
+		return 0;
 
 	/* FCS is the last 4 bytes of the frame */
 	fcs = msp_from_bigendian32(data + (len - 4));

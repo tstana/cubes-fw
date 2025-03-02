@@ -8,6 +8,8 @@
  * Provides CRC functionalities for MSP.
  */
 
+#include <stdlib.h>
+
 #include "msp_crc.h"
 #include "msp_configuration.h"
 
@@ -51,11 +53,14 @@ static unsigned long msp_crc32_nolookup(const unsigned char *data, unsigned long
 	unsigned long crc;
 	unsigned long i;
 	unsigned char j;
-	
+
+	if (data == NULL)
+		return start_remainder;
+
 	/* we need to mask out the 32 least significant bits since a long can be
 	 * larger than 32 bits. */
 	crc = (~start_remainder) & 0xFFFFFFFF;
- 
+
 	for (i = 0; i < len; i++) {
 		unsigned long rem = data[i] ^ (crc & 0xFF);
 		for (j = 0; j < 8; j++) {
@@ -66,7 +71,7 @@ static unsigned long msp_crc32_nolookup(const unsigned char *data, unsigned long
 				rem >>= 1;
 			}
 		}
-		
+
 		crc = (crc >> 8) ^ rem;
 	}
 
@@ -148,11 +153,14 @@ static unsigned long msp_crc32_lookup(const unsigned char *data, unsigned long l
 {
 	unsigned long crc;
 	unsigned long i;
-	
+
+	if (data == NULL)
+		return start_remainder;
+
 	/* We need to mask out the 32 least significant bits since a long can be
 	 * larger than 32 bits. */
 	crc = (~start_remainder) & 0xFFFFFFFF;
- 
+
 	for (i = 0; i < len; i++)
 		crc = (crc >> 8) ^ msp_table_crc32[data[i] ^ (crc & 0xff)];
 

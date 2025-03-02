@@ -10,6 +10,8 @@
  * designated sequence flag. This also goes for custom opcodes.
  */
 
+#include <stdlib.h>
+
 #include "msp_opcodes.h"
 #include "msp_seqflags.h"
 
@@ -46,7 +48,7 @@ msp_seqflags_t msp_seqflags_init(void)
  * @brief Increments a sequence flag.
  * @param flags Pointer to the set of sequence flags.
  * @param opcode The opcode corresponding to the sequence flag.
- * @return 1 if the opcode has no designated sequence flag, 0 otherwise.
+ * @return 1 if the opcode has no designated sequence flag in the flags argument, 0 otherwise.
  *
  * Increments a sequence flag an initializes it. If the specified opcode has no
  * designated sequence flag, the value 1 is returned and no action is taken.
@@ -54,6 +56,9 @@ msp_seqflags_t msp_seqflags_init(void)
 int msp_seqflags_increment(volatile msp_seqflags_t *flags, unsigned char opcode)
 {
 	struct msp_flag_position fp;
+
+	if (flags == NULL)
+		return 1;
 
 	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
@@ -84,6 +89,9 @@ int msp_seqflags_get(volatile const msp_seqflags_t *flags, unsigned char opcode)
 {
 	struct msp_flag_position fp;
 
+	if (flags == NULL)
+		return -1;
+
 	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
 		return -1;
@@ -113,6 +121,9 @@ int msp_seqflags_get(volatile const msp_seqflags_t *flags, unsigned char opcode)
 int msp_seqflags_get_next(volatile const msp_seqflags_t *flags, unsigned char opcode)
 {
 	struct msp_flag_position fp;
+
+	if (flags == NULL)
+		return -1;
 
 	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
@@ -145,6 +156,9 @@ int msp_seqflags_get_next(volatile const msp_seqflags_t *flags, unsigned char op
 int msp_seqflags_is_set(volatile const msp_seqflags_t *flags, unsigned char opcode, unsigned char flag)
 {
 	struct msp_flag_position fp;
+
+	if (flags == NULL)
+		return 0;
 
 	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)
@@ -181,6 +195,9 @@ int msp_seqflags_is_set(volatile const msp_seqflags_t *flags, unsigned char opco
 int msp_seqflags_set(volatile msp_seqflags_t *flags, unsigned char opcode, unsigned char flag)
 {
 	struct msp_flag_position fp;
+
+	if (flags == NULL)
+		return -1;
 
 	fp = msp_get_flag_pos(opcode);
 	if (fp.mask == 0)

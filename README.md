@@ -106,13 +106,15 @@ Each CUBES board has its own ID, labeled on the top side of CUBES boards, corres
 the -Z face of the satellite. The number on this label corresponds to the second character
 in the `BOARD_ID` macro, defined via a `-D` compiler flag (see programming sections below):
 
-- `BOARD_ID = C<number-on-label>` (`C` stands for CUBES, `<number-on-label>` corresponds to
+- `BOARD_ID=C<number-on-label>` (`C` stands for CUBES, `<number-on-label>` corresponds to
   board number, `1` through `5`)
 - Board IDs:
-  - `BOARD_ID = C3` for CUBES-1 on MIST
-  - `BOARD_ID = C4` for CUBES-2 on MIST
+  - `BOARD_ID=\"C3\"` for CUBES-1 on MIST
+  - `BOARD_ID=\"C4\"` for CUBES-2 on MIST
 
   <img alt="cubes-prog.png" src="/fig/cubes-prog.png" width=800px />
+
+  - **Note:** The `\"` characters are necessary to avoid compile errors.
 
 ### Debug: Program to CUBES RAM
 
@@ -133,22 +135,24 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag (see programming secti
 5. Change the `BOARD_ID` macro for the board you are programming as outlined in
    the [Board ID section above](#board-id) (note the escape characters before each
    double quote):
-   - `BOARD_ID = \"C3\"` or
-   - `BOARD_ID = \"C4\"`
+   - `BOARD_ID=\"C3\"` or
+   - `BOARD_ID=\"C4\"`
      
      ![board-id-macro.png](/fig/board-id-macro.png)
 
 6. Change the `MSP_EXP_ADDR` macro for the board according to the `i2c.h` config file
    under the `obcsw` GitLab repository, nominally:
-   - `MSP_EXP_ADDR = 0x35` for CUBES-1
-   - `MSP_EXP_ADDR = 0x36` for CUBES-2
+   - `MSP_EXP_ADDR=0x35` for CUBES-1
+   - `MSP_EXP_ADDR=0x36` for CUBES-2
    
    ![msp-exp-addr-macro.png](/fig/msp-exp-addr-macro.png)
    
 8. Press the **Apply and Close** button in the **Properties** dialog.
 9. Connect the FlashPro5 programmer to the CUBES PCB of interest.
-10. Press the **Debug** (bug) button on the SoftConsole interface.
-11. The code should now be programmed to CUBES volatile memory; HK can be read out
+10. Press the **Debug** button -- the one that looks like a bug -- on the SoftConsole interface.
+11. If a window opens up prompting to select a launch configuration, select the
+    `cubes-fw_Debug.launch` file and click **OK**.
+12. The code should now be programmed to CUBES volatile memory; HK can be read out
    from CUBES and checked if it "makes sense".
 
 ### Production: Program to CUBES NVM
@@ -176,8 +180,8 @@ in the `BOARD_ID` macro, defined via a `-D` compiler flag (see programming secti
 
 6. Change the `MSP_EXP_ADDR` macro for the board according to the `i2c.h` config file
    under the `obcsw` GitLab repository, nominally:
-   - `MSP_EXP_ADDR = 0x35` for CUBES-1
-   - `MSP_EXP_ADDR = 0x36` for CUBES-2
+   - `MSP_EXP_ADDR=0x35` for CUBES-1
+   - `MSP_EXP_ADDR=0x36` for CUBES-2
    
    ![msp-exp-addr-macro.png](/fig/msp-exp-addr-macro.png)
    
